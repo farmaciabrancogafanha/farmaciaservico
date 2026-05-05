@@ -187,9 +187,7 @@ a { color:#1976d2; }
     padding: 12px;
     gap: 12px;
   }
-  /* Ordem: Aveiro (Permanência) em cima, Ílhavo (Disponibilidade) em baixo. */
-  .coluna-wrapper:nth-child(1) { order: 2; }  /* Ílhavo */
-  .coluna-wrapper:nth-child(2) { order: 1; }  /* Aveiro */
+  /* Aveiro vem primeiro no HTML; em mobile fica naturalmente em cima. */
   .coluna-wrapper { min-width: 0; width: 100%; }
   .coluna { padding: 14px; }
 
@@ -301,23 +299,6 @@ a { color:#1976d2; }
 
 <div class="container">
 
-<!-- ILHAVO -->
-<div class="coluna-wrapper">
-  <div class="coluna">
-    <div class="titulo">
-      <div class="cruz"></div>
-      <div>
-        <div class="titulo-principal">Farmácia de Serviço</div>
-        <div class="subtitulo">Concelho de Ílhavo</div>
-      </div>
-    </div>
-
-    <div id="disponibilidade" class="sub-bloco"></div>
-
-    <div id="ilhavo" class="texto">A carregar...</div>
-  </div>
-</div>
-
 <!-- AVEIRO -->
 <div class="coluna-wrapper">
   <div class="coluna">
@@ -332,6 +313,23 @@ a { color:#1976d2; }
     <div id="periodo" class="sub-bloco"></div>
 
     <div id="aveiro" class="texto">A carregar...</div>
+  </div>
+</div>
+
+<!-- ILHAVO -->
+<div class="coluna-wrapper">
+  <div class="coluna">
+    <div class="titulo">
+      <div class="cruz"></div>
+      <div>
+        <div class="titulo-principal">Farmácia de Serviço</div>
+        <div class="subtitulo">Concelho de Ílhavo</div>
+      </div>
+    </div>
+
+    <div id="disponibilidade" class="sub-bloco"></div>
+
+    <div id="ilhavo" class="texto">A carregar...</div>
   </div>
 </div>
 
