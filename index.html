@@ -607,13 +607,17 @@ function renderDisponibilidade(p, dataServico) {
   }
 
   // Linha "Restam Xh Xmin até ao fecho." só durante o horário aberto (9h–21h).
-  let linhaRestante = "";
+  // Fora desse horário a linha continua presente mas vazia, para manter a
+  // altura da coluna alinhada com a coluna do Aveiro (evita colapso visual).
+  let linhaRestante;
   if (!fechado) {
     const agoraEmMin = p.h * 60 + p.m;
     const restantesDisp = 21 * 60 - agoraEmMin;
     // Última hora antes do fecho (20:00–20:59) → vermelho de alerta.
     const corRestanteDisp = (p.h === 20) ? COR_ALERTA : COR_DISP;
     linhaRestante = `<br><b style="color:${corRestanteDisp};">Restam ${formatarTempoRestante(restantesDisp)}</b> até ao fecho.`;
+  } else {
+    linhaRestante = `<br>&nbsp;`;
   }
 
   const novo = `<small>Regime de Disponibilidade<br>${realce} de ${dataServico}${linhaRestante}</small>`;
