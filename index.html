@@ -47,20 +47,7 @@ body { font-family: Arial, sans-serif; margin: 0; background: #eef2f3; }
 .cruz::before{width:70%;height:12px;top:50%;left:15%;transform:translateY(-50%);}
 .cruz::after{height:70%;width:12px;left:50%;top:15%;transform:translateX(-50%);}
 
-.titulo {
-  display:flex;
-  align-items:center;
-  gap:12px;
-  border-bottom:2px solid #2e7d32;
-  margin-bottom:10px;
-}
-.titulo-texto { flex-shrink:0; }
-.bandeira {
-  height:64px;
-  width:auto;
-  flex-shrink:0;
-  margin-bottom:6px;
-}
+.titulo { display:flex; gap:12px; border-bottom:2px solid #2e7d32; margin-bottom:10px; }
 .titulo-principal { font-size:32px; font-weight:bold; }
 .subtitulo { font-size:24px; color:#555; }
 
@@ -206,7 +193,6 @@ a { color:#1976d2; }
 
   .titulo-principal { font-size: 20px; }
   .subtitulo { font-size: 15px; }
-  .bandeira { height: 56px; }
 
   /* Footer: tudo empilhado, centrado. Ordem:
      Restam... → relógio → YOU ARE HERE → QR site → link site → QR Linktree → link Linktree */
@@ -258,7 +244,6 @@ a { color:#1976d2; }
   .cruz { width: 34px; height: 34px; }
   .cruz::before { height: 10px; }
   .cruz::after  { width: 10px; }
-  .bandeira { height: 56px; }
   .texto, .sub-bloco, .sub-bloco small, .farmacia {
     font-size: 13px;
     line-height: 1.35;
@@ -281,7 +266,6 @@ a { color:#1976d2; }
   .subtitulo { font-size: 17px; }
   .texto, .sub-bloco, .sub-bloco small, .farmacia { font-size: 14px; }
   .relogio { max-width: 200px; }
-  .bandeira { height: 64px; }
 }
 
 /* --- Desktop grande: 1280–1799 px --- */
@@ -292,16 +276,13 @@ a { color:#1976d2; }
   .relogio { max-width: 230px; }
   .footer-esquerda, .footer-direita { font-size: 13px; gap: 12px; }
   .qr img { width: 110px; }
-  .bandeira { height: 72px; }
 }
 
 /* --- TV: 1800 px+ --- */
 @media (min-width: 1800px) {
   .titulo-principal { font-size: 30px; }
   .subtitulo { font-size: 22px; }
-  .cruz { width: 50px; height: 50px; }
-  .cruz::before { height: 14px; }
-  .cruz::after  { width: 14px; }
+  .cruz { width: 42px; height: 42px; }
   .texto, .sub-bloco, .sub-bloco small, .farmacia { font-size: 19px; }
   .container { padding: 12px 18px; gap: 16px; }
   .coluna { padding: 14px 18px; }
@@ -310,7 +291,6 @@ a { color:#1976d2; }
   .footer-esquerda, .footer-direita { font-size: 15px; gap: 14px; min-width: 220px; }
   .qr img { width: 130px; }
   .grelha-restante { font-size: 16px; }
-  .bandeira { height: 90px; }
 }
 </style>
 </head>
@@ -324,11 +304,10 @@ a { color:#1976d2; }
   <div class="coluna">
     <div class="titulo">
       <div class="cruz"></div>
-      <div class="titulo-texto">
+      <div>
         <div class="titulo-principal">Farmácia de Serviço</div>
         <div class="subtitulo">Concelho de Aveiro</div>
       </div>
-      <img class="bandeira" src="AVR.png" alt="Brasão do Município de Aveiro">
     </div>
 
     <div id="periodo" class="sub-bloco"></div>
@@ -342,11 +321,10 @@ a { color:#1976d2; }
   <div class="coluna">
     <div class="titulo">
       <div class="cruz"></div>
-      <div class="titulo-texto">
+      <div>
         <div class="titulo-principal">Farmácia de Serviço</div>
         <div class="subtitulo">Concelho de Ílhavo</div>
       </div>
-      <img class="bandeira" src="ILH.png" alt="Brasão do Município de Ílhavo">
     </div>
 
     <div id="disponibilidade" class="sub-bloco"></div>
