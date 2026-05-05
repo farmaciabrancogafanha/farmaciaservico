@@ -676,7 +676,7 @@ function renderPeriodo(p, dataServico) {
     : 24 * 60 - agoraEmMin + alvoTurno;
   // Última hora antes da mudança de turno (08:00–08:59) → vermelho de alerta.
   const corRestanteTurno = (p.h === 8) ? COR_ALERTA : COR_TURNO;
-  const linhaRestante = `<b style="color:${corRestanteTurno};">Restam ${formatarTempoRestante(restantesTurno)}</b> até à mudança de turno`;
+  const linhaRestante = `<b style="color:${corRestanteTurno};">Restam ${formatarTempoRestante(restantesTurno)}</b> até à <mark>mudança de turno</mark>`;
   const novo = `<small>Regime de Permanência<br>Desde as 09h de <span class="data-turno">${dataServico}</span> até às 09h de <mark>${fim}</mark><br>${linhaRestante}</small>`;
   if (novo !== ultimoPeriodo) {
     dom.periodo.innerHTML = novo;
