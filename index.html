@@ -613,7 +613,7 @@ function renderDisponibilidade(p, dataServico) {
     realce = `${verbo} às 21h`;
   }
 
-  // Linha "Restam Xh Xmin até ao fecho." só durante o horário aberto (9h–21h).
+  // Linha "Restam Xh Xmin até ao fecho" só durante o horário aberto (9h–21h).
   // Fora desse horário a linha contém um placeholder invisível (mesmo texto
   // com visibility:hidden) para manter a altura idêntica e alinhar
   // visualmente com a coluna do Aveiro (evita colapso).
@@ -623,9 +623,9 @@ function renderDisponibilidade(p, dataServico) {
     const restantesDisp = 21 * 60 - agoraEmMin;
     // Última hora antes do fecho (20:00–20:59) → vermelho de alerta.
     const corRestanteDisp = (p.h === 20) ? COR_ALERTA : COR_DISP;
-    linhaRestante = `<br><b style="color:${corRestanteDisp};">Restam ${formatarTempoRestante(restantesDisp)}</b> até ao fecho.`;
+    linhaRestante = `<br><b style="color:${corRestanteDisp};">Restam ${formatarTempoRestante(restantesDisp)}</b> até ao fecho`;
   } else {
-    linhaRestante = `<br><span style="visibility:hidden;"><b>Restam 00h00min</b> até ao fecho.</span>`;
+    linhaRestante = `<br><span style="visibility:hidden;"><b>Restam 00h00min</b> até ao fecho</span>`;
   }
 
   const novo = `<small>Regime de Disponibilidade<br>${realce} de <span class="data-turno">${dataServico}</span>${linhaRestante}</small>`;
@@ -645,8 +645,8 @@ function renderPeriodo(p, dataServico) {
     : 24 * 60 - agoraEmMin + alvoTurno;
   // Última hora antes da mudança de turno (08:00–08:59) → vermelho de alerta.
   const corRestanteTurno = (p.h === 8) ? COR_ALERTA : COR_TURNO;
-  const linhaRestante = `<b style="color:${corRestanteTurno};">Restam ${formatarTempoRestante(restantesTurno)}</b> até à mudança de turno.`;
-  const novo = `<small>Regime de Permanência<br>Desde as 9h de <span class="data-turno">${dataServico}</span> até às 9h de <mark>${fim}</mark><br>${linhaRestante}</small>`;
+  const linhaRestante = `<b style="color:${corRestanteTurno};">Restam ${formatarTempoRestante(restantesTurno)}</b> até à mudança de turno`;
+  const novo = `<small>Regime de Permanência<br>Desde as 09h de <span class="data-turno">${dataServico}</span> até às 09h de <mark>${fim}</mark><br>${linhaRestante}</small>`;
   if (novo !== ultimoPeriodo) {
     dom.periodo.innerHTML = novo;
     ultimoPeriodo = novo;
