@@ -128,11 +128,16 @@ mark {
 .footer-trio {
   display:grid;
   grid-template-columns:1fr auto 1fr;
-  align-items:center;
+  align-items:end;
   gap:30px;
   max-width:1900px;
   margin:10px auto 0;
   padding:0;
+}
+.footer-meio {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
 }
 .footer-esquerda { justify-self:start; }
 .footer-direita  { justify-self:end; }
@@ -241,6 +246,7 @@ a { color:#1976d2; }
   .relogio-wrapper { margin: 6px 0; }
   .footer-trio { gap: 16px; margin-top: 4px; }
   .footer-esquerda, .footer-direita { min-width: 140px; gap: 8px; font-size: 11px; }
+  .centro { font-size: 11px; }
   .qr img    { width: 80px; }
   .qr .scan-me { font-size: 11px; }
 }
@@ -260,6 +266,7 @@ a { color:#1976d2; }
   .texto, .sub-bloco, .sub-bloco small, .farmacia { font-size: 16px; }
   .relogio { max-width: 230px; }
   .footer-esquerda, .footer-direita { font-size: 13px; gap: 12px; }
+  .centro { font-size: 13px; }
   .qr img { width: 110px; }
 }
 
@@ -274,6 +281,7 @@ a { color:#1976d2; }
   .farmacia { padding: 8px 10px; margin: 8px 0; }
   .relogio { max-width: 270px; }
   .footer-esquerda, .footer-direita { font-size: 15px; gap: 14px; min-width: 220px; }
+  .centro { font-size: 15px; }
   .qr img { width: 130px; }
 }
 </style>
@@ -342,6 +350,9 @@ a { color:#1976d2; }
     </a>
   </div>
 
+  <!-- Coluna do meio: relógio + Atualizada às... -->
+  <div class="footer-meio">
+
   <!-- Relógio analógico militar (24h) -->
   <div class="relogio-wrapper">
     <svg class="relogio" viewBox="-10 -20 250 250" xmlns="http://www.w3.org/2000/svg">
@@ -405,6 +416,12 @@ a { color:#1976d2; }
     </svg>
   </div>
 
+  <div class="centro">
+    <div id="update"></div>
+  </div>
+
+  </div><!-- fim footer-meio -->
+
   <div class="footer-direita">
     <div class="qr">
       <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://linktr.ee/farmaciabrancogafanha" alt="QR code para abrir o Linktree da Farmácia Branco">
@@ -415,10 +432,6 @@ a { color:#1976d2; }
   </div>
 
   </div><!-- fim footer-trio -->
-
-  <div class="centro">
-    <div id="update"></div>
-  </div>
 
 </div>
 
