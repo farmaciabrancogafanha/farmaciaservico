@@ -660,9 +660,12 @@ function atualizarDatas(p) {
   // Última hora antes da mudança de turno (08:00–08:59) → vermelho de alerta.
   const corRestanteTurno = (p.h === 8) ? COR_ALERTA : COR_TURNO;
 
-  // Constrói a grelha de duas colunas alinhada pelos ":". Linha do Ílhavo
-  // só aparece entre as 9h e as 21h; a do Aveiro está sempre presente.
+  // Constrói a grelha de duas colunas alinhada pelos ":". Linha do Aveiro
+  // está sempre presente; a do Ílhavo só aparece entre as 9h e as 21h.
   const linhas = [];
+
+  linhas.push(`<div class="prefixo">Concelho de Aveiro:</div>`);
+  linhas.push(`<div class="conteudo"><b style="color:${corRestanteTurno};">Restam ${formatarTempoRestante(restantesTurno)}</b> até à mudança de turno do <b>Regime de Permanência</b>.</div>`);
 
   if (p.h >= 9 && p.h < 21) {
     const restantesDisp = 21 * 60 - agoraEmMin;
@@ -672,9 +675,6 @@ function atualizarDatas(p) {
     linhas.push(`<div class="prefixo">Concelho de Ílhavo:</div>`);
     linhas.push(`<div class="conteudo"><b style="color:${corRestanteDisp};">Restam ${formatarTempoRestante(restantesDisp)}</b> até ao fecho ${palavra} em turno do <b>Regime de Disponibilidade</b>.</div>`);
   }
-
-  linhas.push(`<div class="prefixo">Concelho de Aveiro:</div>`);
-  linhas.push(`<div class="conteudo"><b style="color:${corRestanteTurno};">Restam ${formatarTempoRestante(restantesTurno)}</b> até à mudança de turno do <b>Regime de Permanência</b>.</div>`);
 
   const novaGrelha = linhas.join("");
   if (novaGrelha !== ultimoGrelhaRestante) {
