@@ -76,6 +76,13 @@ mark {
   font-weight:bold;
 }
 
+.data-turno {
+  background:#bbdefb;
+  padding:0 4px;
+  border-radius:3px;
+  font-weight:bold;
+}
+
 .farmacia {
   margin:12px 0;
   padding:10px;
@@ -407,7 +414,7 @@ a { color:#1976d2; }
            e 9h — sinal de "atenção, dia novo no calendário, mas o turno
            ainda é o de ontem". -->
       <g id="grupo-data-civil">
-        <rect id="data-civil-fundo" x="71" y="140" width="58" height="14" rx="3" fill="#fff59d" style="display:none;"/>
+        <rect id="data-civil-fundo" x="71" y="140" width="58" height="14" rx="3" fill="#fff59d"/>
         <text id="data-civil" x="100" y="147"
               text-anchor="middle" dominant-baseline="central"
               font-family="Arial, sans-serif"
@@ -621,7 +628,7 @@ function renderDisponibilidade(p, dataServico) {
     linhaRestante = `<br><span style="visibility:hidden;"><b>Restam 00h00min</b> até ao fecho.</span>`;
   }
 
-  const novo = `<small>Regime de Disponibilidade<br>${realce} de ${dataServico}${linhaRestante}</small>`;
+  const novo = `<small>Regime de Disponibilidade<br>${realce} de <span class="data-turno">${dataServico}</span>${linhaRestante}</small>`;
   if (novo !== ultimoDisponibilidade) {
     dom.disponibilidade.innerHTML = novo;
     ultimoDisponibilidade = novo;
@@ -639,7 +646,7 @@ function renderPeriodo(p, dataServico) {
   // Última hora antes da mudança de turno (08:00–08:59) → vermelho de alerta.
   const corRestanteTurno = (p.h === 8) ? COR_ALERTA : COR_TURNO;
   const linhaRestante = `<b style="color:${corRestanteTurno};">Restam ${formatarTempoRestante(restantesTurno)}</b> até à mudança de turno.`;
-  const novo = `<small>Regime de Permanência<br>Desde as 9h de ${dataServico} até às 9h de <mark>${fim}</mark><br>${linhaRestante}</small>`;
+  const novo = `<small>Regime de Permanência<br>Desde as 9h de <span class="data-turno">${dataServico}</span> até às 9h de <mark>${fim}</mark><br>${linhaRestante}</small>`;
   if (novo !== ultimoPeriodo) {
     dom.periodo.innerHTML = novo;
     ultimoPeriodo = novo;
@@ -658,11 +665,12 @@ function formatarTempoRestante(minutos) {
 }
 
 function atualizarDatas(p) {
-  // Entre 0h e 9h, a data civil é destacada com fundo amarelo (mesma regra
-  // das outras datas amarelas: calendário já avançou mas turno é o de ontem).
+  // Entre 0h e 9h, a data civil aparece com fundo amarelo (calendário já
+  // avançou mas o turno ainda é o de ontem). Entre 9h e 23h59 aparece com
+  // fundo azul (data corrente do turno).
   const dataFormatada = (p.h < 9)
     ? `<mark>${isoLisboa(p)}</mark>`
-    : `<b>${isoLisboa(p)}</b>`;
+    : `<span class="data-turno">${isoLisboa(p)}</span>`;
   const novoUpdate = `Atualizada às <b>${formatHora(p)}</b> do dia ${dataFormatada}`;
   if (novoUpdate !== ultimoUpdate) {
     dom.update.innerHTML = novoUpdate;
@@ -869,8 +877,9 @@ function atualizarRelogio(p = partesLisboa()) {
 //   - junto ao 9 e acima do 24: data do PRÓXIMO TURNO, visível das 19h45
 //     até às 9h00
 //   - debaixo do display digital: DATA CIVIL (dia do calendário corrente),
-//     sempre visível; o fundo amarelo aparece só entre 0h e 9h (período
-//     em que o calendário civil já avançou mas o turno ainda é o de ontem)
+//     sempre visível; fundo amarelo entre 0h e 9h (calendário já avançou
+//     mas turno ainda é o de ontem) e fundo azul entre 9h e 24h (data
+//     corrente do turno)
 function atualizarDataProximoTurno(p) {
   const minutosDoDia = p.h * 60 + p.m;
   const inicio = 19 * 60 + 45; // 19h45
@@ -878,10 +887,15 @@ function atualizarDataProximoTurno(p) {
 
   const isoHoje = isoLisboa(p);
 
-  // Data civil debaixo do display: sempre visível; fundo amarelo só 0h-9h.
+  // Data civil debaixo do display: sempre visível.
+  // Fundo amarelo entre 0h e 9h (calendário já avançou, turno ainda é o de
+  // ontem). Fundo azul entre 9h e 24h (data corrente do turno).
   dom.dataCivil.textContent = isoHoje;
-  dom.dataCivilFundo.style.display =
-    (minutosDoDia < fim) ? "" : "none";
+  const corDataCivil = (minutosDoDia < fim) ? "#fff59d" : "#bbdefb";
+  if (corDataCivil !== ultimaCorDataCivil) {
+    dom.dataCivilFundo.setAttribute("fill", corDataCivil);
+    ultimaCorDataCivil = corDataCivil;
+  }
 
   // Data do próximo turno (acima do 24 e junto ao 9): visível 19h45-9h.
   const grupoExt = dom.grupoDataProx;
@@ -914,6 +928,7 @@ let dataServicoAnterior = null;
 let ultimoUpdate = "";
 let ultimoDisponibilidade = "";
 let ultimoPeriodo = "";
+let ultimaCorDataCivil = "";
 
 function tick(dados, p = partesLisboa()) {
   const dataServico = obterDataServico(p);
