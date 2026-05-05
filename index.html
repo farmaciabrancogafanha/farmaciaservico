@@ -175,8 +175,9 @@ a { color:#1976d2; }
    RESPONSIVO — desktop landscape sem scroll; mobile com layout vertical
    ===================================================================== */
 
-/* --- Mobile (<900px): tudo empilhado, scroll permitido --- */
-@media (max-width: 899px) {
+/* --- Mobile/vertical: ativa em ecrãs estreitos OU em ecrãs com altura
+   insuficiente (laptops com baixa resolução vertical, etc.). Permite scroll. --- */
+@media (max-width: 899px), (max-height: 719px) {
   body { background: #eef2f3; }
 
   .container {
@@ -222,8 +223,8 @@ a { color:#1976d2; }
   .footer a { word-break: break-all; }
 }
 
-/* --- Desktop/TV base (≥900px): sem scroll, layout 2 colunas --- */
-@media (min-width: 900px) {
+/* --- Desktop/TV base (≥900px largura E ≥720px altura): sem scroll, layout 2 colunas --- */
+@media (min-width: 900px) and (min-height: 720px) {
   body {
     height: 100vh;
     overflow: hidden;
@@ -248,7 +249,7 @@ a { color:#1976d2; }
   .sub-bloco { margin-bottom: 6px; }
   .farmacia  { padding: 5px 8px; margin: 5px 0; }
   .footer    { margin: 0 12px 8px; }
-  .relogio   { max-width: 200px; }
+  .relogio   { max-width: 180px; }
   .footer-trio { gap: 16px; margin-top: 4px; }
   .footer-esquerda, .footer-direita { min-width: 140px; gap: 8px; font-size: 11px; }
   .footer-meio { gap: 8px; }
@@ -258,19 +259,19 @@ a { color:#1976d2; }
 }
 
 /* --- Desktop médio: 1024–1279 px --- */
-@media (min-width: 1024px) and (max-width: 1279px) {
+@media (min-width: 1024px) and (max-width: 1279px) and (min-height: 720px) {
   .titulo-principal { font-size: 24px; }
   .subtitulo { font-size: 17px; }
   .texto, .sub-bloco, .sub-bloco small, .farmacia { font-size: 14px; }
-  .relogio { max-width: 220px; }
+  .relogio { max-width: 200px; }
 }
 
 /* --- Desktop grande: 1280–1799 px --- */
-@media (min-width: 1280px) and (max-width: 1799px) {
+@media (min-width: 1280px) and (max-width: 1799px) and (min-height: 720px) {
   .titulo-principal { font-size: 26px; }
   .subtitulo { font-size: 19px; }
   .texto, .sub-bloco, .sub-bloco small, .farmacia { font-size: 16px; }
-  .relogio { max-width: 260px; }
+  .relogio { max-width: 230px; }
   .footer-esquerda, .footer-direita { font-size: 13px; gap: 12px; }
   .footer-meio { gap: 12px; }
   .centro { font-size: 13px; }
@@ -278,7 +279,7 @@ a { color:#1976d2; }
 }
 
 /* --- TV: 1800 px+ --- */
-@media (min-width: 1800px) {
+@media (min-width: 1800px) and (min-height: 720px) {
   .titulo-principal { font-size: 30px; }
   .subtitulo { font-size: 22px; }
   .cruz { width: 42px; height: 42px; }
@@ -286,7 +287,7 @@ a { color:#1976d2; }
   .container { padding: 12px 18px; gap: 16px; }
   .coluna { padding: 14px 18px; }
   .farmacia { padding: 8px 10px; margin: 8px 0; }
-  .relogio { max-width: 310px; }
+  .relogio { max-width: 270px; }
   .footer-esquerda, .footer-direita { font-size: 15px; gap: 14px; min-width: 220px; }
   .footer-meio { gap: 14px; }
   .centro { font-size: 15px; }
