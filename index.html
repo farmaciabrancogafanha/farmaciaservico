@@ -424,15 +424,26 @@ a { color:#1976d2; }
       <!-- Eixo central -->
       <circle cx="100" cy="100" r="4" fill="black"/>
 
-      <!-- Data do próximo turno (aparece entre as 19h45 e as 9h, junto ao 9 e
-           acima do 24). Visualmente igual aos <mark> do cabeçalho: fundo
-           amarelo, texto preto bold. -->
+      <!-- Datas à volta do mostrador (visíveis das 19h45 às 9h):
+           - em cima do 24: amarelo (próximo turno) — uma única data
+           - ao lado do 9: amarelo (próximo turno) + azul (turno actual),
+             posicionados a igual distância horizontal da circunferência,
+             pelo que não ficam alinhados pelo mesmo x: a azul (mais abaixo)
+             segue a curvatura e fica mais para dentro. -->
       <g id="grupo-data-prox" style="display:none;">
-        <rect x="191" y="163" width="58" height="14" rx="3" fill="#fff59d"/>
-        <text id="data-proximo-turno" x="195" y="170"
+        <!-- Lateral, junto ao 9: amarelo (próximo turno), à altura do 9 -->
+        <rect x="188" y="148" width="58" height="14" rx="3" fill="#fff59d"/>
+        <text id="data-proximo-turno" x="192" y="155"
               text-anchor="start" dominant-baseline="central"
               font-family="Arial, sans-serif"
               font-size="8" font-weight="bold" fill="black"></text>
+        <!-- Lateral, junto ao 9: azul (turno actual), abaixo do amarelo -->
+        <rect x="173" y="167" width="58" height="14" rx="3" fill="#bbdefb"/>
+        <text id="data-turno-actual" x="177" y="174"
+              text-anchor="start" dominant-baseline="central"
+              font-family="Arial, sans-serif"
+              font-size="8" font-weight="bold" fill="black"></text>
+        <!-- Topo, em cima do 24: amarelo (próximo turno), única data -->
         <rect x="71" y="-15" width="58" height="14" rx="3" fill="#fff59d"/>
         <text id="data-proximo-turno-topo" x="100" y="-8"
               text-anchor="middle" dominant-baseline="central"
@@ -559,6 +570,7 @@ const dom = {
   grupoDataProx:        document.getElementById("grupo-data-prox"),
   dataProximoTurno:     document.getElementById("data-proximo-turno"),
   dataProximoTurnoTopo: document.getElementById("data-proximo-turno-topo"),
+  dataTurnoActual:      document.getElementById("data-turno-actual"),
 };
 
 // =====================================================================
@@ -904,13 +916,16 @@ function atualizarRelogio(p = partesLisboa()) {
   atualizarDataProximoTurno(p);
 }
 
-// Mostra a data do próximo "9h da manhã" em três sítios do relógio:
-//   - junto ao 9 e acima do 24: data do PRÓXIMO TURNO, visível das 19h45
-//     até às 9h00
-//   - debaixo do display digital: DATA CIVIL (dia do calendário corrente),
-//     sempre visível; fundo amarelo entre 0h e 9h (calendário já avançou
-//     mas turno ainda é o de ontem) e fundo azul entre 9h e 24h (data
-//     corrente do turno)
+// Mostra datas à volta do mostrador:
+//   - em cima do 24: data do PRÓXIMO turno (amarelo) — única data
+//   - ao lado do 9 (acima): data do PRÓXIMO turno (amarelo)
+//   - ao lado do 9 (abaixo): data do TURNO ACTUAL (azul); fica mais para
+//     dentro porque segue a curvatura do mostrador
+// Todas visíveis das 19h45 até às 9h00 do dia seguinte (transição de turno).
+// Adicionalmente, debaixo do display digital aparece sempre a DATA CIVIL
+// (calendário corrente). O fundo dessa data é amarelo entre 0h e 9h
+// (calendário já avançou mas turno ainda é o de ontem) e azul entre 9h e 24h
+// (data corrente do turno).
 function atualizarDataProximoTurno(p) {
   const minutosDoDia = p.h * 60 + p.m;
   const inicio = 19 * 60 + 45; // 19h45
@@ -942,8 +957,12 @@ function atualizarDataProximoTurno(p) {
     ? adicionarDias(isoHoje, 1)
     : isoHoje;
 
+  // Turno actual: dia em que o turno começou (9h). É a "data de serviço".
+  const dataTurnoActual = obterDataServico(p);
+
   dom.dataProximoTurno.textContent = dataProxima;
   dom.dataProximoTurnoTopo.textContent = dataProxima;
+  dom.dataTurnoActual.textContent = dataTurnoActual;
   grupoExt.style.display = "";
 }
 
