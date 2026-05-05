@@ -156,20 +156,27 @@ mark {
   min-width:200px;
   text-align:center;
 }
-.qr { text-align:center; }
-.qr img { width:160px; }
-.qr .scan-me, .qr .esta-aqui {
-  font-weight:bold;
-  margin-bottom:16px;
+/* QR layout: o balão (à esquerda, opcional) e a imagem do QR (centro)
+   numa grid 1fr auto 1fr, para que a imagem fique sempre centrada
+   horizontalmente na coluna, independentemente da existência ou
+   tamanho do balão. */
+.qr {
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+  align-items:center;
+  column-gap:10px;
 }
-.qr .esta-aqui .balao {
+.qr > img { grid-column:2; width:160px; }
+.qr > .esta-aqui {
+  grid-column:1;
+  justify-self:end;
+  font-weight:bold;
+}
+.qr .balao {
+  width:75px;
   height:auto;
   display:block;
-  margin:0 auto;
 }
-/* Por defeito (mobile) mostra a versão vertical (ponta para baixo) */
-.qr .esta-aqui .balao-v { width:60px; }
-.qr .esta-aqui .balao-h { display:none; }
 
 a { color:#1976d2; }
 
@@ -219,7 +226,6 @@ a { color:#1976d2; }
   .footer-direita  { order: 2; justify-self: center; }
 
   .relogio { max-width: 220px; }
-  .qr img { width: 160px; }
 
   /* Quebra forçada para o link ficar legível em ecrãs estreitos */
   .footer a { word-break: break-all; }
@@ -274,27 +280,9 @@ a { color:#1976d2; }
   .footer-direita > .qr  { grid-column: 3; grid-row: 1; align-self: center; min-width: 0; }
   .footer-direita > a    { grid-column: 3; grid-row: 2; min-width: 0; }
 
-  /* Site QR: balão "YOU ARE HERE" à esquerda, imagem à direita.
-     A ordem visual segue a ordem do DOM (balão antes da imagem); em
-     mobile, com flex-direction: column, o balão fica naturalmente por
-     cima da imagem. */
-  .footer-esquerda > .qr {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-  }
-  /* Em desktop, mostra o balão horizontal (ponta para a esquerda) e
-     esconde o vertical. A margem inferior deixa de fazer sentido. */
-  .qr .esta-aqui { margin-bottom: 0; }
-  .qr .esta-aqui .balao-v { display: none; }
-  .qr .esta-aqui .balao-h { display: block; width: 75px; }
-
   .footer-esquerda, .footer-direita { font-size: 11px; }
   .centro { font-size: 11px; }
-  .qr img    { width: 80px; }
-  .qr .scan-me { font-size: 11px; }
+  .qr > img { width: 80px; }
 }
 
 /* --- Desktop médio: 1024–1279 px --- */
@@ -314,8 +302,8 @@ a { color:#1976d2; }
   .footer-trio { row-gap: 12px; }
   .footer-esquerda, .footer-direita { font-size: 13px; }
   .centro { font-size: 13px; }
-  .qr img { width: 110px; }
-  .qr .esta-aqui .balao-h { width: 95px; }
+  .qr > img { width: 110px; }
+  .qr .balao { width: 95px; }
 }
 
 /* --- TV: 1800 px+ --- */
@@ -331,8 +319,8 @@ a { color:#1976d2; }
   .footer-trio { row-gap: 14px; }
   .footer-esquerda, .footer-direita { font-size: 15px; min-width: 220px; }
   .centro { font-size: 15px; }
-  .qr img { width: 130px; }
-  .qr .esta-aqui .balao-h { width: 110px; }
+  .qr > img { width: 130px; }
+  .qr .balao { width: 110px; }
 }
 </style>
 </head>
@@ -385,14 +373,7 @@ a { color:#1976d2; }
   <div class="footer-esquerda">
     <div class="qr">
       <div class="esta-aqui" aria-label="Está aqui">
-        <svg class="balao balao-v" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" role="img">
-          <circle cx="50" cy="50" r="45" fill="#d32f2f"/>
-          <polygon points="35,90 65,90 50,115" fill="#d32f2f"/>
-          <text x="50" y="40" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-weight="bold" font-size="16">YOU</text>
-          <text x="50" y="58" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-weight="bold" font-size="16">ARE</text>
-          <text x="50" y="76" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-weight="bold" font-size="16">HERE</text>
-        </svg>
-        <svg class="balao balao-h" viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg" role="img">
+        <svg class="balao" viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg" role="img">
           <circle cx="45" cy="50" r="45" fill="#d32f2f"/>
           <polygon points="120,50 90,35 90,65" fill="#d32f2f"/>
           <text x="45" y="40" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-weight="bold" font-size="16">YOU</text>
