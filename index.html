@@ -212,10 +212,10 @@ a { color:#1976d2; }
     width: 100%;
     gap: 12px;
   }
-  /* No desktop, esquerda = Linktree, direita = Site. No mobile queremos
-     Site primeiro, Linktree depois. */
-  .footer-esquerda { order: 2; justify-self: center; }
-  .footer-direita  { order: 1; justify-self: center; }
+  /* No desktop, esquerda = Site, direita = Linktree. No mobile queremos
+     Site primeiro, Linktree depois — ordem natural do HTML. */
+  .footer-esquerda { order: 1; justify-self: center; }
+  .footer-direita  { order: 2; justify-self: center; }
 
   .relogio { max-width: 220px; }
   .relogio-wrapper { margin: 0; }
@@ -347,10 +347,19 @@ a { color:#1976d2; }
 
   <div class="footer-esquerda">
     <div class="qr">
-      <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://linktr.ee/farmaciabrancogafanha" alt="QR code para abrir o Linktree da Farmácia Branco">
+      <div class="esta-aqui" aria-label="Está aqui">
+        <svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" role="img">
+          <circle cx="50" cy="50" r="45" fill="#d32f2f"/>
+          <polygon points="35,90 65,90 50,115" fill="#d32f2f"/>
+          <text x="50" y="40" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-weight="bold" font-size="16">YOU</text>
+          <text x="50" y="58" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-weight="bold" font-size="16">ARE</text>
+          <text x="50" y="76" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-weight="bold" font-size="16">HERE</text>
+        </svg>
+      </div>
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://farmaciaservicoconcelhosilhavoeaveiro.netlify.app/" alt="QR code para abrir o site das farmácias de serviço">
     </div>
-    <a href="https://linktr.ee/farmaciabrancogafanha" target="_blank" rel="noopener noreferrer">
-      https://linktr.ee/farmaciabrancogafanha
+    <a href="https://farmaciaservicoconcelhosilhavoeaveiro.netlify.app/" target="_blank" rel="noopener noreferrer">
+      https://farmaciaservicoconcelhosilhavoeaveiro.netlify.app/
     </a>
   </div>
 
@@ -419,19 +428,10 @@ a { color:#1976d2; }
 
   <div class="footer-direita">
     <div class="qr">
-      <div class="esta-aqui" aria-label="Está aqui">
-        <svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" role="img">
-          <circle cx="50" cy="50" r="45" fill="#d32f2f"/>
-          <polygon points="35,90 65,90 50,115" fill="#d32f2f"/>
-          <text x="50" y="40" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-weight="bold" font-size="16">YOU</text>
-          <text x="50" y="58" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-weight="bold" font-size="16">ARE</text>
-          <text x="50" y="76" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-weight="bold" font-size="16">HERE</text>
-        </svg>
-      </div>
-      <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://farmaciaservicoconcelhosilhavoeaveiro.netlify.app/" alt="QR code para abrir o site das farmácias de serviço">
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://linktr.ee/farmaciabrancogafanha" alt="QR code para abrir o Linktree da Farmácia Branco">
     </div>
-    <a href="https://farmaciaservicoconcelhosilhavoeaveiro.netlify.app/" target="_blank" rel="noopener noreferrer">
-      https://farmaciaservicoconcelhosilhavoeaveiro.netlify.app/
+    <a href="https://linktr.ee/farmaciabrancogafanha" target="_blank" rel="noopener noreferrer">
+      https://linktr.ee/farmaciabrancogafanha
     </a>
   </div>
 
