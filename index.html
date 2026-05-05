@@ -274,12 +274,13 @@ a { color:#1976d2; }
   .footer-direita > .qr  { grid-column: 3; grid-row: 1; align-self: center; min-width: 0; }
   .footer-direita > a    { grid-column: 3; grid-row: 2; min-width: 0; }
 
-  /* Site QR: imagem à esquerda, balão "YOU ARE HERE" à direita.
-     row-reverse porque no DOM o balão vem antes da imagem (necessário
-     para o mobile manter o balão por cima). */
+  /* Site QR: balão "YOU ARE HERE" à esquerda, imagem à direita.
+     A ordem visual segue a ordem do DOM (balão antes da imagem); em
+     mobile, com flex-direction: column, o balão fica naturalmente por
+     cima da imagem. */
   .footer-esquerda > .qr {
     display: flex;
-    flex-direction: row-reverse;
+    flex-direction: row;
     align-items: center;
     justify-content: center;
     gap: 10px;
@@ -392,11 +393,11 @@ a { color:#1976d2; }
           <text x="50" y="76" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-weight="bold" font-size="16">HERE</text>
         </svg>
         <svg class="balao balao-h" viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg" role="img">
-          <circle cx="75" cy="50" r="45" fill="#d32f2f"/>
-          <polygon points="0,50 30,35 30,65" fill="#d32f2f"/>
-          <text x="75" y="40" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-weight="bold" font-size="16">YOU</text>
-          <text x="75" y="58" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-weight="bold" font-size="16">ARE</text>
-          <text x="75" y="76" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-weight="bold" font-size="16">HERE</text>
+          <circle cx="45" cy="50" r="45" fill="#d32f2f"/>
+          <polygon points="120,50 90,35 90,65" fill="#d32f2f"/>
+          <text x="45" y="40" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-weight="bold" font-size="16">YOU</text>
+          <text x="45" y="58" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-weight="bold" font-size="16">ARE</text>
+          <text x="45" y="76" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-weight="bold" font-size="16">HERE</text>
         </svg>
       </div>
       <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://farmaciaservicoconcelhosilhavoeaveiro.netlify.app/" alt="QR code para abrir o site das farmácias de serviço">
