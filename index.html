@@ -117,14 +117,13 @@ mark {
 
 .centro {
   text-align:center;
-  margin-top:20px;
 }
 
 /* Relógio analógico de 24h */
 .relogio-wrapper {
   display:flex;
   justify-content:center;
-  margin:30px 0;
+  margin:0;
 }
 .relogio {
   width:100%;
@@ -210,13 +209,13 @@ a { color:#1976d2; }
     width: 100%;
     gap: 12px;
   }
+  .footer-meio { gap: 12px; }
   /* No desktop, esquerda = Site, direita = Linktree. No mobile queremos
      Site primeiro, Linktree depois — ordem natural do HTML. */
   .footer-esquerda { order: 1; justify-self: center; }
   .footer-direita  { order: 2; justify-self: center; }
 
   .relogio { max-width: 220px; }
-  .relogio-wrapper { margin: 0; }
   .qr img { width: 160px; }
 
   /* Quebra forçada para o link ficar legível em ecrãs estreitos */
@@ -249,10 +248,10 @@ a { color:#1976d2; }
   .sub-bloco { margin-bottom: 6px; }
   .farmacia  { padding: 5px 8px; margin: 5px 0; }
   .footer    { margin: 0 12px 8px; }
-  .relogio   { max-width: 180px; }
-  .relogio-wrapper { margin: 6px 0; }
+  .relogio   { max-width: 200px; }
   .footer-trio { gap: 16px; margin-top: 4px; }
   .footer-esquerda, .footer-direita { min-width: 140px; gap: 8px; font-size: 11px; }
+  .footer-meio { gap: 8px; }
   .centro { font-size: 11px; }
   .qr img    { width: 80px; }
   .qr .scan-me { font-size: 11px; }
@@ -263,7 +262,7 @@ a { color:#1976d2; }
   .titulo-principal { font-size: 24px; }
   .subtitulo { font-size: 17px; }
   .texto, .sub-bloco, .sub-bloco small, .farmacia { font-size: 14px; }
-  .relogio { max-width: 200px; }
+  .relogio { max-width: 220px; }
 }
 
 /* --- Desktop grande: 1280–1799 px --- */
@@ -271,8 +270,9 @@ a { color:#1976d2; }
   .titulo-principal { font-size: 26px; }
   .subtitulo { font-size: 19px; }
   .texto, .sub-bloco, .sub-bloco small, .farmacia { font-size: 16px; }
-  .relogio { max-width: 230px; }
+  .relogio { max-width: 260px; }
   .footer-esquerda, .footer-direita { font-size: 13px; gap: 12px; }
+  .footer-meio { gap: 12px; }
   .centro { font-size: 13px; }
   .qr img { width: 110px; }
 }
@@ -286,8 +286,9 @@ a { color:#1976d2; }
   .container { padding: 12px 18px; gap: 16px; }
   .coluna { padding: 14px 18px; }
   .farmacia { padding: 8px 10px; margin: 8px 0; }
-  .relogio { max-width: 270px; }
+  .relogio { max-width: 310px; }
   .footer-esquerda, .footer-direita { font-size: 15px; gap: 14px; min-width: 220px; }
+  .footer-meio { gap: 14px; }
   .centro { font-size: 15px; }
   .qr img { width: 130px; }
 }
