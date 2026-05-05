@@ -162,12 +162,14 @@ mark {
   font-weight:bold;
   margin-bottom:16px;
 }
-.qr .esta-aqui svg {
-  width:60px;
+.qr .esta-aqui .balao {
   height:auto;
   display:block;
   margin:0 auto;
 }
+/* Por defeito (mobile) mostra a versão vertical (ponta para baixo) */
+.qr .esta-aqui .balao-v { width:60px; }
+.qr .esta-aqui .balao-h { display:none; }
 
 a { color:#1976d2; }
 
@@ -250,9 +252,45 @@ a { color:#1976d2; }
   .farmacia  { padding: 5px 8px; margin: 5px 0; }
   .footer    { margin: 0 12px 8px; }
   .relogio   { max-width: 180px; }
-  .footer-trio { gap: 16px; margin-top: 4px; }
-  .footer-esquerda, .footer-direita { min-width: 140px; gap: 8px; font-size: 11px; }
-  .footer-meio { gap: 8px; }
+
+  /* Footer-trio passa a ser uma grid 3 colunas × 2 linhas:
+     Linha 1 (QR | Relógio | QR), Linha 2 (URL | Atualizada | URL).
+     Os QRs ficam centrados verticalmente na 1.ª linha → centrados pelo
+     centro do relógio. Os textos da 2.ª linha alinham pela base. */
+  .footer-trio {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    grid-template-rows: auto auto;
+    align-items: end;
+    column-gap: 16px;
+    row-gap: 8px;
+    margin-top: 4px;
+  }
+  .footer-esquerda, .footer-meio, .footer-direita { display: contents; }
+  .footer-esquerda > .qr { grid-column: 1; grid-row: 1; align-self: center; min-width: 0; }
+  .footer-esquerda > a   { grid-column: 1; grid-row: 2; min-width: 0; }
+  .footer-meio > .relogio-wrapper { grid-column: 2; grid-row: 1; }
+  .footer-meio > .centro { grid-column: 2; grid-row: 2; }
+  .footer-direita > .qr  { grid-column: 3; grid-row: 1; align-self: center; min-width: 0; }
+  .footer-direita > a    { grid-column: 3; grid-row: 2; min-width: 0; }
+
+  /* Site QR: imagem à esquerda, balão "YOU ARE HERE" à direita.
+     row-reverse porque no DOM o balão vem antes da imagem (necessário
+     para o mobile manter o balão por cima). */
+  .footer-esquerda > .qr {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  /* Em desktop, mostra o balão horizontal (ponta para a esquerda) e
+     esconde o vertical. A margem inferior deixa de fazer sentido. */
+  .qr .esta-aqui { margin-bottom: 0; }
+  .qr .esta-aqui .balao-v { display: none; }
+  .qr .esta-aqui .balao-h { display: block; width: 75px; }
+
+  .footer-esquerda, .footer-direita { font-size: 11px; }
   .centro { font-size: 11px; }
   .qr img    { width: 80px; }
   .qr .scan-me { font-size: 11px; }
@@ -272,10 +310,11 @@ a { color:#1976d2; }
   .subtitulo { font-size: 19px; }
   .texto, .sub-bloco, .sub-bloco small, .farmacia { font-size: 16px; }
   .relogio { max-width: 230px; }
-  .footer-esquerda, .footer-direita { font-size: 13px; gap: 12px; }
-  .footer-meio { gap: 12px; }
+  .footer-trio { row-gap: 12px; }
+  .footer-esquerda, .footer-direita { font-size: 13px; }
   .centro { font-size: 13px; }
   .qr img { width: 110px; }
+  .qr .esta-aqui .balao-h { width: 95px; }
 }
 
 /* --- TV: 1800 px+ --- */
@@ -288,10 +327,11 @@ a { color:#1976d2; }
   .coluna { padding: 14px 18px; }
   .farmacia { padding: 8px 10px; margin: 8px 0; }
   .relogio { max-width: 270px; }
-  .footer-esquerda, .footer-direita { font-size: 15px; gap: 14px; min-width: 220px; }
-  .footer-meio { gap: 14px; }
+  .footer-trio { row-gap: 14px; }
+  .footer-esquerda, .footer-direita { font-size: 15px; min-width: 220px; }
   .centro { font-size: 15px; }
   .qr img { width: 130px; }
+  .qr .esta-aqui .balao-h { width: 110px; }
 }
 </style>
 </head>
@@ -344,12 +384,19 @@ a { color:#1976d2; }
   <div class="footer-esquerda">
     <div class="qr">
       <div class="esta-aqui" aria-label="Está aqui">
-        <svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" role="img">
+        <svg class="balao balao-v" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" role="img">
           <circle cx="50" cy="50" r="45" fill="#d32f2f"/>
           <polygon points="35,90 65,90 50,115" fill="#d32f2f"/>
           <text x="50" y="40" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-weight="bold" font-size="16">YOU</text>
           <text x="50" y="58" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-weight="bold" font-size="16">ARE</text>
           <text x="50" y="76" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-weight="bold" font-size="16">HERE</text>
+        </svg>
+        <svg class="balao balao-h" viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg" role="img">
+          <circle cx="75" cy="50" r="45" fill="#d32f2f"/>
+          <polygon points="0,50 30,35 30,65" fill="#d32f2f"/>
+          <text x="75" y="40" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-weight="bold" font-size="16">YOU</text>
+          <text x="75" y="58" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-weight="bold" font-size="16">ARE</text>
+          <text x="75" y="76" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-weight="bold" font-size="16">HERE</text>
         </svg>
       </div>
       <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://farmaciaservicoconcelhosilhavoeaveiro.netlify.app/" alt="QR code para abrir o site das farmácias de serviço">
