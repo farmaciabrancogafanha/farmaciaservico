@@ -327,12 +327,26 @@ a { color:#1976d2; }
    DIAGNÓSTICO DE VIEWPORT
    ===================================================================== */
 
-/* Linha permanente sob "Atualizada às...". Subtil, cinzento. */
+/* Linha permanente sob "Atualizada às...". Subtil, cinzento.
+   Em fallback (mobile/baixa altura) fica em fluxo normal.
+   Em desktop/TV é absoluta para não quebrar o alinhamento das bases
+   da linha 2 do grid (URL site | Atualizada | URL Linktree). */
 .update-debug {
   margin-top: 2px;
   font-family: Consolas, 'Courier New', monospace;
   font-size: 11px;
   color: #888;
+}
+@media (min-width: 900px) and (min-height: 720px) {
+  .centro { position: relative; }
+  .update-debug {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 2px;
+    text-align: center;
+  }
 }
 
 /* Overlay fixo no canto superior esquerdo. Escondido por defeito;
