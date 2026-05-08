@@ -186,7 +186,7 @@ a { color:#1976d2; }
 
 /* --- Mobile/vertical: ativa em ecrãs estreitos OU em ecrãs com altura
    insuficiente (laptops com baixa resolução vertical, etc.). Permite scroll. --- */
-@media (max-width: 899px), (max-height: 719px) {
+@media (max-width: 899px), (max-height: 499px) {
   body { background: #eef2f3; }
 
   .container {
@@ -232,7 +232,7 @@ a { color:#1976d2; }
 }
 
 /* --- Desktop/TV base (≥900px largura E ≥720px altura): sem scroll, layout 2 colunas --- */
-@media (min-width: 900px) and (min-height: 720px) {
+@media (min-width: 900px) and (min-height: 500px) {
   body {
     height: 100vh;
     overflow: hidden;
@@ -286,7 +286,7 @@ a { color:#1976d2; }
 }
 
 /* --- Desktop médio: 1024–1279 px --- */
-@media (min-width: 1024px) and (max-width: 1279px) and (min-height: 720px) {
+@media (min-width: 1024px) and (max-width: 1279px) and (min-height: 500px) {
   .titulo-principal { font-size: 24px; }
   .subtitulo { font-size: 17px; }
   .texto, .sub-bloco, .sub-bloco small, .farmacia { font-size: 14px; }
@@ -294,7 +294,7 @@ a { color:#1976d2; }
 }
 
 /* --- Desktop grande: 1280–1799 px --- */
-@media (min-width: 1280px) and (max-width: 1799px) and (min-height: 720px) {
+@media (min-width: 1280px) and (max-width: 1799px) and (min-height: 500px) {
   .titulo-principal { font-size: 26px; }
   .subtitulo { font-size: 19px; }
   .texto, .sub-bloco, .sub-bloco small, .farmacia { font-size: 16px; }
@@ -307,7 +307,7 @@ a { color:#1976d2; }
 }
 
 /* --- TV: 1800 px+ --- */
-@media (min-width: 1800px) and (min-height: 720px) {
+@media (min-width: 1800px) and (min-height: 500px) {
   .titulo-principal { font-size: 30px; }
   .subtitulo { font-size: 22px; }
   .cruz { width: 42px; height: 42px; }
@@ -337,7 +337,7 @@ a { color:#1976d2; }
   font-size: 11px;
   color: #888;
 }
-@media (min-width: 900px) and (min-height: 720px) {
+@media (min-width: 900px) and (min-height: 500px) {
   .centro { position: relative; }
   .update-debug {
     position: absolute;
@@ -1065,10 +1065,10 @@ function tick(dados, p = partesLisboa()) {
   // está visível (ex.: TV a cair em fallback). Actualiza no resize.
   // ---------------------------------------------------------------------
   function nomeBreakpointActivo() {
-    if (matchMedia("(min-width: 1800px) and (min-height: 720px)").matches) return "TV";
-    if (matchMedia("(min-width: 1280px) and (max-width: 1799px) and (min-height: 720px)").matches) return "grande";
-    if (matchMedia("(min-width: 1024px) and (max-width: 1279px) and (min-height: 720px)").matches) return "médio";
-    if (matchMedia("(min-width: 900px) and (min-height: 720px)").matches) return "base";
+    if (matchMedia("(min-width: 1800px) and (min-height: 500px)").matches) return "TV";
+    if (matchMedia("(min-width: 1280px) and (max-width: 1799px) and (min-height: 500px)").matches) return "grande";
+    if (matchMedia("(min-width: 1024px) and (max-width: 1279px) and (min-height: 500px)").matches) return "médio";
+    if (matchMedia("(min-width: 900px) and (min-height: 500px)").matches) return "base";
     return "fallback";
   }
   function infoViewport() {
