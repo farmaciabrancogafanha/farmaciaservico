@@ -322,10 +322,45 @@ a { color:#1976d2; }
   .qr > img { width: 130px; }
   .qr .balao { width: 110px; }
 }
+
+/* =====================================================================
+   DIAGNÓSTICO DE VIEWPORT
+   ===================================================================== */
+
+/* Linha permanente sob "Atualizada às...". Subtil, cinzento. */
+.update-debug {
+  margin-top: 2px;
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 11px;
+  color: #888;
+}
+
+/* Overlay fixo no canto superior esquerdo. Escondido por defeito;
+   activa-se com ?debug=1 na URL (classe .on adicionada via JS). */
+#debug-vp {
+  display: none;
+  position: fixed;
+  top: 6px;
+  left: 6px;
+  z-index: 9999;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.75);
+  color: #ffeb3b;
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 12px;
+  font-weight: bold;
+  border-radius: 3px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+#debug-vp.on { display: block; }
 </style>
 </head>
 
 <body>
+
+<!-- Overlay de diagnóstico de viewport. Activado por ?debug=1 na URL. -->
+<div id="debug-vp"></div>
 
 <div class="container">
 
@@ -467,6 +502,7 @@ a { color:#1976d2; }
 
   <div class="centro">
     <div id="update"></div>
+    <div id="update-debug" class="update-debug"></div>
   </div>
 
   </div><!-- fim footer-meio -->
@@ -556,6 +592,8 @@ const dom = {
   periodo:              document.getElementById("periodo"),
   // Footer central
   update:               document.getElementById("update"),
+  updateDebug:          document.getElementById("update-debug"),
+  debugVp:              document.getElementById("debug-vp"),
   // Relógio: anéis
   setorDecorrido:       document.getElementById("setor-decorrido"),
   setorFalta:           document.getElementById("setor-falta"),
@@ -1006,6 +1044,35 @@ function tick(dados, p = partesLisboa()) {
 
   gerarMarcacoesRelogio();
   atualizarRelogio();
+
+  // ---------------------------------------------------------------------
+  // Diagnóstico de viewport: linha permanente no footer + overlay opcional.
+  // O overlay activa-se com ?debug=1 na URL. Útil quando o footer não
+  // está visível (ex.: TV a cair em fallback). Actualiza no resize.
+  // ---------------------------------------------------------------------
+  function nomeBreakpointActivo() {
+    if (matchMedia("(min-width: 1800px) and (min-height: 720px)").matches) return "TV";
+    if (matchMedia("(min-width: 1280px) and (max-width: 1799px) and (min-height: 720px)").matches) return "grande";
+    if (matchMedia("(min-width: 1024px) and (max-width: 1279px) and (min-height: 720px)").matches) return "médio";
+    if (matchMedia("(min-width: 900px) and (min-height: 720px)").matches) return "base";
+    return "fallback";
+  }
+  function infoViewport() {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const dpr = window.devicePixelRatio || 1;
+    return `${w}×${h} dpr:${dpr} mq:${nomeBreakpointActivo()}`;
+  }
+  function atualizarDebugViewport() {
+    const txt = infoViewport();
+    dom.updateDebug.textContent = txt;
+    dom.debugVp.textContent = txt;
+  }
+  if (new URLSearchParams(location.search).has("debug")) {
+    dom.debugVp.classList.add("on");
+  }
+  atualizarDebugViewport();
+  window.addEventListener("resize", atualizarDebugViewport);
 
   const dados = await carregarDados();
   if (!dados) {
