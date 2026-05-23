@@ -418,6 +418,14 @@ a { color:#1976d2; }
 #horario-overlay .subtitulo        { font-size: clamp(18px, 3vw, 40px); }
 #horario-overlay .cruz             { width: clamp(48px, 6vw, 88px);
                                      height: clamp(48px, 6vw, 88px); }
+/* Linha de diagnóstico no fundo do overlay: ligeiramente maior que o
+   .update-debug do site (que é fixo a 11px) para acompanhar a escala
+   da TV, mas continuando suficientemente subtil. */
+#horario-overlay .update-debug {
+  font-size: clamp(11px, 1.2vw, 18px);
+  text-align: center;
+  margin-top: 8px;
+}
 #horario-overlay table {
   border-collapse: collapse;
   width: 100%;
@@ -1472,9 +1480,16 @@ function inicializarHorario() {
   }
   tabela.appendChild(tbody);
   caixa.appendChild(tabela);
+
+  // Linha de diagnóstico de viewport (cinzento subtil, sob a tabela),
+  // à imagem do .update-debug do site principal. Útil para confirmar
+  // que a TV está a usar o breakpoint pretendido.
+  const debugViewport = document.createElement("div");
+  debugViewport.className = "update-debug";
+  caixa.appendChild(debugViewport);
   document.body.appendChild(overlay);
 
-  return { overlay, thsDias, celulas, zonaRelogio, relogio, hojeIndice: -1 };
+  return { overlay, thsDias, celulas, zonaRelogio, relogio, debugViewport, hojeIndice: -1 };
 }
 
 // Devolve a data ISO (YYYY-MM-DD) da segunda-feira da semana de `p`.
@@ -1665,6 +1680,9 @@ function popularTabelaHorario(refs, calendario, dados, p) {
     const txt = infoViewport();
     dom.updateDebug.textContent = txt;
     dom.debugVp.textContent = txt;
+    if (horarioRefs && horarioRefs.debugViewport) {
+      horarioRefs.debugViewport.textContent = txt;
+    }
   }
   if (new URLSearchParams(location.search).has("debug")) {
     dom.debugVp.classList.add("on");
