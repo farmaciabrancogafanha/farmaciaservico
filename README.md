@@ -3,7 +3,7 @@
 Site estático que mostra em tempo real as farmácias de serviço dos
 concelhos de Ílhavo e Aveiro.
 
-🌐 https://farmaciaservicoconcelhosilhavoeaveiro.netlify.app/
+🌐 https://farmaciaservicoilhavoaveiro.netlify.app/
 
 ## Estrutura
 - `index.html` — site (HTML+CSS+JS vanilla, autocontido)
