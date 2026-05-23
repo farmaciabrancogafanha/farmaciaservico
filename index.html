@@ -462,7 +462,7 @@ a { color:#1976d2; }
   background: #f9fbf9;
   color: #555;
   font-weight: bold;
-  width: 11%;
+  width: 15%;
   border-color: #2e7d32;
 }
 /* Estados das células, baços por defeito. */
@@ -1425,7 +1425,7 @@ function inicializarHorario() {
   for (let h = HORARIO_HORA_INI; h < HORARIO_HORA_FIM; h++) {
     const tr = document.createElement("tr");
     const thH = document.createElement("th");
-    thH.textContent = `${String(h).padStart(2,"0")}–${String(h+1).padStart(2,"0")}`;
+    thH.textContent = `${String(h).padStart(2,"0")}H00 – ${String(h+1).padStart(2,"0")}H00`;
     tr.appendChild(thH);
     const linha = [];
     for (let d = 0; d < 7; d++) {
