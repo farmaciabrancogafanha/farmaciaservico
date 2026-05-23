@@ -468,6 +468,23 @@ a { color:#1976d2; }
 #horario-overlay thead th.passado .data { background: #eeeeee; }
 #horario-overlay thead th.hoje    .data { background: #bbdefb; }
 #horario-overlay thead th.futuro  .data { background: #fff59d; }
+
+/* Chip do tipo de horário (Normal / Alargado / Fechada). Cores
+   alinhadas com a paleta institucional: verde médio para horário
+   regular, laranja (COR_DISP) para regime de disponibilidade, cinza
+   (COR_DECORRIDO) para dia fechado. */
+#horario-overlay thead th .tipo {
+  display: block;
+  width: fit-content;
+  margin: 0.2em auto 0;
+  padding: 0 4px;
+  border-radius: 3px;
+  font-weight: bold;
+  font-size: 0.75em;
+}
+#horario-overlay thead th .tipo.normal   { background: #a5d6a7; color: #000; }
+#horario-overlay thead th .tipo.alargado { background: #ff9800; color: #000; }
+#horario-overlay thead th .tipo.fechada  { background: #9e9e9e; color: #fff; }
 /* Coluna "Hora": fundo neutro, alinhado com o tom das caixas brancas. */
 #horario-overlay tbody th {
   background: #f9fbf9;
@@ -1424,8 +1441,11 @@ function inicializarHorario() {
     const sp = document.createElement("span");
     sp.className = "data";
     th.appendChild(sp);
+    const tipo = document.createElement("span");
+    tipo.className = "tipo";
+    th.appendChild(tipo);
     trHead.appendChild(th);
-    thsDias.push({ th, sp });
+    thsDias.push({ th, sp, tipo });
   }
   thead.appendChild(trHead);
   tabela.appendChild(thead);
@@ -1523,6 +1543,20 @@ function popularTabelaHorario(refs, calendario, dados, p) {
     } else {
       th.classList.add("hoje");
       refs.hojeIndice = i;
+    }
+
+    // Classificar tipo de horário: Fechada / Normal / Alargado.
+    const horario = horariosSemana[i];
+    const tipoSp = refs.thsDias[i].tipo;
+    if (!horario.aberto) {
+      tipoSp.textContent = "Fechada";
+      tipoSp.className = "tipo fechada";
+    } else if (eDisponibilidadeBranco(iso, dados)) {
+      tipoSp.textContent = "Alargado";
+      tipoSp.className = "tipo alargado";
+    } else {
+      tipoSp.textContent = "Normal";
+      tipoSp.className = "tipo normal";
     }
   }
 
