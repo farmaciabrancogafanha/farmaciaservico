@@ -7,7 +7,7 @@
 <meta property="og:title" content="Farmácia de Serviço — Ílhavo e Aveiro">
 <meta property="og:description" content="Farmácias de serviço dos concelhos de Ílhavo e Aveiro. Atualizado em tempo real.">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://farmaciaservicoconcelhosilhavoeaveiro.netlify.app/">
+<meta property="og:url" content="https://farmaciaservicoilhavoaveiro.netlify.app/">
 <!-- Favicon: cruz verde de farmácia, SVG inline (sem ficheiro externo). -->
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='5' fill='%232e7d32'/%3E%3Crect x='5' y='13' width='22' height='6' fill='white'/%3E%3Crect x='13' y='5' width='6' height='22' fill='white'/%3E%3C/svg%3E">
 <title>Farmácia de Serviço — Ílhavo e Aveiro</title>
@@ -430,11 +430,9 @@ a { color:#1976d2; }
           <text x="45" y="76" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-weight="bold" font-size="16">AQUI</text>
         </svg>
       </div>
-      <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://farmaciaservicoconcelhosilhavoeaveiro.netlify.app/" alt="QR code para abrir o site das farmácias de serviço">
+      <img id="qr-site" src="" alt="QR code para abrir o site das farmácias de serviço">
     </div>
-    <a href="https://farmaciaservicoconcelhosilhavoeaveiro.netlify.app/" target="_blank" rel="noopener noreferrer">
-      https://farmaciaservicoconcelhosilhavoeaveiro.netlify.app/
-    </a>
+    <a id="link-site" href="" target="_blank" rel="noopener noreferrer"></a>
   </div>
 
   <!-- Coluna do meio: relógio + Atualizada às... -->
@@ -521,7 +519,7 @@ a { color:#1976d2; }
 
   </div><!-- fim footer-meio -->
 
-  <div class="footer-direita">
+  <div class="footer-direita" id="footer-direita">
     <div class="qr">
       <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://linktr.ee/farmaciabrancogafanha" alt="QR code para abrir o Linktree da Farmácia Branco">
     </div>
@@ -593,6 +591,18 @@ const COR_DISP       = "#ff9800"; // laranja disponibilidade
 const COR_ALERTA     = "#d32f2f"; // vermelho material (texto e anéis)
 const COR_DECORRIDO  = "#9e9e9e"; // cinzento (setor decorrido + estado fechado)
 
+// Hostnames onde o bloco "footer-direita" (Linktree da Farmácia Branco)
+// deve ficar escondido. Default é mostrar; só se esconde se explicitamente
+// listado aqui. Mantém o comportamento antigo seguro caso um novo Site
+// apareça no futuro.
+const HOSTNAMES_SEM_LINKTREE = [
+  "farmaciaservicoaveiroilhavo.netlify.app"
+];
+
+// URL de fallback para o QR e link "Você está aqui" quando a página é
+// aberta fora de HTTP (ex.: file:// em testes locais).
+const URL_FALLBACK = "https://farmaciaservicoilhavoaveiro.netlify.app/";
+
 // =====================================================================
 // REFERÊNCIAS DOM CACHEADAS
 // =====================================================================
@@ -623,6 +633,10 @@ const dom = {
   dataProximoTurno:     document.getElementById("data-proximo-turno"),
   dataProximoTurnoTopo: document.getElementById("data-proximo-turno-topo"),
   dataTurnoActual:      document.getElementById("data-turno-actual"),
+  // Configuração por hostname
+  qrSite:               document.getElementById("qr-site"),
+  linkSite:             document.getElementById("link-site"),
+  footerDireita:        document.getElementById("footer-direita"),
 };
 
 // =====================================================================
@@ -1051,7 +1065,45 @@ function tick(dados, p = partesLisboa()) {
   atualizarVisibilidadeLigar(p);
 }
 
+// =====================================================================
+// CONFIGURAÇÃO POR HOSTNAME
+// =====================================================================
+// O mesmo index.html é servido por vários sites Netlify. Cada um tem
+// hostname diferente. Esta função adapta dinamicamente:
+//   - O QR e o link "Você está aqui" → apontam para o próprio URL
+//   - O bloco Linktree (footer-direita) → escondido em hostnames
+//     listados em HOSTNAMES_SEM_LINKTREE
+// Default: tudo visível. Esconder é opt-in explícito.
+
+function aplicarConfigPorHostname() {
+  // URL onde a página está a correr. Se for file:// (testes locais),
+  // location.origin pode ser "null" ou "file://"; nesse caso usa-se
+  // o URL principal (Site B) como fallback.
+  const origem = location.origin && location.origin.startsWith("http")
+    ? location.origin + "/"
+    : URL_FALLBACK;
+
+  // QR "Você está aqui": gerado via api.qrserver.com com a URL actual.
+  const apiQr = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=";
+  dom.qrSite.src = apiQr + encodeURIComponent(origem);
+
+  // Link "Você está aqui": href e texto visível.
+  dom.linkSite.href = origem;
+  dom.linkSite.textContent = origem;
+
+  // Esconde o bloco Linktree se o hostname estiver na whitelist.
+  if (HOSTNAMES_SEM_LINKTREE.includes(location.hostname)) {
+    dom.footerDireita.style.display = "none";
+  }
+}
+
 (async () => {
+  // Configura o QR "Você está aqui", o link respectivo, e a visibilidade
+  // do Linktree, com base no URL onde a página está a correr. Permite
+  // ter múltiplos sites (Netlify) a servir o mesmo index.html com
+  // comportamentos diferentes, sem branching de código.
+  aplicarConfigPorHostname();
+
   // Cor cinzenta dos setores decorridos (centralizada em COR_DECORRIDO).
   dom.setorDecorrido.setAttribute("fill", COR_DECORRIDO);
   dom.setorDispDecorrido.setAttribute("fill", COR_DECORRIDO);
