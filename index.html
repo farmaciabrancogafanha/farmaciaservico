@@ -507,6 +507,39 @@ a { color:#1976d2; }
 #horario-overlay td.hoje.almoco  { background: #9e9e9e; }
 #horario-overlay td.hoje.fechado { background: #9e9e9e; }
 
+/* Sub-classes da coluna do dia corrente, atribuídas dinamicamente
+   por tickEstadoHoje em função da hora actual. */
+
+/* Hora já passada: célula volta a parecer-se com as dos outros dias
+   (cores baças, sem texto). Especificidade aumentada para vencer as
+   regras .hoje.aberto/.hoje.almoco/.hoje.fechado acima. */
+#horario-overlay td.hoje.hoje-passada {
+  color: transparent;
+  font-weight: normal;
+}
+#horario-overlay td.hoje.hoje-passada.aberto  { background: #c8e6c9; }
+#horario-overlay td.hoje.hoje-passada.almoco  { background: #eeeeee; }
+#horario-overlay td.hoje.hoje-passada.fechado { background: #eeeeee; }
+
+/* Hora em curso: célula viva com linha horizontal preta posicionada
+   verticalmente em proporção aos minutos (via variável CSS gerida
+   por JS). A linha é desenhada com ::after para não interferir com
+   o texto da célula. */
+#horario-overlay td.hoje-actual {
+  position: relative;
+}
+#horario-overlay td.hoje-actual::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: var(--minuto-pct, 0%);
+  height: 2px;
+  background: #000;
+  pointer-events: none;
+  z-index: 1;
+}
+
 /* Zona entre o título e a tabela: espaço onde o relógio digital flutua
    por cima da coluna do dia corrente. A posição horizontal é definida
    por JS (segue a coluna do dia hoje); a vertical é centrada na zona. */
@@ -1513,6 +1546,37 @@ function atualizarRelogioHorario(refs, p) {
   refs.relogio.textContent = `${hh}:${mm}:${ss}`;
 }
 
+// Rótulos das células no dia corrente, em PT-PT.
+const HORARIO_ROTULOS = { aberto: "Aberta", almoco: "Almoço", fechado: "Fechada" };
+
+// Actualiza, a cada tick, a coluna do dia corrente para reflectir o
+// andamento do dia: células de horas já passadas viram baças (igual
+// aos outros dias), a célula da hora em curso recebe uma linha
+// horizontal proporcional aos minutos, células futuras mantêm-se
+// vivas. Função idempotente; chamada a cada segundo.
+function tickEstadoHoje(refs, p) {
+  if (!refs || refs.hojeIndice < 0 || !refs.estadosHoje) return;
+  for (let row = 0; row < refs.celulas.length; row++) {
+    const hCelula = HORARIO_HORA_INI + row;
+    const td = refs.celulas[row][refs.hojeIndice];
+    const estado = refs.estadosHoje[row];
+    td.classList.remove("hoje-passada", "hoje-actual");
+    if (hCelula < p.h) {
+      // Hora já passada: igual aos outros dias.
+      td.classList.add("hoje-passada");
+      td.textContent = "";
+    } else if (hCelula === p.h) {
+      // Hora em curso: célula viva + linha horizontal aos minutos.
+      td.classList.add("hoje-actual");
+      td.textContent = HORARIO_ROTULOS[estado] || "";
+      td.style.setProperty("--minuto-pct", (p.m / 60 * 100) + "%");
+    } else {
+      // Hora futura: célula viva com rótulo, sem linha.
+      td.textContent = HORARIO_ROTULOS[estado] || "";
+    }
+  }
+}
+
 function popularTabelaHorario(refs, calendario, dados, p) {
   if (!refs) return;
   const isoHoje = `${p.ano}-${String(p.mes).padStart(2,"0")}-${String(p.dia).padStart(2,"0")}`;
@@ -1560,24 +1624,27 @@ function popularTabelaHorario(refs, calendario, dados, p) {
     }
   }
 
-  // Rótulos legíveis para as células do dia corrente, em PT-PT.
-  const ROTULOS = { aberto: "Aberta", almoco: "Almoço", fechado: "Fechada" };
-
   // Corpo: para cada (hora, dia), aplicar classe de estado e destacar
-  // a coluna do dia corrente. Rótulos só aparecem no dia corrente.
+  // a coluna do dia corrente. As células da coluna do dia corrente
+  // levam só a classe base 'hoje' aqui; a sub-classificação cronológica
+  // (passada/em-curso/futura) e o rótulo de texto são geridos por
+  // tickEstadoHoje a cada segundo. Guardamos os estados da coluna do
+  // dia para essa função poder pôr o texto certo sem recalcular.
+  refs.estadosHoje = [];
   for (let row = 0; row < refs.celulas.length; row++) {
     const h = HORARIO_HORA_INI + row;
+    let estadoHojeRow = null;
     for (let i = 0; i < 7; i++) {
       const td = refs.celulas[row][i];
       const estado = estadoCelula(horariosSemana[i], h);
       td.className = estado;
+      td.textContent = "";
       if (isosSemana[i] === isoHoje) {
         td.classList.add("hoje");
-        td.textContent = ROTULOS[estado] || "";
-      } else {
-        td.textContent = "";
+        estadoHojeRow = estado;
       }
     }
+    refs.estadosHoje.push(estadoHojeRow);
   }
 
   // Reposicionar o relógio digital sobre a coluna do dia hoje. Usa
@@ -1737,6 +1804,7 @@ function aplicarVista(overlayMontra, overlayHorario, vista) {
   }
   // Primeira população imediata.
   repopularSeMudarDia(partesLisboa());
+  if (horarioRefs) tickEstadoHoje(horarioRefs, partesLisboa());
 
   // Cada tick: 1 chamada a partesLisboa() partilhada entre todos os
   // componentes (garante coerência temporal).
@@ -1745,7 +1813,10 @@ function aplicarVista(overlayMontra, overlayHorario, vista) {
     tick(dados, p);
     atualizarRelogio(p);
     repopularSeMudarDia(p);
-    if (horarioRefs) atualizarRelogioHorario(horarioRefs, p);
+    if (horarioRefs) {
+      atualizarRelogioHorario(horarioRefs, p);
+      tickEstadoHoje(horarioRefs, p);
+    }
     // Rotação de vistas: decide qual overlay (se algum) está visível.
     if (temMontra || temHorario) {
       const ctx = {
