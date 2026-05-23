@@ -370,32 +370,18 @@ a { color:#1976d2; }
 #debug-vp.on { display: block; }
 
 /* =====================================================================
-   OVERLAYS DE ROTAÇÃO (montra e horário)
+   OVERLAY DO HORÁRIO SEMANAL (?horario=1)
    ===================================================================== */
-/* Ambos os overlays ocupam o viewport todo, fixos, com transição de
-   opacidade de 500ms. Só são injectados no DOM se os respectivos
-   parâmetros (?montra=1, ?horario=1) estiverem na URL. */
+/* O overlay é fixo, ocupa o viewport todo, e fica sempre visível
+   enquanto o parâmetro ?horario=1 estiver na URL. Pensado para uma TV
+   dedicada — sem alternância com a vista principal. */
 
-#montra-overlay,
 #horario-overlay {
   position: fixed;
   inset: 0;
-  opacity: 0;
-  transition: opacity 500ms;
   z-index: 9999;
   pointer-events: none;
-  background: white;
-}
-#montra-overlay.visivel,
-#horario-overlay.visivel { opacity: 1; }
-
-/* Overlay do cartaz 1400 SAFE: imagem ocupa o ecrã com object-fit
-   contain (mantém proporção do cartaz, com bandas brancas laterais). */
-#montra-overlay img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  display: block;
+  background: #eef2f3;
 }
 
 /* Overlay do horário: tabela tipo horário escolar EB2,3, com identidade
@@ -409,7 +395,6 @@ a { color:#1976d2; }
   justify-content: center;
   padding: 20px;
   box-sizing: border-box;
-  background: #eef2f3;
   font-family: Arial, sans-serif;
 }
 #horario-overlay .caixa {
@@ -424,12 +409,21 @@ a { color:#1976d2; }
   flex-direction: column;
   overflow: hidden;
 }
+/* Tamanhos amplificados para o cabeçalho dentro do overlay, calibrados
+   para leitura à distância na TV. Sobrepõem-se às media queries globais
+   das classes .titulo-principal e .subtitulo, que foram desenhadas para
+   um viewport CSS normal mas tornam-se pequenas para uma TV em modo
+   quiosque (DPR alto, viewport CSS efectivo menor que o ecrã físico). */
+#horario-overlay .titulo-principal { font-size: clamp(24px, 4vw, 56px); }
+#horario-overlay .subtitulo        { font-size: clamp(18px, 3vw, 40px); }
+#horario-overlay .cruz             { width: clamp(48px, 6vw, 88px);
+                                     height: clamp(48px, 6vw, 88px); }
 #horario-overlay table {
   border-collapse: collapse;
   width: 100%;
   flex: 1;
   table-layout: fixed;
-  font-size: clamp(11px, 1.4vw, 20px);
+  font-size: clamp(14px, 2.4vw, 32px);
   line-height: 1.3;
 }
 #horario-overlay th,
@@ -556,7 +550,7 @@ a { color:#1976d2; }
   color: #ff2a2a;
   font-family: Consolas, "Courier New", monospace;
   font-weight: bold;
-  font-size: clamp(14px, 2.2vw, 28px);
+  font-size: clamp(18px, 3.4vw, 42px);
   padding: 3px 10px;
   border-radius: 3px;
   white-space: nowrap;
@@ -798,27 +792,11 @@ const HOSTNAMES_SEM_LINKTREE = [
 // aberta fora de HTTP (ex.: file:// em testes locais).
 const URL_FALLBACK = "https://farmaciaservicoilhavoaveiro.netlify.app/";
 
-// Overlay da montra (?montra=1): janela horária e ficheiro do cartaz.
-const MONTRA_HORA_ON  = 21;
-const MONTRA_HORA_OFF = 9;
-const MONTRA_IMG_SRC  = "1400.png";
-
 // Overlay do horário (?horario=1): tabela 8h–22h × Seg–Dom.
 const HORARIO_URL_DADOS  = "calendario.json";
 const HORARIO_HORA_INI   = 8;   // primeira linha: 08–09
 const HORARIO_HORA_FIM   = 22;  // última linha: 21–22
 const HORARIO_DIAS_NOMES = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
-
-// Rotação de vistas (quando ?montra=1 e/ou ?horario=1 estão activos):
-// ciclos em segundos. Posição dentro do ciclo determina qual vista
-// mostrar. Lógica detalhada em determinarVistaActual().
-const ROT_CICLO_DIA       = 60;  // 9h–21h fora do almoço
-const ROT_CICLO_NOITE     = 60;  // 21h–9h
-const ROT_CICLO_ALMOCO    = 30;  // almoço de dias abertos
-const ROT_DIA_SITE_ATE    = 40;  // 0..39 site, 40..59 horário (ciclo 60)
-const ROT_NOITE_SITE_ATE  = 40;  // 0..39 site, 40..49 cartaz, 50..59 horário
-const ROT_NOITE_CARTAZ_ATE= 50;
-const ROT_ALMOCO_SITE_ATE = 15;  // 0..14 site, 15..29 horário
 
 // =====================================================================
 // REFERÊNCIAS DOM CACHEADAS
@@ -1406,14 +1384,6 @@ function estadoCelula(horario, h) {
   return "fechado";
 }
 
-// Está agora dentro do intervalo de almoço (apenas em dias abertos)?
-function estaEmAlmocoAgora(p, calendario, dados) {
-  const iso = `${p.ano}-${String(p.mes).padStart(2,"0")}-${String(p.dia).padStart(2,"0")}`;
-  const h = horarioBrancoDia(iso, calendario, dados);
-  if (!h.aberto || !h.almoco) return false;
-  return p.h >= h.almoco[0] && p.h < h.almoco[1];
-}
-
 // Cria o overlay do horário (tabela vazia) e injecta no body se
 // ?horario=1. Devolve referências para população posterior.
 function inicializarHorario() {
@@ -1653,69 +1623,6 @@ function popularTabelaHorario(refs, calendario, dados, p) {
   requestAnimationFrame(() => posicionarRelogioHorario(refs));
 }
 
-// =====================================================================
-// OVERLAY DA MONTRA (?montra=1)
-// =====================================================================
-// Cria o overlay do cartaz 1400 SAFE no DOM se ?montra=1. Devolve o
-// elemento ou null. A visibilidade é controlada pela rotação central.
-
-function inicializarMontra() {
-  if (!new URLSearchParams(location.search).has("montra")) return null;
-  const overlay = document.createElement("div");
-  overlay.id = "montra-overlay";
-  overlay.setAttribute("aria-hidden", "true");
-  const img = document.createElement("img");
-  img.src = MONTRA_IMG_SRC;
-  img.alt = "Linha 1400 — Serviço de Assistência Farmacêutica";
-  overlay.appendChild(img);
-  document.body.appendChild(overlay);
-  return overlay;
-}
-
-// =====================================================================
-// ROTAÇÃO DE VISTAS
-// =====================================================================
-// Decide qual vista mostrar em cada segundo, com base na hora do dia
-// e nos parâmetros activos. Vistas possíveis: "site", "cartaz",
-// "horario". O ciclo é determinístico (baseado no tempo Lisboa), por
-// isso várias TVs ficam sincronizadas sem precisar de comunicação.
-
-function determinarVistaActual(p, ctx) {
-  const s = p.s;
-  // 1) Almoço (apenas em dias abertos): 15s site + 15s horário.
-  //    Se não houver overlay de horário, fica sempre site.
-  if (ctx.almocoAgora) {
-    if (!ctx.temHorario) return "site";
-    return (s % ROT_CICLO_ALMOCO) < ROT_ALMOCO_SITE_ATE ? "site" : "horario";
-  }
-  // 2) 9h–21h fora do almoço: 40s site + 20s horário.
-  if (p.h >= 9 && p.h < 21) {
-    if (!ctx.temHorario) return "site";
-    return (s % ROT_CICLO_DIA) < ROT_DIA_SITE_ATE ? "site" : "horario";
-  }
-  // 3) 21h–9h: cenário nocturno, ciclo 60s.
-  //    Quatro combinações possíveis de overlays activos:
-  if (!ctx.temMontra && !ctx.temHorario) return "site";
-  if (ctx.temMontra && !ctx.temHorario) {
-    // 50s site + 10s cartaz (comportamento da TV que só tem montra)
-    return s < 50 ? "site" : "cartaz";
-  }
-  if (!ctx.temMontra && ctx.temHorario) {
-    // 50s site + 10s horário
-    return s < 50 ? "site" : "horario";
-  }
-  // Ambos: 40s site + 10s cartaz + 10s horário
-  if (s < ROT_NOITE_SITE_ATE)   return "site";
-  if (s < ROT_NOITE_CARTAZ_ATE) return "cartaz";
-  return "horario";
-}
-
-// Aplica a vista decidida ao DOM, alternando opacidade dos overlays.
-function aplicarVista(overlayMontra, overlayHorario, vista) {
-  if (overlayMontra)  overlayMontra .classList.toggle("visivel", vista === "cartaz");
-  if (overlayHorario) overlayHorario.classList.toggle("visivel", vista === "horario");
-}
-
 (async () => {
   // Configura o QR "Você está aqui", o link respectivo, e a visibilidade
   // do Linktree, com base no URL onde a página está a correr. Permite
@@ -1723,13 +1630,11 @@ function aplicarVista(overlayMontra, overlayHorario, vista) {
   // comportamentos diferentes, sem branching de código.
   aplicarConfigPorHostname();
 
-  // Inicializa overlays opcionais (criados no DOM apenas se os
-  // respectivos parâmetros estiverem na URL: ?montra=1, ?horario=1).
-  const overlayMontra  = inicializarMontra();
+  // Inicializa o overlay do horário (criado no DOM apenas se ?horario=1
+  // estiver presente na URL). Quando activo, ocupa o ecrã todo de forma
+  // permanente — caso de uso: TV dedicada ao horário semanal.
   const horarioRefs    = inicializarHorario();
-  const overlayHorario = horarioRefs ? horarioRefs.overlay : null;
-  const temMontra  = !!overlayMontra;
-  const temHorario = !!overlayHorario;
+  const temHorario     = !!horarioRefs;
 
   // Cor cinzenta dos setores decorridos (centralizada em COR_DECORRIDO).
   dom.setorDecorrido.setAttribute("fill", COR_DECORRIDO);
@@ -1816,15 +1721,6 @@ function aplicarVista(overlayMontra, overlayHorario, vista) {
     if (horarioRefs) {
       atualizarRelogioHorario(horarioRefs, p);
       tickEstadoHoje(horarioRefs, p);
-    }
-    // Rotação de vistas: decide qual overlay (se algum) está visível.
-    if (temMontra || temHorario) {
-      const ctx = {
-        temMontra,
-        temHorario,
-        almocoAgora: temHorario && estaEmAlmocoAgora(p, calendario, dados),
-      };
-      aplicarVista(overlayMontra, overlayHorario, determinarVistaActual(p, ctx));
     }
   }, 1000);
 })();
