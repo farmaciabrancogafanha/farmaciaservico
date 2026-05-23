@@ -368,6 +368,31 @@ a { color:#1976d2; }
   white-space: nowrap;
 }
 #debug-vp.on { display: block; }
+
+/* =====================================================================
+   OVERLAY DA MONTRA (?montra=1)
+   ===================================================================== */
+/* Cartaz institucional ANF (linha 1400) que entra e sai por cima do
+   site durante a janela 21h00–09h00 (Lisboa), para a TV da montra da
+   Farmácia Branco. Só é activado se a URL contiver ?montra=1 — para os
+   visitantes normais (telemóvel, computador, outras TVs) o overlay
+   não é sequer injectado no DOM. */
+#montra-overlay {
+  position: fixed;
+  inset: 0;
+  background: white;
+  opacity: 0;
+  transition: opacity 500ms;
+  z-index: 9999;
+  pointer-events: none;
+}
+#montra-overlay.visivel { opacity: 1; }
+#montra-overlay img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
 </style>
 </head>
 
@@ -602,6 +627,19 @@ const HOSTNAMES_SEM_LINKTREE = [
 // URL de fallback para o QR e link "Você está aqui" quando a página é
 // aberta fora de HTTP (ex.: file:// em testes locais).
 const URL_FALLBACK = "https://farmaciaservicoilhavoaveiro.netlify.app/";
+
+// Overlay da montra (?montra=1): janela horária em que o cartaz é
+// mostrado, em horas Lisboa. Mostra-se entre HORA_ON e HORA_OFF.
+// Convenção: HORA_ON inclusive, HORA_OFF exclusivo (às 09:00:00
+// passa a esconder). A janela 21h–9h cruza a meia-noite; tratado
+// na função tickMontra.
+const MONTRA_HORA_ON  = 21;
+const MONTRA_HORA_OFF = 9;
+// Ciclo de 60s: aos segundos MONTRA_SEG_ON a 59 mostra cartaz,
+// caso contrário mostra o site. 50→59 = 10s de cartaz por minuto.
+const MONTRA_SEG_ON   = 50;
+// Caminho da imagem do cartaz no repo (raiz, ao lado do index.html).
+const MONTRA_IMG_SRC  = "1400.jpg";
 
 // =====================================================================
 // REFERÊNCIAS DOM CACHEADAS
@@ -1097,12 +1135,53 @@ function aplicarConfigPorHostname() {
   }
 }
 
+// =====================================================================
+// OVERLAY DA MONTRA (?montra=1)
+// =====================================================================
+// Cartaz institucional (1400 SAFE) que entra e sai por cima do site
+// durante a janela 21h00–09h00 (Lisboa), aos segundos 50–59 de cada
+// minuto (10s por minuto). Determinístico: várias TVs em paralelo
+// mostram o cartaz em simultâneo, sem necessidade de sincronização.
+//
+// Só activo se a URL contiver ?montra=1. Caso contrário, o overlay
+// nem sequer é injectado no DOM, e a imagem nunca é carregada.
+
+// Cria o overlay no DOM se ?montra=1 estiver presente na URL.
+// Devolve o elemento criado (ou null se inactivo).
+function inicializarMontra() {
+  if (!new URLSearchParams(location.search).has("montra")) return null;
+  const overlay = document.createElement("div");
+  overlay.id = "montra-overlay";
+  overlay.setAttribute("aria-hidden", "true");
+  const img = document.createElement("img");
+  img.src = MONTRA_IMG_SRC;
+  img.alt = "Linha 1400 — Serviço de Assistência Farmacêutica";
+  overlay.appendChild(img);
+  document.body.appendChild(overlay);
+  return overlay;
+}
+
+// Decide se o overlay deve estar visível neste tick. Chamado uma vez
+// por segundo a partir do mesmo setInterval do relógio.
+function tickMontra(overlay, p) {
+  if (!overlay) return;
+  // Janela 21h–9h cruza a meia-noite: ≥21 OU <9.
+  const naJanela = (p.h >= MONTRA_HORA_ON) || (p.h < MONTRA_HORA_OFF);
+  const naFatia  = (p.s >= MONTRA_SEG_ON);
+  const deveMostrar = naJanela && naFatia;
+  overlay.classList.toggle("visivel", deveMostrar);
+}
+
 (async () => {
   // Configura o QR "Você está aqui", o link respectivo, e a visibilidade
   // do Linktree, com base no URL onde a página está a correr. Permite
   // ter múltiplos sites (Netlify) a servir o mesmo index.html com
   // comportamentos diferentes, sem branching de código.
   aplicarConfigPorHostname();
+
+  // Inicializa o overlay da montra: cria o elemento no DOM se ?montra=1.
+  // Variável fechada na IIFE e usada no setInterval mais abaixo.
+  const overlayMontra = inicializarMontra();
 
   // Cor cinzenta dos setores decorridos (centralizada em COR_DECORRIDO).
   dom.setorDecorrido.setAttribute("fill", COR_DECORRIDO);
@@ -1142,8 +1221,13 @@ function aplicarConfigPorHostname() {
 
   const dados = await carregarDados();
   if (!dados) {
-    // Falha no fetch — mantém o relógio a funcionar sem dados.
-    setInterval(atualizarRelogio, 1000);
+    // Falha no fetch — relógio e overlay da montra continuam a funcionar
+    // sem depender dos dados das farmácias.
+    setInterval(() => {
+      const p = partesLisboa();
+      atualizarRelogio(p);
+      tickMontra(overlayMontra, p);
+    }, 1000);
     return;
   }
   tick(dados);
@@ -1154,6 +1238,7 @@ function aplicarConfigPorHostname() {
     const p = partesLisboa();
     tick(dados, p);
     atualizarRelogio(p);
+    tickMontra(overlayMontra, p);
   }, 1000);
 })();
 
