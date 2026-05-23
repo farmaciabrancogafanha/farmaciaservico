@@ -509,9 +509,9 @@ a { color:#1976d2; }
    curso recebe uma linha horizontal preta proporcional aos minutos.
    As células das horas já passadas ficam com fundo mais baço, mas
    mantêm texto branco bold (a regra .hoje aplica-se sempre). */
-#horario-overlay td.hoje.hoje-passada.aberto  { background: #5a8b5e; }
-#horario-overlay td.hoje.hoje-passada.almoco  { background: #bdbdbd; }
-#horario-overlay td.hoje.hoje-passada.fechado { background: #bdbdbd; }
+#horario-overlay td.hoje.hoje-passada.aberto  { background: #7faa83; }
+#horario-overlay td.hoje.hoje-passada.almoco  { background: #c8c8c8; }
+#horario-overlay td.hoje.hoje-passada.fechado { background: #c8c8c8; }
 #horario-overlay td.hoje-actual {
   position: relative;
 }
@@ -1564,15 +1564,19 @@ const HORARIO_ROTULOS = { aberto: "Aberta", almoco: "Almoço", fechado: "Fechada
 // vivas. Função idempotente; chamada a cada segundo.
 function tickEstadoHoje(refs, p) {
   if (!refs || refs.hojeIndice < 0 || !refs.estadosHoje) return;
+  // Antes das 8h o período útil da tabela ainda não começou; toda a
+  // coluna fica baça. A partir das 8h, cada hora ganha cor viva até
+  // ser ultrapassada, altura em que volta a ficar baça.
+  const antesDoInicio = p.h < HORARIO_HORA_INI;
   for (let row = 0; row < refs.celulas.length; row++) {
     const hCelula = HORARIO_HORA_INI + row;
     const td = refs.celulas[row][refs.hojeIndice];
     const estado = refs.estadosHoje[row];
     td.classList.remove("hoje-actual", "hoje-passada");
     td.textContent = HORARIO_ROTULOS[estado] || "";
-    if (hCelula < p.h) {
-      // Hora já passada do próprio dia: fundo mais baço (mantém texto
-      // branco bold à imagem do chip "Fechou às 21h" do site principal).
+    if (antesDoInicio || hCelula < p.h) {
+      // Hora já passada (ou todo o dia, se ainda antes das 8h): fundo
+      // baço, texto branco bold à imagem do chip "Fechou às 21h".
       td.classList.add("hoje-passada");
     } else if (hCelula === p.h) {
       // Hora em curso: marcar com classe que adiciona linha horizontal
