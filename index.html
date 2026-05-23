@@ -470,7 +470,11 @@ a { color:#1976d2; }
 #horario-overlay td.almoco  { background: #ffe0b2; }
 #horario-overlay td.fechado { background: #eeeeee; }
 /* Estados das células do dia corrente: cores saturadas, com texto
-   branco onde necessário para contraste. */
+   branco a negrito para legibilidade à distância. */
+#horario-overlay td.hoje {
+  color: white;
+  font-weight: bold;
+}
 #horario-overlay td.hoje.aberto  { background: #2e7d32; }
 #horario-overlay td.hoje.almoco  { background: #ff9800; }
 #horario-overlay td.hoje.fechado { background: #9e9e9e; }
@@ -1442,14 +1446,23 @@ function popularTabelaHorario(refs, calendario, dados, p) {
     refs.thsDias[i].th.classList.toggle("hoje", iso === isoHoje);
   }
 
+  // Rótulos legíveis para as células do dia corrente, em PT-PT.
+  const ROTULOS = { aberto: "Aberta", almoco: "Almoço", fechado: "Fechada" };
+
   // Corpo: para cada (hora, dia), aplicar classe de estado e destacar
-  // a coluna do dia corrente.
+  // a coluna do dia corrente. Rótulos só aparecem no dia corrente.
   for (let row = 0; row < refs.celulas.length; row++) {
     const h = HORARIO_HORA_INI + row;
     for (let i = 0; i < 7; i++) {
       const td = refs.celulas[row][i];
-      td.className = estadoCelula(horariosSemana[i], h);
-      if (isosSemana[i] === isoHoje) td.classList.add("hoje");
+      const estado = estadoCelula(horariosSemana[i], h);
+      td.className = estado;
+      if (isosSemana[i] === isoHoje) {
+        td.classList.add("hoje");
+        td.textContent = ROTULOS[estado] || "";
+      } else {
+        td.textContent = "";
+      }
     }
   }
 }
