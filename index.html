@@ -451,9 +451,10 @@ a { color:#1976d2; }
 #horario-overlay thead th.hoje {
   background: #2e7d32;        /* verde pleno no dia corrente */
 }
-/* Span da data: chip arredondado com fundo amarelo (mesma convenção
-   do <mark> no site) para os outros dias, azul (mesma convenção do
-   .data-turno) para o dia corrente. Centrado por baixo do nome do dia. */
+/* Span da data: chip arredondado, com cor de fundo a indicar a posição
+   cronológica do dia na semana. Convenção alinhada com o resto do site:
+   amarelo para futuro (próximo, como o <mark>), azul para hoje (actual,
+   como o .data-turno), cinza para passado (histórico, neutro). */
 #horario-overlay thead th .data {
   display: block;
   width: fit-content;
@@ -463,11 +464,10 @@ a { color:#1976d2; }
   font-weight: bold;
   font-size: 0.85em;
   color: #000;
-  background: #fff59d;
 }
-#horario-overlay thead th.hoje .data {
-  background: #bbdefb;
-}
+#horario-overlay thead th.passado .data { background: #eeeeee; }
+#horario-overlay thead th.hoje    .data { background: #bbdefb; }
+#horario-overlay thead th.futuro  .data { background: #fff59d; }
 /* Coluna "Hora": fundo neutro, alinhado com o tom das caixas brancas. */
 #horario-overlay tbody th {
   background: #f9fbf9;
@@ -1507,15 +1507,23 @@ function popularTabelaHorario(refs, calendario, dados, p) {
     horariosSemana.push(horarioBrancoDia(iso, calendario, dados));
   }
 
-  // Cabeçalho: data por baixo de cada dia, marcar "hoje" e guardar o
-  // índice do dia corrente para o reposicionamento do relógio digital.
+  // Cabeçalho: data por baixo de cada dia, classificar cronologicamente
+  // (passado/hoje/futuro) e guardar o índice do dia corrente para o
+  // reposicionamento do relógio digital.
   refs.hojeIndice = -1;
   for (let i = 0; i < 7; i++) {
     const iso = isosSemana[i];
     refs.thsDias[i].sp.textContent = iso;
-    const ehHoje = iso === isoHoje;
-    refs.thsDias[i].th.classList.toggle("hoje", ehHoje);
-    if (ehHoje) refs.hojeIndice = i;
+    const th = refs.thsDias[i].th;
+    th.classList.remove("passado", "hoje", "futuro");
+    if (iso < isoHoje) {
+      th.classList.add("passado");
+    } else if (iso > isoHoje) {
+      th.classList.add("futuro");
+    } else {
+      th.classList.add("hoje");
+      refs.hojeIndice = i;
+    }
   }
 
   // Rótulos legíveis para as células do dia corrente, em PT-PT.
