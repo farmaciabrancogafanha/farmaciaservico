@@ -424,15 +424,6 @@ a { color:#1976d2; }
   flex-direction: column;
   overflow: hidden;
 }
-#horario-overlay h2 {
-  margin: 0 0 10px 0;
-  padding-bottom: 8px;
-  border-bottom: 2px solid #2e7d32;
-  font-size: clamp(18px, 2.4vw, 32px);
-  font-weight: bold;
-  color: #000;
-  text-align: left;
-}
 #horario-overlay table {
   border-collapse: collapse;
   width: 100%;
@@ -1349,9 +1340,24 @@ function inicializarHorario() {
   caixa.className = "caixa";
   overlay.appendChild(caixa);
 
-  const titulo = document.createElement("h2");
-  titulo.textContent = "Horário Semanal da Farmácia Branco";
-  caixa.appendChild(titulo);
+  // Cabeçalho com a mesma identidade visual dos cabeçalhos das colunas
+  // de farmácia (cruz verde + título principal + subtítulo).
+  const cabec = document.createElement("div");
+  cabec.className = "titulo";
+  const cruz = document.createElement("div");
+  cruz.className = "cruz";
+  const textos = document.createElement("div");
+  const tp = document.createElement("div");
+  tp.className = "titulo-principal";
+  tp.textContent = "Farmácia Branco";
+  const st = document.createElement("div");
+  st.className = "subtitulo";
+  st.textContent = "Horário desta semana";
+  textos.appendChild(tp);
+  textos.appendChild(st);
+  cabec.appendChild(cruz);
+  cabec.appendChild(textos);
+  caixa.appendChild(cabec);
 
   const tabela = document.createElement("table");
 
