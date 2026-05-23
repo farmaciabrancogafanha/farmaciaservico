@@ -398,63 +398,91 @@ a { color:#1976d2; }
   display: block;
 }
 
-/* Overlay do horário: tabela tipo horário escolar EB2,3. */
+/* Overlay do horário: tabela tipo horário escolar EB2,3, com identidade
+   visual alinhada ao resto do site (Arial, verde institucional #2e7d32,
+   fundo #eef2f3, caixa branca arredondada). O dia corrente destaca-se
+   pela saturação plena das cores; os outros dias usam tons pastel. */
 #horario-overlay {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2vh 2vw;
+  padding: 20px;
   box-sizing: border-box;
+  background: #eef2f3;
+  font-family: Arial, sans-serif;
+}
+#horario-overlay .caixa {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  width: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 #horario-overlay h2 {
-  margin: 0 0 1.5vh 0;
-  font-size: clamp(16px, 2.6vw, 36px);
+  margin: 0 0 10px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #2e7d32;
+  font-size: clamp(18px, 2.4vw, 32px);
   font-weight: bold;
-  color: #1b5e20;
-  text-align: center;
+  color: #000;
+  text-align: left;
 }
 #horario-overlay table {
   border-collapse: collapse;
   width: 100%;
-  max-width: 100%;
-  height: auto;
+  flex: 1;
   table-layout: fixed;
-  font-family: Arial, sans-serif;
-  font-size: clamp(10px, 1.3vw, 18px);
+  font-size: clamp(11px, 1.4vw, 20px);
+  line-height: 1.3;
 }
 #horario-overlay th,
 #horario-overlay td {
-  border: 2px solid #000;
+  border: 1px solid #ccc;
   text-align: center;
   vertical-align: middle;
-  padding: 0.4em 0.2em;
+  padding: 0.35em 0.2em;
 }
+/* Cabeçalhos: verde institucional. Cabeçalho do dia corrente tem o
+   verde pleno; os restantes dias têm o verde dessaturado para se
+   integrar com a regra vivo/baço do corpo da tabela. */
 #horario-overlay thead th {
-  background: #2e7d32;
+  background: #a5c9a8;        /* verde dessaturado por defeito */
   color: white;
   font-weight: bold;
-  padding: 0.5em 0.2em;
+  border-color: #2e7d32;
+}
+#horario-overlay thead th.hoje {
+  background: #2e7d32;        /* verde pleno no dia corrente */
 }
 #horario-overlay thead th .data {
   display: block;
   font-weight: normal;
   font-size: 0.85em;
-  opacity: 0.9;
+  opacity: 0.95;
 }
+/* Coluna "Hora": fundo neutro, alinhado com o tom das caixas brancas. */
 #horario-overlay tbody th {
-  background: #f5f5f5;
+  background: #f9fbf9;
+  color: #555;
   font-weight: bold;
-  width: 12%;
+  width: 11%;
+  border-color: #2e7d32;
 }
-#horario-overlay td.aberto  { background: #66bb6a; }
-#horario-overlay td.almoco  { background: #fff176; }
-#horario-overlay td.fechado { background: #bdbdbd; }
-/* Coluna do dia corrente: borda dupla destacada. */
-#horario-overlay .hoje {
-  outline: 4px solid #d32f2f;
-  outline-offset: -3px;
-}
+/* Estados das células, baços por defeito. */
+#horario-overlay td.aberto  { background: #c8e6c9; }
+#horario-overlay td.almoco  { background: #ffe0b2; }
+#horario-overlay td.fechado { background: #eeeeee; }
+/* Estados das células do dia corrente: cores saturadas, com texto
+   branco onde necessário para contraste. */
+#horario-overlay td.hoje.aberto  { background: #2e7d32; }
+#horario-overlay td.hoje.almoco  { background: #ff9800; }
+#horario-overlay td.hoje.fechado { background: #9e9e9e; }
 </style>
 </head>
 
@@ -1315,9 +1343,15 @@ function inicializarHorario() {
   overlay.id = "horario-overlay";
   overlay.setAttribute("aria-hidden", "true");
 
+  // Caixa branca arredondada (mimetiza o estilo das colunas da vista
+  // principal), contendo título + tabela.
+  const caixa = document.createElement("div");
+  caixa.className = "caixa";
+  overlay.appendChild(caixa);
+
   const titulo = document.createElement("h2");
   titulo.textContent = "Horário Semanal da Farmácia Branco";
-  overlay.appendChild(titulo);
+  caixa.appendChild(titulo);
 
   const tabela = document.createElement("table");
 
@@ -1358,7 +1392,7 @@ function inicializarHorario() {
     celulas.push(linha);
   }
   tabela.appendChild(tbody);
-  overlay.appendChild(tabela);
+  caixa.appendChild(tabela);
   document.body.appendChild(overlay);
 
   return { overlay, thsDias, celulas };
