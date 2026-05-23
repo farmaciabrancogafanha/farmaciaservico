@@ -723,10 +723,10 @@ const HORARIO_DIAS_NOMES = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 // Rotação de vistas (quando ?montra=1 e/ou ?horario=1 estão activos):
 // ciclos em segundos. Posição dentro do ciclo determina qual vista
 // mostrar. Lógica detalhada em determinarVistaActual().
-const ROT_CICLO_DIA       = 30;  // 9h–21h fora do almoço
+const ROT_CICLO_DIA       = 60;  // 9h–21h fora do almoço
 const ROT_CICLO_NOITE     = 60;  // 21h–9h
 const ROT_CICLO_ALMOCO    = 30;  // almoço de dias abertos
-const ROT_DIA_SITE_ATE    = 20;  // 0..19 site, 20..29 horário (ciclo 30)
+const ROT_DIA_SITE_ATE    = 40;  // 0..39 site, 40..59 horário (ciclo 60)
 const ROT_NOITE_SITE_ATE  = 40;  // 0..39 site, 40..49 cartaz, 50..59 horário
 const ROT_NOITE_CARTAZ_ATE= 50;
 const ROT_ALMOCO_SITE_ATE = 15;  // 0..14 site, 15..29 horário
@@ -1489,7 +1489,7 @@ function determinarVistaActual(p, ctx) {
     if (!ctx.temHorario) return "site";
     return (s % ROT_CICLO_ALMOCO) < ROT_ALMOCO_SITE_ATE ? "site" : "horario";
   }
-  // 2) 9h–21h fora do almoço: 20s site + 10s horário.
+  // 2) 9h–21h fora do almoço: 40s site + 20s horário.
   if (p.h >= 9 && p.h < 21) {
     if (!ctx.temHorario) return "site";
     return (s % ROT_CICLO_DIA) < ROT_DIA_SITE_ATE ? "site" : "horario";
