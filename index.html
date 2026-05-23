@@ -478,6 +478,30 @@ a { color:#1976d2; }
 #horario-overlay td.hoje.aberto  { background: #2e7d32; }
 #horario-overlay td.hoje.almoco  { background: #ff9800; }
 #horario-overlay td.hoje.fechado { background: #9e9e9e; }
+
+/* Zona entre o título e a tabela: espaço onde o relógio digital flutua
+   por cima da coluna do dia corrente. A posição horizontal é definida
+   por JS (segue a coluna do dia hoje); a vertical é centrada na zona. */
+#horario-overlay .zona-relogio {
+  position: relative;
+  height: clamp(28px, 4.5vh, 56px);
+  margin: 10px 0 6px;
+}
+#horario-overlay .relogio-digital {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: #222;
+  color: #ff2a2a;
+  font-family: Consolas, "Courier New", monospace;
+  font-weight: bold;
+  font-size: clamp(14px, 2.2vw, 28px);
+  padding: 3px 10px;
+  border-radius: 3px;
+  white-space: nowrap;
+  /* left definido por JS, conforme dia corrente */
+  left: 50%;
+}
 </style>
 </head>
 
@@ -1363,6 +1387,17 @@ function inicializarHorario() {
   cabec.appendChild(textos);
   caixa.appendChild(cabec);
 
+  // Zona com o relógio digital, posicionado por cima da coluna do dia
+  // corrente. O relógio flutua em posição absoluta; a sua coluna é
+  // definida em popularTabelaHorario e reajustada no resize.
+  const zonaRelogio = document.createElement("div");
+  zonaRelogio.className = "zona-relogio";
+  const relogio = document.createElement("div");
+  relogio.className = "relogio-digital";
+  relogio.textContent = "--:--:--";
+  zonaRelogio.appendChild(relogio);
+  caixa.appendChild(zonaRelogio);
+
   const tabela = document.createElement("table");
 
   // Cabeçalho: Hora | Seg dd/mm | Ter dd/mm | ...
@@ -1405,7 +1440,7 @@ function inicializarHorario() {
   caixa.appendChild(tabela);
   document.body.appendChild(overlay);
 
-  return { overlay, thsDias, celulas };
+  return { overlay, thsDias, celulas, zonaRelogio, relogio, hojeIndice: -1 };
 }
 
 // Devolve a data ISO (YYYY-MM-DD) da segunda-feira da semana de `p`.
@@ -1424,6 +1459,29 @@ function inicioDaSemanaISO(p) {
 
 // Preenche a tabela com a semana corrente. Idempotente: pode ser
 // chamado várias vezes; sobrescreve o estado anterior.
+// Posiciona horizontalmente o relógio digital por cima da coluna do
+// dia hoje, lendo a posição real da <th> correspondente. Necessário
+// chamar após popular a tabela e sempre que o viewport for redimensionado.
+function posicionarRelogioHorario(refs) {
+  if (!refs || refs.hojeIndice < 0) return;
+  const th = refs.thsDias[refs.hojeIndice] && refs.thsDias[refs.hojeIndice].th;
+  if (!th || !refs.zonaRelogio) return;
+  const rZona = refs.zonaRelogio.getBoundingClientRect();
+  const rTh   = th.getBoundingClientRect();
+  // Centro horizontal da <th> relativo à zona-relógio.
+  const centro = rTh.left - rZona.left + rTh.width / 2;
+  refs.relogio.style.left = centro + "px";
+}
+
+// Actualiza o display do relógio digital no formato hh:mm:ss.
+function atualizarRelogioHorario(refs, p) {
+  if (!refs || !refs.relogio) return;
+  const hh = String(p.h).padStart(2, "0");
+  const mm = String(p.m).padStart(2, "0");
+  const ss = String(p.s).padStart(2, "0");
+  refs.relogio.textContent = `${hh}:${mm}:${ss}`;
+}
+
 function popularTabelaHorario(refs, calendario, dados, p) {
   if (!refs) return;
   const isoHoje = `${p.ano}-${String(p.mes).padStart(2,"0")}-${String(p.dia).padStart(2,"0")}`;
@@ -1438,12 +1496,16 @@ function popularTabelaHorario(refs, calendario, dados, p) {
     horariosSemana.push(horarioBrancoDia(iso, calendario, dados));
   }
 
-  // Cabeçalho: data por baixo de cada dia, e marcar "hoje".
+  // Cabeçalho: data por baixo de cada dia, marcar "hoje" e guardar o
+  // índice do dia corrente para o reposicionamento do relógio digital.
+  refs.hojeIndice = -1;
   for (let i = 0; i < 7; i++) {
     const iso = isosSemana[i];
     const [, mo, d] = iso.split("-");
     refs.thsDias[i].sp.textContent = `${d}/${mo}`;
-    refs.thsDias[i].th.classList.toggle("hoje", iso === isoHoje);
+    const ehHoje = iso === isoHoje;
+    refs.thsDias[i].th.classList.toggle("hoje", ehHoje);
+    if (ehHoje) refs.hojeIndice = i;
   }
 
   // Rótulos legíveis para as células do dia corrente, em PT-PT.
@@ -1465,6 +1527,11 @@ function popularTabelaHorario(refs, calendario, dados, p) {
       }
     }
   }
+
+  // Reposicionar o relógio digital sobre a coluna do dia hoje. Usa
+  // requestAnimationFrame para garantir que o browser já fez o layout
+  // da tabela actualizada antes de medir as posições.
+  requestAnimationFrame(() => posicionarRelogioHorario(refs));
 }
 
 // =====================================================================
@@ -1580,6 +1647,11 @@ function aplicarVista(overlayMontra, overlayHorario, vista) {
   }
   atualizarDebugViewport();
   window.addEventListener("resize", atualizarDebugViewport);
+  // Reposicionar o relógio do horário quando o viewport muda (a
+  // largura das colunas da tabela varia).
+  window.addEventListener("resize", () => {
+    if (horarioRefs) posicionarRelogioHorario(horarioRefs);
+  });
 
   // Carrega farmacias.json e calendario.json em paralelo. O calendário
   // só é estritamente necessário se ?horario=1 estiver activo.
@@ -1621,6 +1693,7 @@ function aplicarVista(overlayMontra, overlayHorario, vista) {
     tick(dados, p);
     atualizarRelogio(p);
     repopularSeMudarDia(p);
+    if (horarioRefs) atualizarRelogioHorario(horarioRefs, p);
     // Rotação de vistas: decide qual overlay (se algum) está visível.
     if (temMontra || temHorario) {
       const ctx = {
