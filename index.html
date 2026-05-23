@@ -511,7 +511,7 @@ a { color:#1976d2; }
    (cores baças, sem texto). Especificidade aumentada para vencer as
    regras .hoje.aberto/.hoje.almoco/.hoje.fechado acima. */
 #horario-overlay td.hoje.hoje-passada {
-  color: transparent;
+  color: #000;
   font-weight: normal;
 }
 #horario-overlay td.hoje.hoje-passada.aberto  { background: #c8e6c9; }
@@ -560,6 +560,43 @@ a { color:#1976d2; }
   /* left definido por JS, conforme dia corrente */
   left: 50%;
 }
+/* =====================================================================
+   MODO COMPACTO PARA VIEWPORT BAIXO (TV em quiosque)
+   =====================================================================
+   A Sony Bravia reporta-se como 960×539 (DPR 2 → 1920×1080 físicos).
+   Em 539px de altura a tabela de 15 linhas não cabe com paddings e
+   margens default. Cortes cirúrgicos para evitar scroll, sem
+   comprometer legibilidade. Aplica-se também ao PC quando a janela
+   está abaixo de 600px de altura. */
+@media (max-height: 600px) {
+  #horario-overlay { padding: 4px; }
+  #horario-overlay .caixa { padding: 6px; }
+  /* Cabeçalho (título + cruz) compacto. */
+  #horario-overlay .titulo { margin-bottom: 4px; gap: 8px; }
+  #horario-overlay .titulo-principal { font-size: 22px; }
+  #horario-overlay .subtitulo        { font-size: 14px; }
+  #horario-overlay .cruz             { width: 32px; height: 32px; }
+  /* Zona do relógio com mais folga vertical para acomodar o relógio
+     sem sobrepor a tabela. */
+  #horario-overlay .zona-relogio {
+    height: 30px;
+    margin: 2px 0;
+  }
+  #horario-overlay .relogio-digital {
+    font-size: clamp(12px, 1.8vw, 22px);
+    padding: 1px 6px;
+  }
+  /* Chips do header da tabela mais compactos. */
+  #horario-overlay thead th .data { margin: 0.15em auto 0; font-size: 0.8em; }
+  #horario-overlay thead th .tipo { margin: 0.1em auto 0; font-size: 0.7em; }
+  /* Células com padding mínimo para caber 15 linhas em 539px. */
+  #horario-overlay td,
+  #horario-overlay th {
+    padding: 0.08em 0.2em;
+  }
+  #horario-overlay table { line-height: 1.15; }
+}
+
 </style>
 </head>
 
@@ -1543,9 +1580,11 @@ function tickEstadoHoje(refs, p) {
     const estado = refs.estadosHoje[row];
     td.classList.remove("hoje-passada", "hoje-actual");
     if (hCelula < p.h) {
-      // Hora já passada: igual aos outros dias.
+      // Hora já passada: fundo pastel + texto escuro normal (mantém o
+      // rótulo visível para que durante todo o dia em vigor se veja
+      // Aberta/Almoço/Fechada, mesmo nas horas que já passaram).
       td.classList.add("hoje-passada");
-      td.textContent = "";
+      td.textContent = HORARIO_ROTULOS[estado] || "";
     } else if (hCelula === p.h) {
       // Hora em curso: célula viva + linha horizontal aos minutos.
       td.classList.add("hoje-actual");
