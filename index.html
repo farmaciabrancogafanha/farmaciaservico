@@ -451,11 +451,22 @@ a { color:#1976d2; }
 #horario-overlay thead th.hoje {
   background: #2e7d32;        /* verde pleno no dia corrente */
 }
+/* Span da data: chip arredondado com fundo amarelo (mesma convenção
+   do <mark> no site) para os outros dias, azul (mesma convenção do
+   .data-turno) para o dia corrente. Centrado por baixo do nome do dia. */
 #horario-overlay thead th .data {
   display: block;
-  font-weight: normal;
+  width: fit-content;
+  margin: 0.25em auto 0;
+  padding: 0 4px;
+  border-radius: 3px;
+  font-weight: bold;
   font-size: 0.85em;
-  opacity: 0.95;
+  color: #000;
+  background: #fff59d;
+}
+#horario-overlay thead th.hoje .data {
+  background: #bbdefb;
 }
 /* Coluna "Hora": fundo neutro, alinhado com o tom das caixas brancas. */
 #horario-overlay tbody th {
@@ -1425,7 +1436,7 @@ function inicializarHorario() {
   for (let h = HORARIO_HORA_INI; h < HORARIO_HORA_FIM; h++) {
     const tr = document.createElement("tr");
     const thH = document.createElement("th");
-    thH.textContent = `${String(h).padStart(2,"0")}H00 – ${String(h+1).padStart(2,"0")}H00`;
+    thH.textContent = `${String(h).padStart(2,"0")}h00 – ${String(h+1).padStart(2,"0")}h00`;
     tr.appendChild(thH);
     const linha = [];
     for (let d = 0; d < 7; d++) {
