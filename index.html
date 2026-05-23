@@ -505,23 +505,13 @@ a { color:#1976d2; }
 #horario-overlay td.hoje.fechado { background: #9e9e9e; }
 
 /* Sub-classes da coluna do dia corrente, atribuídas dinamicamente
-   por tickEstadoHoje em função da hora actual. */
-
-/* Hora já passada: célula volta a parecer-se com as dos outros dias
-   (cores baças, sem texto). Especificidade aumentada para vencer as
-   regras .hoje.aberto/.hoje.almoco/.hoje.fechado acima. */
-#horario-overlay td.hoje.hoje-passada {
-  color: #000;
-  font-weight: normal;
-}
-#horario-overlay td.hoje.hoje-passada.aberto  { background: #c8e6c9; }
-#horario-overlay td.hoje.hoje-passada.almoco  { background: #eeeeee; }
-#horario-overlay td.hoje.hoje-passada.fechado { background: #eeeeee; }
-
-/* Hora em curso: célula viva com linha horizontal preta posicionada
-   verticalmente em proporção aos minutos (via variável CSS gerida
-   por JS). A linha é desenhada com ::after para não interferir com
-   o texto da célula. */
+   por tickEstadoHoje em função da hora actual. A célula da hora em
+   curso recebe uma linha horizontal preta proporcional aos minutos.
+   As células das horas já passadas ficam com fundo mais baço, mas
+   mantêm texto branco bold (a regra .hoje aplica-se sempre). */
+#horario-overlay td.hoje.hoje-passada.aberto  { background: #5a8b5e; }
+#horario-overlay td.hoje.hoje-passada.almoco  { background: #bdbdbd; }
+#horario-overlay td.hoje.hoje-passada.fechado { background: #bdbdbd; }
 #horario-overlay td.hoje-actual {
   position: relative;
 }
@@ -1578,21 +1568,17 @@ function tickEstadoHoje(refs, p) {
     const hCelula = HORARIO_HORA_INI + row;
     const td = refs.celulas[row][refs.hojeIndice];
     const estado = refs.estadosHoje[row];
-    td.classList.remove("hoje-passada", "hoje-actual");
+    td.classList.remove("hoje-actual", "hoje-passada");
+    td.textContent = HORARIO_ROTULOS[estado] || "";
     if (hCelula < p.h) {
-      // Hora já passada: fundo pastel + texto escuro normal (mantém o
-      // rótulo visível para que durante todo o dia em vigor se veja
-      // Aberta/Almoço/Fechada, mesmo nas horas que já passaram).
+      // Hora já passada do próprio dia: fundo mais baço (mantém texto
+      // branco bold à imagem do chip "Fechou às 21h" do site principal).
       td.classList.add("hoje-passada");
-      td.textContent = HORARIO_ROTULOS[estado] || "";
     } else if (hCelula === p.h) {
-      // Hora em curso: célula viva + linha horizontal aos minutos.
+      // Hora em curso: marcar com classe que adiciona linha horizontal
+      // preta cuja posição vertical é proporcional aos minutos.
       td.classList.add("hoje-actual");
-      td.textContent = HORARIO_ROTULOS[estado] || "";
       td.style.setProperty("--minuto-pct", (p.m / 60 * 100) + "%");
-    } else {
-      // Hora futura: célula viva com rótulo, sem linha.
-      td.textContent = HORARIO_ROTULOS[estado] || "";
     }
   }
 }
