@@ -427,19 +427,24 @@ a { color:#1976d2; }
    a tabela esticar. */
 #horario-overlay .footer-overlay {
   flex: 0 0 auto;
-  margin-top: 8px;
-  font-size: clamp(11px, 1.1vw, 16px);
+  margin-top: 16px;
+  font-size: clamp(13px, 1.4vw, 18px);
   color: #333;
 }
-/* Grid 3-colunas para o rodapé. Esquerda alinha à esquerda; meio fica
-   vazio; direita alinha à direita. As classes fo- são exclusivas do
-   overlay, isoladas das regras .footer-* do site principal (que têm
-   media queries com display:contents incompatíveis com esta grid). */
+/* Grid 3-colunas para o rodapé. As colunas laterais recebem mais peso
+   que a coluna central (que está vazia) para acomodar o link textual
+   numa única linha. As classes fo- são exclusivas do overlay, isoladas
+   das regras .footer-* do site principal (que têm media queries com
+   display:contents incompatíveis com esta grid). */
+/* Grid 2-colunas: a coluna central foi eliminada (não havia conteúdo)
+   mas as colunas laterais mantêm o mesmo `justify-self: start / end`
+   do rodapé do site principal — os QRs continuam encostados às margens
+   da caixa, com alinhamento lateral idêntico ao da página principal. */
 #horario-overlay .fo-trio {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  align-items: start;
-  gap: 12px;
+  grid-template-columns: 1fr 1fr;
+  align-items: end;
+  gap: 30px;
 }
 #horario-overlay .fo-esquerda,
 #horario-overlay .fo-direita {
@@ -448,20 +453,25 @@ a { color:#1976d2; }
   align-items: center;
   gap: 6px;
   text-align: center;
+  min-width: 0;
 }
 #horario-overlay .fo-esquerda { justify-self: start; }
 #horario-overlay .fo-direita  { justify-self: end; }
-#horario-overlay .fo-meio     { /* placeholder vazio, ocupa coluna 2 */ }
-/* QR codes do rodapé do overlay: maior no desktop, mais pequenos em
-   viewports apertados, calibrados para leitura à distância da montra. */
+/* Coluna central eliminada do grid; .fo-meio fica vazio e oculto. */
+#horario-overlay .fo-meio     { display: none; }
+/* QR codes do rodapé do overlay: calibrados para a TV (CSS 960×539,
+   DPR 2 → físico 1920×1080) — leitura à distância na montra. */
 #horario-overlay .footer-overlay .qr > img {
-  width: clamp(70px, 8vw, 130px);
+  width: clamp(85px, 9.5vw, 140px);
 }
 #horario-overlay .footer-overlay .qr .balao {
-  width: clamp(45px, 5vw, 75px);
+  width: clamp(58px, 6vw, 85px);
 }
+/* Links em linha única, fonte calibrada para mostrar o URL completo
+   sem quebra em viewports ≥960px de largura (TV em quiosque). */
 #horario-overlay .footer-overlay a {
-  word-break: break-all;
+  white-space: nowrap;
+  font-size: clamp(10.5px, 1.1vw, 15px);
   color: #1976d2;
 }
 #horario-overlay table {
@@ -628,11 +638,11 @@ a { color:#1976d2; }
     padding: 0.08em 0.2em;
   }
   #horario-overlay table { line-height: 1.15; }
-  /* Rodapé do overlay em modo compacto (TV): margem superior reduzida
-     e QRs ligeiramente mais pequenos para manter tudo dentro do ecrã. */
-  #horario-overlay .footer-overlay { margin-top: 4px; }
-  #horario-overlay .footer-overlay .qr > img { width: clamp(60px, 7vw, 100px); }
-  #horario-overlay .footer-overlay .qr .balao { width: clamp(40px, 4.5vw, 65px); }
+  /* Rodapé do overlay em modo compacto (TV 960×539): margem superior
+     reduzida porque o espaço vertical é apertado. Os tamanhos dos QRs
+     e fontes não são reduzidos aqui porque os defaults já estão
+     calibrados precisamente para o viewport CSS da TV. */
+  #horario-overlay .footer-overlay { margin-top: 10px; }
   #horario-overlay .fo-trio { gap: 8px; }
 }
 
