@@ -431,22 +431,27 @@ a { color:#1976d2; }
   font-size: clamp(11px, 1.1vw, 16px);
   color: #333;
 }
-#horario-overlay .footer-trio {
+/* Grid 3-colunas para o rodapé. Esquerda alinha à esquerda; meio fica
+   vazio; direita alinha à direita. As classes fo- são exclusivas do
+   overlay, isoladas das regras .footer-* do site principal (que têm
+   media queries com display:contents incompatíveis com esta grid). */
+#horario-overlay .fo-trio {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   align-items: start;
   gap: 12px;
 }
-#horario-overlay .footer-esquerda,
-#horario-overlay .footer-direita-overlay {
+#horario-overlay .fo-esquerda,
+#horario-overlay .fo-direita {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
   text-align: center;
 }
-#horario-overlay .footer-esquerda { justify-self: start; }
-#horario-overlay .footer-direita-overlay { justify-self: end; }
+#horario-overlay .fo-esquerda { justify-self: start; }
+#horario-overlay .fo-direita  { justify-self: end; }
+#horario-overlay .fo-meio     { /* placeholder vazio, ocupa coluna 2 */ }
 /* QR codes do rodapé do overlay: maior no desktop, mais pequenos em
    viewports apertados, calibrados para leitura à distância da montra. */
 #horario-overlay .footer-overlay .qr > img {
@@ -628,7 +633,7 @@ a { color:#1976d2; }
   #horario-overlay .footer-overlay { margin-top: 4px; }
   #horario-overlay .footer-overlay .qr > img { width: clamp(60px, 7vw, 100px); }
   #horario-overlay .footer-overlay .qr .balao { width: clamp(40px, 4.5vw, 65px); }
-  #horario-overlay .footer-trio { gap: 8px; }
+  #horario-overlay .fo-trio { gap: 8px; }
 }
 
 /* =====================================================================
@@ -1577,14 +1582,15 @@ function inicializarHorario() {
   // Rodapé com QR + link à esquerda (apontando para a página actual do
   // horário) e QR + link à direita (apontando para o Linktree da
   // Farmácia Branco). A coluna do meio fica vazia, à imagem do rodapé
-  // do site principal mas sem o relógio analógico. Reutiliza as
-  // classes .footer-trio, .footer-esquerda, .footer-direita, .qr e
-  // .esta-aqui já definidas para o site principal.
+  // do site principal mas sem o relógio analógico. Classes prefixadas
+  // fo- (footer-overlay) para evitar colisão com regras CSS do site
+  // principal, em particular com a media query que aplica
+  // display:contents a .footer-esquerda/.footer-meio/.footer-direita.
   const footer = document.createElement("div");
   footer.className = "footer-overlay";
   footer.innerHTML = `
-    <div class="footer-trio">
-      <div class="footer-esquerda">
+    <div class="fo-trio">
+      <div class="fo-esquerda">
         <div class="qr">
           <div class="esta-aqui" aria-label="Está aqui">
             <svg class="balao" viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg" role="img">
@@ -1599,8 +1605,8 @@ function inicializarHorario() {
         </div>
         <a class="link-horario" target="_blank" rel="noopener noreferrer"></a>
       </div>
-      <div class="footer-meio"></div>
-      <div class="footer-direita-overlay">
+      <div class="fo-meio"></div>
+      <div class="fo-direita">
         <div class="qr">
           <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://linktr.ee/farmaciabrancogafanha" alt="QR code para o Linktree da Farmácia Branco">
         </div>
@@ -1627,7 +1633,7 @@ function inicializarHorario() {
   // Em hostnames listados em HOSTNAMES_SEM_LINKTREE (sites partilhados
   // com farmácias parceiras), o bloco do Linktree é escondido.
   if (HOSTNAMES_SEM_LINKTREE.includes(location.hostname)) {
-    footer.querySelector(".footer-direita-overlay").style.display = "none";
+    footer.querySelector(".fo-direita").style.display = "none";
   }
 
   // Linha de diagnóstico de viewport. Fica como filho directo do
