@@ -576,6 +576,22 @@ a { color:#1976d2; }
 #horario-overlay td.hoje.hoje-passada.aberto  { background: #c8e6c9; }
 #horario-overlay td.hoje.hoje-passada.almoco  { background: #eeeeee; }
 #horario-overlay td.hoje.hoje-passada.fechado { background: #eeeeee; }
+
+/* Células "extra": horas Aberta que só existem por causa do regime
+   alargado (disponibilidade). Substituem o verde pelo laranja COR_DISP
+   #ff9800, espelhando a cor do "Restam Xh Xmin até ao fecho" no site.
+   Aplica-se a: dias não-corrente, dia corrente vivo, dia corrente
+   passada. A regra precisa de vir DEPOIS das regras .aberto base para
+   ganhar especificidade igual + ordem. */
+#horario-overlay td.aberto.extra                   { background: #ffe0b2; }
+#horario-overlay td.hoje.aberto.extra              { background: #ff9800; }
+#horario-overlay td.hoje.hoje-passada.aberto.extra { background: #ffe0b2; }
+/* Última hora antes do fecho (20h-21h num dia alargado), em curso:
+   vermelho de alerta, espelha o COR_ALERTA do "Restam Xh Xmin até ao
+   fecho" no site principal durante a mesma janela horária. Quando a
+   hora passa, a célula transita para o laranja pastel das outras
+   horas extra passadas (regra anterior). */
+#horario-overlay td.hoje.aberto.extra.ultima-hora  { background: #d32f2f; }
 #horario-overlay td.hoje-actual {
   position: relative;
 }
@@ -1501,6 +1517,44 @@ function estadoCelula(horario, h) {
   return "fechado";
 }
 
+// Devolve o horário Branco para a data iso COMO SE NÃO HOUVESSE
+// disponibilidade nesse dia. Usado para identificar as horas "extra"
+// que aparecem por estarmos em regime alargado — comparativamente ao
+// horário normal do dia da semana.
+function horarioBrancoNormal(iso) {
+  const [y, mo, d] = iso.split("-").map(Number);
+  const ds = new Date(Date.UTC(y, mo - 1, d)).getUTCDay();
+  const eDomingo = ds === 0;
+  const eSabado  = ds === 6;
+  // Domingo (e feriado) sem disp = fechado.
+  if (eDomingo) return { aberto: false };
+  // Sábado sem disp.
+  if (eSabado) return { aberto: true, manha: [9,13], almoco: [13,15], tarde: [15,19] };
+  // Dia útil sem disp.
+  return { aberto: true, manha: [9,13], almoco: [13,14], tarde: [14,20] };
+}
+
+// Para uma hora h num dia iso de regime alargado (disponibilidade),
+// devolve true se essa hora seria FECHADA no horário normal do dia da
+// semana — ou seja, é uma hora extra que só existe por causa da disp.
+// Feriados em dias úteis são considerados como o dia útil normal seria
+// (fechado se feriado nacional caísse num dia útil, mas como o calendário
+// não distingue feriado em dia útil de dia útil normal aqui, usamos
+// apenas o dia da semana como base do "normal").
+function eHoraExtra(iso, h, calendario, dados) {
+  if (!eDisponibilidadeBranco(iso, dados)) return false;
+  const normal = horarioBrancoNormal(iso);
+  // Se o dia seria fechado no normal (domingo) e a hora é Aberta no
+  // alargado, é toda extra.
+  if (!normal.aberto) return true;
+  const estadoNoNormal = estadoCelula(normal, h);
+  // Feriado em dia útil/sábado: no normal estaria fechado todo o dia.
+  // Tratamento simples: se for feriado, todas as horas Abertas são extra.
+  if (eFeriado(iso, calendario)) return true;
+  // Caso geral: hora é extra se no normal seria Fechada (não Aberta nem Almoço).
+  return estadoNoNormal === "fechado";
+}
+
 // Cria o overlay do horário (tabela vazia) e injecta no body se
 // ?horario=1. Devolve referências para população posterior.
 function inicializarHorario() {
@@ -1719,7 +1773,8 @@ function tickEstadoHoje(refs, p) {
     const hCelula = HORARIO_HORA_INI + row;
     const td = refs.celulas[row][refs.hojeIndice];
     const estado = refs.estadosHoje[row];
-    td.classList.remove("hoje-actual", "hoje-passada");
+    const extra  = refs.extrasHoje[row];
+    td.classList.remove("hoje-actual", "hoje-passada", "ultima-hora");
     if (antesDoInicio || hCelula < p.h) {
       // Hora já passada (ou todo o dia, se ainda antes das 8h): a
       // célula fica idêntica às dos outros dias, sem texto. A coluna
@@ -1728,8 +1783,13 @@ function tickEstadoHoje(refs, p) {
       td.textContent = "";
     } else if (hCelula === p.h) {
       // Hora em curso: cor viva + linha horizontal preta proporcional
-      // aos minutos.
+      // aos minutos. Se for a última hora antes do fecho num dia
+      // alargado (20h-21h numa célula extra), assinala-se com classe
+      // adicional para vermelho de alerta — sincroniza com o "Restam
+      // Xh Xmin até ao fecho" do site principal que também fica
+      // vermelho durante esta hora.
       td.classList.add("hoje-actual");
+      if (extra && hCelula === 20) td.classList.add("ultima-hora");
       td.textContent = HORARIO_ROTULOS[estado] || "";
       td.style.setProperty("--minuto-pct", (p.m / 60 * 100) + "%");
     } else {
@@ -1793,20 +1853,29 @@ function popularTabelaHorario(refs, calendario, dados, p) {
   // tickEstadoHoje a cada segundo. Guardamos os estados da coluna do
   // dia para essa função poder pôr o texto certo sem recalcular.
   refs.estadosHoje = [];
+  refs.extrasHoje  = [];
   for (let row = 0; row < refs.celulas.length; row++) {
     const h = HORARIO_HORA_INI + row;
     let estadoHojeRow = null;
+    let extraHojeRow = false;
     for (let i = 0; i < 7; i++) {
       const td = refs.celulas[row][i];
       const estado = estadoCelula(horariosSemana[i], h);
       td.className = estado;
       td.textContent = "";
+      // Marcar células "extra": horas Aberta que só existem por causa
+      // da disponibilidade (não fariam parte do horário normal do dia).
+      // Aplicam-se só a células Aberta (não Almoço, não Fechada).
+      const extra = estado === "aberto" && eHoraExtra(isosSemana[i], h, calendario, dados);
+      if (extra) td.classList.add("extra");
       if (isosSemana[i] === isoHoje) {
         td.classList.add("hoje");
         estadoHojeRow = estado;
+        extraHojeRow = extra;
       }
     }
     refs.estadosHoje.push(estadoHojeRow);
+    refs.extrasHoje.push(extraHojeRow);
   }
 
   // Reposicionar o relógio digital sobre a coluna do dia hoje. Usa
