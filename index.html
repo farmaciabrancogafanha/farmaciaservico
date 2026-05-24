@@ -391,10 +391,10 @@ a { color:#1976d2; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  /* justify-content centra verticalmente quando há folga; quando o
-     conteúdo excede o viewport, o browser cai naturalmente para
-     alinhamento ao topo, e o scroll permite ver o resto. */
-  justify-content: center;
+  /* Alinhamento ao topo (não center): quando o conteúdo é maior que o
+     viewport, o centramento esconderia parte do topo. Com flex-start,
+     o conteúdo começa sempre no topo e o scroll mostra o resto. */
+  justify-content: flex-start;
   padding: 20px;
   box-sizing: border-box;
   font-family: Arial, sans-serif;
@@ -418,17 +418,15 @@ a { color:#1976d2; }
      natural do conteúdo. Se exceder o viewport, o overlay (pai) faz o
      scroll. */
 }
-/* Linha de diagnóstico no fundo do overlay: posicionada absolutamente
-   para escapar ao overflow:hidden da caixa e à pressão flex da tabela.
-   Visível sempre, em qualquer altura de viewport. */
+/* Linha de diagnóstico no fundo do overlay: agora no fluxo normal
+   (não mais position:fixed) para não tapar os textos dos links no
+   rodapé. Quando o conteúdo é maior que o viewport, o utilizador rola
+   até ao fim para ver tanto os links como o debug. */
 #horario-overlay .update-debug {
-  position: fixed;
-  bottom: 4px;
-  left: 0;
-  right: 0;
-  margin: 0;
+  margin: 8px 0 0 0;
   font-size: clamp(11px, 1.2vw, 18px);
   text-align: center;
+  width: 100%;
 }
 
 /* Rodapé do overlay: dois QR codes (esquerda e direita) com a coluna
