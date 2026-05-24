@@ -391,10 +391,19 @@ a { color:#1976d2; }
   display: flex;
   flex-direction: column;
   align-items: center;
+  /* justify-content centra verticalmente quando há folga; quando o
+     conteúdo excede o viewport, o browser cai naturalmente para
+     alinhamento ao topo, e o scroll permite ver o resto. */
   justify-content: center;
   padding: 20px;
   box-sizing: border-box;
   font-family: Arial, sans-serif;
+  /* Scroll vertical sempre disponível: se o conteúdo couber, a barra
+     não aparece; se não couber, aparece automaticamente. Esta solução
+     é robusta para qualquer combinação de viewport e dispositivo,
+     sem precisar de calibrar limites de media queries. */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 #horario-overlay .caixa {
   background: white;
@@ -402,11 +411,12 @@ a { color:#1976d2; }
   padding: 20px;
   width: 100%;
   max-width: 100%;
-  max-height: 100%;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  /* Sem max-height nem overflow:hidden: a caixa expande-se ao tamanho
+     natural do conteúdo. Se exceder o viewport, o overlay (pai) faz o
+     scroll. */
 }
 /* Linha de diagnóstico no fundo do overlay: posicionada absolutamente
    para escapar ao overflow:hidden da caixa e à pressão flex da tabela.
@@ -477,7 +487,10 @@ a { color:#1976d2; }
 #horario-overlay table {
   border-collapse: collapse;
   width: 100%;
-  flex: 1;
+  /* flex: 1 0 auto = pode crescer para preencher; nunca encolhe abaixo
+     do tamanho natural (necessário desde que a caixa deixou de cortar
+     o overflow). */
+  flex: 1 0 auto;
   table-layout: fixed;
   font-size: clamp(11px, 1.4vw, 20px);
   line-height: 1.3;
@@ -604,14 +617,15 @@ a { color:#1976d2; }
   left: 50%;
 }
 /* =====================================================================
-   MODO COMPACTO PARA VIEWPORT BAIXO (TV em quiosque)
+   MODO COMPACTO PARA VIEWPORT BAIXO (TV em quiosque, telemóvel paisagem)
    =====================================================================
    A Sony Bravia reporta-se como 960×539 (DPR 2 → 1920×1080 físicos).
-   Em 539px de altura a tabela de 15 linhas não cabe com paddings e
-   margens default. Cortes cirúrgicos para evitar scroll, sem
-   comprometer legibilidade. Aplica-se também ao PC quando a janela
-   está abaixo de 600px de altura. */
-@media (max-height: 600px) {
+   Em 539px de altura a tabela de 15 linhas + rodapé com QRs não cabe
+   com paddings e margens default. Cortes cirúrgicos para evitar scroll,
+   sem comprometer legibilidade. Limite a 750px para apanhar também os
+   telemóveis em paisagem com viewport CSS escalado (1675×662 num
+   Samsung típico, por exemplo). */
+@media (max-height: 750px) {
   #horario-overlay { padding: 4px; }
   #horario-overlay .caixa { padding: 6px; }
   /* Cabeçalho (título + cruz) compacto. */
@@ -647,27 +661,19 @@ a { color:#1976d2; }
 }
 
 /* =====================================================================
-   MODO SCROLL PARA VIEWPORT MUITO BAIXO (telemóvel em paisagem)
+   MODO COMPACTO EXTRA PARA TV (viewport CSS ≤ 600px de altura)
    =====================================================================
-   Em alturas abaixo de 450px (telemóvel deitado, após a chrome do
-   browser), o conteúdo já não cabe mesmo com a compressão do modo
-   compacto. Activa-se scroll vertical no overlay. A TV (539px) não
-   é abrangida — continua sem scroll. */
-@media (max-height: 450px) {
-  #horario-overlay {
-    display: block;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    padding: 4px 4px 24px;
-  }
-  #horario-overlay .caixa {
-    max-height: none;
-    overflow: visible;
-  }
-  /* A tabela perde o flex:1 (que a esticava para preencher o overlay);
-     passa a usar altura natural, somando linhas até ao seu tamanho
-     intrínseco. O excesso é acomodado pelo scroll do overlay. */
-  #horario-overlay table { flex: none; }
+   Quando o viewport é particularmente baixo (TV 960×539, ou janela de
+   PC muito espalmada), aperta-se mais a tabela e o rodapé para garantir
+   que tudo cabe sem scroll. Os telemóveis em paisagem têm viewport
+   tipicamente >600px e ficam no modo compacto regular acima. */
+@media (max-height: 600px) {
+  #horario-overlay .footer-overlay .qr > img { width: clamp(70px, 8vw, 110px); }
+  #horario-overlay .footer-overlay .qr .balao { width: clamp(48px, 5vw, 72px); }
+  #horario-overlay .footer-overlay { margin-top: 6px; font-size: clamp(11px, 1.2vw, 16px); }
+  #horario-overlay .footer-overlay a { font-size: clamp(10px, 1vw, 14px); }
+  #horario-overlay td,
+  #horario-overlay th { padding: 0.04em 0.2em; }
 }
 
 </style>
