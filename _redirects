@@ -1,0 +1,7 @@
+# Reescritas do Netlify (servidas como 200, mantêm o URL no browser).
+# Documentação: https://docs.netlify.com/routing/redirects/
+
+# Rota /horario serve o index.html. O JavaScript detecta o pathname e
+# activa o overlay do horário semanal em ecrã cheio.
+/horario   /index.html   200
+/horario/  /index.html   200
