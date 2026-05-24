@@ -8,7 +8,7 @@ Site estático que mostra em tempo real qual a farmácia de serviço nos concelh
 |---|---|
 | https://farmaciaservicoilhavoaveiro.netlify.app/ | URL canónico, divulgado em QR codes e materiais |
 | https://farmaciaservicoaveiroilhavo.netlify.app/ | URL alternativo para farmácias parceiras (sem Linktree da Branco) |
-| https://farmaciaservicoilhavoaveiro.netlify.app/?horario=1 | TV em montra: horário semanal da Branco em ecrã cheio |
+| https://farmaciaservicoilhavoaveiro.netlify.app/farmaciabranco/horario | TV em montra: horário semanal da Branco em ecrã cheio |
 
 ## Regimes de serviço
 
@@ -24,7 +24,8 @@ Site estático que mostra em tempo real qual a farmácia de serviço nos concelh
 | `index.html` | Aplicação completa: HTML, CSS e JavaScript num único ficheiro |
 | `farmacias.json` | Catálogo de farmácias dos dois concelhos e escala mensal de serviço |
 | `calendario.json` | Feriados nacionais e municipais aplicáveis |
-| `prompt.md` | Contexto para sessões com IA (substituir e manter o projecto) |
+| `_redirects` | Configuração de reescritas do Netlify |
+| `prompt.md` | Contexto para sessões com IA (manter o projecto) |
 | `README.md` | Este ficheiro |
 
 ## Stack
