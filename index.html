@@ -1417,13 +1417,10 @@ function estadoCelula(horario, h) {
 // Cria o overlay do horário (tabela vazia) e injecta no body se
 // ?horario=1. Devolve referências para população posterior.
 function inicializarHorario() {
-  // Activar o modo horário se a URL contiver o pathname /horario (via
-  // reescrita do Netlify configurada em _redirects) ou se a query
-  // string contiver ?horario=. Aceita-se a query para retrocompatibi-
-  // lidade enquanto as TVs físicas ainda não forem reconfiguradas.
-  const pathHorario  = /^\/horario\/?$/.test(location.pathname);
-  const queryHorario = new URLSearchParams(location.search).has("horario");
-  if (!pathHorario && !queryHorario) return null;
+  // Activar o modo horário apenas se a URL contiver o pathname
+  // /horario (com ou sem barra final), via reescrita do Netlify
+  // configurada em _redirects.
+  if (!/^\/horario\/?$/.test(location.pathname)) return null;
 
   const overlay = document.createElement("div");
   overlay.id = "horario-overlay";
