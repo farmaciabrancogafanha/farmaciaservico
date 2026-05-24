@@ -509,9 +509,9 @@ a { color:#1976d2; }
    curso recebe uma linha horizontal preta proporcional aos minutos.
    As células das horas já passadas ficam com fundo mais baço, mas
    mantêm texto branco bold (a regra .hoje aplica-se sempre). */
-#horario-overlay td.hoje.hoje-passada.aberto  { background: #7faa83; }
-#horario-overlay td.hoje.hoje-passada.almoco  { background: #c8c8c8; }
-#horario-overlay td.hoje.hoje-passada.fechado { background: #c8c8c8; }
+#horario-overlay td.hoje.hoje-passada.aberto  { background: #c8e6c9; }
+#horario-overlay td.hoje.hoje-passada.almoco  { background: #eeeeee; }
+#horario-overlay td.hoje.hoje-passada.fechado { background: #eeeeee; }
 #horario-overlay td.hoje-actual {
   position: relative;
 }
@@ -823,7 +823,7 @@ const HOSTNAMES_SEM_LINKTREE = [
 const URL_FALLBACK = "https://farmaciaservicoilhavoaveiro.netlify.app/";
 
 // Overlay do horário (?horario=1): tabela 8h–22h × Seg–Dom.
-const HORARIO_URL_DADOS  = "calendario.json";
+const HORARIO_URL_DADOS  = "/calendario.json";
 const HORARIO_HORA_INI   = 8;   // primeira linha: 08–09
 const HORARIO_HORA_FIM   = 22;  // última linha: 21–22
 const HORARIO_DIAS_NOMES = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
@@ -870,7 +870,7 @@ const dom = {
 
 async function carregarDados() {
   try {
-    const res = await fetch("farmacias.json");
+    const res = await fetch("/farmacias.json");
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
   } catch (err) {
@@ -1417,7 +1417,13 @@ function estadoCelula(horario, h) {
 // Cria o overlay do horário (tabela vazia) e injecta no body se
 // ?horario=1. Devolve referências para população posterior.
 function inicializarHorario() {
-  if (!new URLSearchParams(location.search).has("horario")) return null;
+  // Activar o modo horário se a URL contiver o pathname /horario (via
+  // reescrita do Netlify configurada em _redirects) ou se a query
+  // string contiver ?horario=. Aceita-se a query para retrocompatibi-
+  // lidade enquanto as TVs físicas ainda não forem reconfiguradas.
+  const pathHorario  = /^\/horario\/?$/.test(location.pathname);
+  const queryHorario = new URLSearchParams(location.search).has("horario");
+  if (!pathHorario && !queryHorario) return null;
 
   const overlay = document.createElement("div");
   overlay.id = "horario-overlay";
@@ -1573,16 +1579,21 @@ function tickEstadoHoje(refs, p) {
     const td = refs.celulas[row][refs.hojeIndice];
     const estado = refs.estadosHoje[row];
     td.classList.remove("hoje-actual", "hoje-passada");
-    td.textContent = HORARIO_ROTULOS[estado] || "";
     if (antesDoInicio || hCelula < p.h) {
-      // Hora já passada (ou todo o dia, se ainda antes das 8h): fundo
-      // baço, texto branco bold à imagem do chip "Fechou às 21h".
+      // Hora já passada (ou todo o dia, se ainda antes das 8h): a
+      // célula fica idêntica às dos outros dias, sem texto. A coluna
+      // continua distinguível pelo cabeçalho (data e tipo do dia).
       td.classList.add("hoje-passada");
+      td.textContent = "";
     } else if (hCelula === p.h) {
-      // Hora em curso: marcar com classe que adiciona linha horizontal
-      // preta cuja posição vertical é proporcional aos minutos.
+      // Hora em curso: cor viva + linha horizontal preta proporcional
+      // aos minutos.
       td.classList.add("hoje-actual");
+      td.textContent = HORARIO_ROTULOS[estado] || "";
       td.style.setProperty("--minuto-pct", (p.m / 60 * 100) + "%");
+    } else {
+      // Hora futura: cor viva, rótulo visível.
+      td.textContent = HORARIO_ROTULOS[estado] || "";
     }
   }
 }
