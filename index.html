@@ -420,6 +420,45 @@ a { color:#1976d2; }
   font-size: clamp(11px, 1.2vw, 18px);
   text-align: center;
 }
+
+/* Rodapé do overlay: dois QR codes (esquerda e direita) com a coluna
+   do meio vazia (sem relógio analógico, ao contrário do site principal).
+   flex: 0 0 auto impede que o rodapé estique e cede o espaço extra para
+   a tabela esticar. */
+#horario-overlay .footer-overlay {
+  flex: 0 0 auto;
+  margin-top: 8px;
+  font-size: clamp(11px, 1.1vw, 16px);
+  color: #333;
+}
+#horario-overlay .footer-trio {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  align-items: start;
+  gap: 12px;
+}
+#horario-overlay .footer-esquerda,
+#horario-overlay .footer-direita-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+#horario-overlay .footer-esquerda { justify-self: start; }
+#horario-overlay .footer-direita-overlay { justify-self: end; }
+/* QR codes do rodapé do overlay: maior no desktop, mais pequenos em
+   viewports apertados, calibrados para leitura à distância da montra. */
+#horario-overlay .footer-overlay .qr > img {
+  width: clamp(70px, 8vw, 130px);
+}
+#horario-overlay .footer-overlay .qr .balao {
+  width: clamp(45px, 5vw, 75px);
+}
+#horario-overlay .footer-overlay a {
+  word-break: break-all;
+  color: #1976d2;
+}
 #horario-overlay table {
   border-collapse: collapse;
   width: 100%;
@@ -584,6 +623,12 @@ a { color:#1976d2; }
     padding: 0.08em 0.2em;
   }
   #horario-overlay table { line-height: 1.15; }
+  /* Rodapé do overlay em modo compacto (TV): margem superior reduzida
+     e QRs ligeiramente mais pequenos para manter tudo dentro do ecrã. */
+  #horario-overlay .footer-overlay { margin-top: 4px; }
+  #horario-overlay .footer-overlay .qr > img { width: clamp(60px, 7vw, 100px); }
+  #horario-overlay .footer-overlay .qr .balao { width: clamp(40px, 4.5vw, 65px); }
+  #horario-overlay .footer-trio { gap: 8px; }
 }
 
 /* =====================================================================
@@ -1441,9 +1486,9 @@ function estadoCelula(horario, h) {
 // ?horario=1. Devolve referências para população posterior.
 function inicializarHorario() {
   // Activar o modo horário apenas se a URL contiver o pathname
-  // /horario (com ou sem barra final), via reescrita do Netlify
-  // configurada em _redirects.
-  if (!/^\/horario\/?$/.test(location.pathname)) return null;
+  // /farmaciabranco/horario (com ou sem barra final), via reescrita
+  // do Netlify configurada em _redirects.
+  if (!/^\/farmaciabranco\/horario\/?$/.test(location.pathname)) return null;
 
   const overlay = document.createElement("div");
   overlay.id = "horario-overlay";
@@ -1528,6 +1573,62 @@ function inicializarHorario() {
   }
   tabela.appendChild(tbody);
   caixa.appendChild(tabela);
+
+  // Rodapé com QR + link à esquerda (apontando para a página actual do
+  // horário) e QR + link à direita (apontando para o Linktree da
+  // Farmácia Branco). A coluna do meio fica vazia, à imagem do rodapé
+  // do site principal mas sem o relógio analógico. Reutiliza as
+  // classes .footer-trio, .footer-esquerda, .footer-direita, .qr e
+  // .esta-aqui já definidas para o site principal.
+  const footer = document.createElement("div");
+  footer.className = "footer-overlay";
+  footer.innerHTML = `
+    <div class="footer-trio">
+      <div class="footer-esquerda">
+        <div class="qr">
+          <div class="esta-aqui" aria-label="Está aqui">
+            <svg class="balao" viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg" role="img">
+              <circle cx="45" cy="50" r="45" fill="#d32f2f"/>
+              <polygon points="120,50 90,35 90,65" fill="#d32f2f"/>
+              <text x="45" y="40" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-weight="bold" font-size="16">VOCÊ</text>
+              <text x="45" y="58" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-weight="bold" font-size="16">ESTÁ</text>
+              <text x="45" y="76" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-weight="bold" font-size="16">AQUI</text>
+            </svg>
+          </div>
+          <img class="qr-img-horario" alt="QR code para o horário desta semana">
+        </div>
+        <a class="link-horario" target="_blank" rel="noopener noreferrer"></a>
+      </div>
+      <div class="footer-meio"></div>
+      <div class="footer-direita-overlay">
+        <div class="qr">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://linktr.ee/farmaciabrancogafanha" alt="QR code para o Linktree da Farmácia Branco">
+        </div>
+        <a href="https://linktr.ee/farmaciabrancogafanha" target="_blank" rel="noopener noreferrer">https://linktr.ee/farmaciabrancogafanha</a>
+      </div>
+    </div>
+  `;
+  caixa.appendChild(footer);
+
+  // Preenche o QR e o link da página actual do horário. Constrói o URL
+  // a partir do origin actual; em file:// (testes locais) cai no
+  // URL_FALLBACK. A lógica é equivalente à de aplicarConfigPorHostname.
+  const origem = location.origin && location.origin.startsWith("http")
+    ? location.origin
+    : URL_FALLBACK.replace(/\/$/, "");
+  const urlHorario   = origem + "/farmaciabranco/horario";
+  const apiQrHorario = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=";
+  const qrImgHorario = footer.querySelector(".qr-img-horario");
+  const linkHorario  = footer.querySelector(".link-horario");
+  qrImgHorario.src    = apiQrHorario + encodeURIComponent(urlHorario);
+  linkHorario.href    = urlHorario;
+  linkHorario.textContent = urlHorario;
+
+  // Em hostnames listados em HOSTNAMES_SEM_LINKTREE (sites partilhados
+  // com farmácias parceiras), o bloco do Linktree é escondido.
+  if (HOSTNAMES_SEM_LINKTREE.includes(location.hostname)) {
+    footer.querySelector(".footer-direita-overlay").style.display = "none";
+  }
 
   // Linha de diagnóstico de viewport. Fica como filho directo do
   // overlay (não da caixa) e posicionada absolutamente no fundo, para
