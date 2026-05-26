@@ -418,15 +418,16 @@ a { color:#1976d2; }
      natural do conteúdo. Se exceder o viewport, o overlay (pai) faz o
      scroll. */
 }
-/* Linha de diagnóstico no fundo do overlay: agora no fluxo normal
-   (não mais position:fixed) para não tapar os textos dos links no
-   rodapé. Quando o conteúdo é maior que o viewport, o utilizador rola
-   até ao fim para ver tanto os links como o debug. */
+/* Linha de diagnóstico no rodapé do overlay: vive na coluna central
+   (.fo-meio) do grid do rodapé, alinhada na vertical com a base dos
+   URLs das colunas laterais. Espelha a colocação da .update-debug do
+   site principal, que também aparece a meio do rodapé na linha dos
+   links. pointer-events:none por precaução (texto puramente informativo). */
 #horario-overlay .update-debug {
-  margin: 8px 0 0 0;
-  font-size: clamp(11px, 1.2vw, 18px);
+  margin: 0;
+  font-size: clamp(11px, 0.9vw, 14px);
   text-align: center;
-  width: 100%;
+  pointer-events: none;
 }
 
 /* Rodapé do overlay: dois QR codes (esquerda e direita) com a coluna
@@ -439,18 +440,15 @@ a { color:#1976d2; }
   font-size: clamp(13px, 1.4vw, 18px);
   color: #333;
 }
-/* Grid 3-colunas para o rodapé. As colunas laterais recebem mais peso
-   que a coluna central (que está vazia) para acomodar o link textual
-   numa única linha. As classes fo- são exclusivas do overlay, isoladas
-   das regras .footer-* do site principal (que têm media queries com
-   display:contents incompatíveis com esta grid). */
-/* Grid 2-colunas: a coluna central foi eliminada (não havia conteúdo)
-   mas as colunas laterais mantêm o mesmo `justify-self: start / end`
-   do rodapé do site principal — os QRs continuam encostados às margens
-   da caixa, com alinhamento lateral idêntico ao da página principal. */
+/* Grid 3-colunas para o rodapé: QR esquerda | linha de diagnóstico
+   central | QR direita. A coluna central é `auto` (dimensionada ao
+   conteúdo da .update-debug), as laterais 1fr cada para distribuir
+   o espaço restante. align-items:end garante que tudo se alinha pela
+   base — base dos QRs laterais, base do texto dos URLs, base do
+   texto da .update-debug, todos na mesma linha horizontal. */
 #horario-overlay .fo-trio {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr auto 1fr;
   align-items: end;
   gap: 30px;
 }
@@ -465,8 +463,13 @@ a { color:#1976d2; }
 }
 #horario-overlay .fo-esquerda { justify-self: start; }
 #horario-overlay .fo-direita  { justify-self: end; }
-/* Coluna central eliminada do grid; .fo-meio fica vazio e oculto. */
-#horario-overlay .fo-meio     { display: none; }
+/* Coluna central: acomoda a linha de diagnóstico, alinhada pela base
+   ao mesmo nível dos URLs das colunas laterais. */
+#horario-overlay .fo-meio {
+  align-self: end;
+  justify-self: center;
+  min-width: 0;
+}
 /* QR codes do rodapé do overlay: calibrados para a TV (CSS 960×539,
    DPR 2 → físico 1920×1080) — leitura à distância na montra. */
 #horario-overlay .footer-overlay .qr > img {
@@ -594,7 +597,32 @@ a { color:#1976d2; }
 #horario-overlay td.hoje.aberto.extra.ultima-hora  { background: #d32f2f; }
 #horario-overlay td.hoje-actual {
   position: relative;
+  /* Sombra subtil no rótulo: assegura legibilidade do texto branco
+     bold quando a fronteira pastel/vivo atravessa o centro vertical
+     da célula. Sobre os fundos saturados (verde, laranja, vermelho,
+     cinzento) a sombra é praticamente invisível; sobre os pastéis
+     (#c8e6c9, #ffe0b2, #eeeeee) restitui o contraste perdido. */
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.55);
 }
+/* Camada baça sobreposta ao topo da célula da hora corrente: desde
+   o início da hora (top:0) até à fronteira proporcional aos minutos
+   decorridos (height:var(--minuto-pct)). A cor é a mesma das células
+   ".hoje-passada" do estado funcional correspondente, de modo a que,
+   ao fim da hora, a célula transite suavemente para o seu próximo
+   estado (passada). */
+#horario-overlay td.hoje-actual::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: var(--minuto-pct, 0%);
+  background: var(--cor-baca-actual, transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+/* Linha horizontal preta de 2px sobre a fronteira viva/baça. Desce
+   continuamente à medida que os minutos avançam dentro da hora. */
 #horario-overlay td.hoje-actual::after {
   content: "";
   position: absolute;
@@ -604,8 +632,18 @@ a { color:#1976d2; }
   height: 2px;
   background: #000;
   pointer-events: none;
-  z-index: 1;
+  z-index: 2;
 }
+/* Cor da camada baça por combinação de estado funcional + extra.
+   Espelham os fundos pastel definidos para as células ".hoje-passada"
+   do mesmo estado. Para a "ultima-hora" (vermelho), a parte baça é
+   o laranja pastel das células extra passadas; a transição final da
+   hora 20h-21h fica consistente quando ela própria se torna passada. */
+#horario-overlay td.hoje-actual.aberto                    { --cor-baca-actual: #c8e6c9; }
+#horario-overlay td.hoje-actual.almoco                    { --cor-baca-actual: #eeeeee; }
+#horario-overlay td.hoje-actual.fechado                   { --cor-baca-actual: #eeeeee; }
+#horario-overlay td.hoje-actual.aberto.extra              { --cor-baca-actual: #ffe0b2; }
+#horario-overlay td.hoje-actual.aberto.extra.ultima-hora  { --cor-baca-actual: #ffe0b2; }
 
 /* Zona entre o título e a tabela: espaço onde o relógio digital flutua
    por cima da coluna do dia corrente. A posição horizontal é definida
@@ -1704,13 +1742,13 @@ function inicializarHorario() {
     footer.querySelector(".fo-direita").style.display = "none";
   }
 
-  // Linha de diagnóstico de viewport. Fica como filho directo do
-  // overlay (não da caixa) e posicionada absolutamente no fundo, para
-  // não ser afectada pelo overflow:hidden da caixa nem pela pressão de
-  // espaço do flex layout interno da tabela.
+  // Linha de diagnóstico de viewport. Vive na coluna central (.fo-meio)
+  // do rodapé, ao mesmo nível vertical dos URLs das colunas laterais.
+  // O footer já está anexado à caixa, e a .fo-meio existe no innerHTML
+  // acima, portanto o querySelector encontra-a.
   const debugViewport = document.createElement("div");
   debugViewport.className = "update-debug";
-  overlay.appendChild(debugViewport);
+  footer.querySelector(".fo-meio").appendChild(debugViewport);
   document.body.appendChild(overlay);
 
   return { overlay, thsDias, celulas, zonaRelogio, relogio, debugViewport, hojeIndice: -1 };
