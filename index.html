@@ -422,8 +422,16 @@ a { color:#1976d2; }
    (.fo-meio) do grid do rodapé, alinhada na vertical com a base dos
    URLs das colunas laterais. Espelha a colocação da .update-debug do
    site principal, que também aparece a meio do rodapé na linha dos
-   links. pointer-events:none por precaução (texto puramente informativo). */
+   links. pointer-events:none por precaução (texto puramente informativo).
+   position:static e bottom/left/right:auto desfazem a regra do CSS
+   base (@media min-width:900px) que coloca a .update-debug em
+   position:absolute; bottom:100% — herança que tirava a linha do
+   fluxo do rodapé do overlay e a empurrava para fora do écran. */
 #horario-overlay .update-debug {
+  position: static;
+  bottom: auto;
+  left: auto;
+  right: auto;
   margin: 0;
   font-size: clamp(11px, 0.9vw, 14px);
   text-align: center;
