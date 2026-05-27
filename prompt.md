@@ -65,9 +65,9 @@ Disponibilidades da Farmácia Branco são lidas exclusivamente de `farmacias.jso
 ## Modo TV em montra
 
 - Hardware: Sony Bravia FW-43BZ35F, Android 9, com Fully Kiosk Browser em modo Fullscreen
-- A TV reporta ao browser CSS 960×539 com DPR 2 (físico 1920×1080)
-- Devido ao DPR alto, o CSS breakpoint que dispara é `base`, não `TV`. Comportamento esperado
-- Cada página tem no fundo uma linha de diagnóstico `LARGURAxALTURA dpr:N mq:breakpoint`, útil para confirmar
+- A largura e a altura CSS reportadas pelo browser **dependem das definições do Android** (Tamanho do ecrã / Display size, Smallest width nas Opções de programador) e também de qualquer Zoom forçado no Fully Kiosk. Valores observados no passado: `960×539` (com `dpr:2`, breakpoint `base`) e `1024×575` (com `dpr:2`, breakpoint `médio`). Logo, não fixar nenhum valor concreto como referência permanente
+- O ecrã físico tem 1920×1080 px. Se o DPR nominal for `2` mas o produto `largura_CSS × DPR` não der 1920, é porque o `devicePixelRatio` reportado está arredondado a partir de um valor fraccionário real (ex.: 1.875 arredondado para 2)
+- Cada página tem no fundo uma linha de diagnóstico com o formato `LxA dpr:N.NN (fis:WxH) mq:breakpoint`, **única fonte fidedigna** para confirmar a configuração corrente. Aparece no rodapé do site principal e do overlay do horário
 - Duas TVs na montra:
   - TV 1: `/farmaciabranco/horario` → horário semanal em ecrã cheio
   - TV 2: `/` → site de serviço
@@ -169,7 +169,7 @@ Em três situações o texto não aparece:
 - Horas já passadas do dia (ficam pastel sem texto)
 - Em colunas que não são o dia em vigor
 
-A célula da hora corrente (`hoje-actual`) tem ainda uma linha horizontal preta (2px) cuja posição vertical é proporcional aos minutos: 0% nos primeiros segundos da hora, 100% nos últimos.
+A célula da hora corrente (`hoje-actual`) é dividida em duas metades horizontais por uma linha preta de 2px. Acima da linha, a célula está pintada com a cor "baça" do estado funcional (verde pastel, laranja pastel ou cinzento claro), igual à cor que essa célula terá depois quando passar a `hoje-passada`. Abaixo da linha, a célula está pintada com a cor "viva" do estado funcional (verde institucional, laranja, vermelho na última hora, ou cinzento médio). A posição vertical da linha é proporcional aos minutos decorridos dentro da hora: 0% nos primeiros segundos, 100% nos últimos. Ao fim da hora, a parte baça preencheu toda a célula e a transição para `hoje-passada` é visualmente contínua.
 
 ## Notas sobre infraestrutura
 
