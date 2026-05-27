@@ -1966,7 +1966,14 @@ function popularTabelaHorario(refs, calendario, dados, p) {
     const w = window.innerWidth;
     const h = window.innerHeight;
     const dpr = window.devicePixelRatio || 1;
-    return `${w}×${h} dpr:${dpr} mq:${nomeBreakpointActivo()}`;
+    // DPR mostrado com 2 casas decimais para detectar valores não-inteiros
+    // (ex.: 1.875 arredondado a "2" mascarava a Hipótese de overscan/zoom).
+    // Px físicos calculados (w*dpr × h*dpr) ajudam a confirmar se o sistema
+    // está a reportar a resolução física esperada da TV (1920×1080).
+    const dprFmt = dpr.toFixed(2);
+    const wFis = Math.round(w * dpr);
+    const hFis = Math.round(h * dpr);
+    return `${w}×${h} dpr:${dprFmt} (fis:${wFis}×${hFis}) mq:${nomeBreakpointActivo()}`;
   }
   function atualizarDebugViewport() {
     const txt = infoViewport();
