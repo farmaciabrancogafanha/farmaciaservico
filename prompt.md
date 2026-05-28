@@ -66,8 +66,8 @@ Disponibilidades da Farmácia Branco são lidas exclusivamente de `farmacias.jso
 
 - Hardware: Sony Bravia FW-43BZ35F, Android 9, com Fully Kiosk Browser em modo Fullscreen
 - A largura e a altura CSS reportadas pelo browser **dependem das definições do Android** (Tamanho do ecrã / Display size, Smallest width nas Opções de programador) e também de qualquer Zoom forçado no Fully Kiosk. Valores observados no passado: `960×539` (com `dpr:2`, breakpoint `base`) e `1024×575` (com `dpr:2`, breakpoint `médio`). Logo, não fixar nenhum valor concreto como referência permanente
-- O ecrã físico tem 1920×1080 px. Se o DPR nominal for `2` mas o produto `largura_CSS × DPR` não der 1920, é porque o `devicePixelRatio` reportado está arredondado a partir de um valor fraccionário real (ex.: 1.875 arredondado para 2)
-- Cada página tem no fundo uma linha de diagnóstico com o formato `LxA dpr:N.NN (fis:WxH) mq:breakpoint`, **única fonte fidedigna** para confirmar a configuração corrente. Aparece no rodapé do site principal e do overlay do horário
+- O ecrã físico é **3840×2160 (4K UHD nativo)**. O canvas lógico do Android é menor (`largura_CSS × DPR`, ex.: 2048×1150 com 1024×575 a `dpr:2`) e depois é escalado para a resolução física pela TV com factor não-inteiro. Em modo de utilização à distância da montra, esta perda de nitidez é imperceptível, mas existe margem para configurar a TV de modo a obter CSS 1920×1080 a `dpr:2` (canvas lógico 3840×2160, mapeamento 1:1 com o físico, breakpoint `TV`)
+- Cada página tem no fundo uma linha de diagnóstico com o formato `LxA dpr:N.NN (fis:WxH) mq:breakpoint`, **única fonte fidedigna** para confirmar a configuração corrente. `fis` é o canvas lógico (`largura_CSS × DPR`), não a resolução física do ecrã. Aparece no rodapé do site principal e do overlay do horário
 - Duas TVs na montra:
   - TV 1: `/farmaciabranco/horario` → horário semanal em ecrã cheio
   - TV 2: `/` → site de serviço
