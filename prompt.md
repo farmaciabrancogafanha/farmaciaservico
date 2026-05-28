@@ -17,6 +17,7 @@ A IA não tem acesso de escrita ao repositório. Todas as alterações são entr
 3. Para cada alteração: editar uma cópia do ficheiro e devolver o `index.html` completo para download
 4. Sugerir uma mensagem de commit em inglês, ≤ 60 caracteres, no tempo presente
 5. O Daniel faz commit no GitHub web; o Netlify deploya em cerca de 60 segundos
+6. Depois do deploy, confirmar que a alteração está mesmo em produção (ver "Verificação pós-deploy"). Não assumir que o commit foi bem feito só porque o ficheiro foi gerado
 
 ## URLs
 
@@ -207,6 +208,18 @@ O ficheiro `_redirects` na raiz do repo define:
 ```
 
 Esta reescrita é servida com status 200 (não 301/302), portanto o URL na barra do browser mantém-se `/farmaciabranco/horario` enquanto o conteúdo servido é o `index.html` da raiz.
+
+### Verificação pós-deploy
+
+Regra de ouro: um ficheiro gerado e "entregue" não é um ficheiro em produção. Entre os dois há dois passos manuais (o commit no GitHub web e o deploy do Netlify) onde a alteração se pode perder. Já aconteceu mais do que uma vez submeter ao GitHub uma versão antiga do ficheiro, ou submeter um ficheiro e esquecer outro, ficando a alteração por publicar sem ninguém dar conta.
+
+Por isso, depois de cada commit, confirmar em duas frentes:
+
+1. **O deploy correu (o "envelope").** Confirmar que existe um deploy de produção recente, bem-sucedido, do commit certo, sem erros de build nem de redirects. Quando o conector Netlify está disponível, a IA consegue confirmar isto de forma autónoma (estado, data, commit, resumo do deploy). O conector NÃO dá o conteúdo do ficheiro servido, apenas os metadados do deploy.
+
+2. **O conteúdo está lá (o "recheio").** A confirmação visual é sempre do Daniel, no browser: abrir o site em produção (não o ficheiro local) e verificar que a alteração aparece de facto. Para alterações dependentes da hora (ex.: arcos das datas, visíveis só entre 19h45 e 9h), simular a hora na consola do browser redefinindo o construtor `Date`, sem mexer no relógio do sistema.
+
+Nenhuma das duas frentes substitui a outra: o deploy pode estar verde com o conteúdo errado lá dentro, e o conteúdo certo pode estar no ficheiro local mas nunca ter sido submetido. Confirmar as duas.
 
 ### Detecção do modo horário
 
