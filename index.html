@@ -110,6 +110,23 @@ mark {
   color:white;
 }
 
+/* Nota legal de custo da chamada (DL 59/2021, rev. Lei 14/2023).
+   Tipografia apagada: bloco próprio numa linha, pequeno e cinzento
+   claro, sem negrito. Presente para conformidade, visualmente discreta.
+   Escondida no modo montra (TV física vista da rua, não é o "sítio da
+   Internet" que a lei visa). */
+.nota-custo-chamada {
+  display:block;
+  font-size:10px;
+  line-height:1.2;
+  color:#aaa;
+  font-weight:normal;
+  margin-top:1px;
+}
+.modo-montra .nota-custo-chamada {
+  display:none;
+}
+
 .footer {
   margin:20px;
   text-align:left;
@@ -1075,7 +1092,15 @@ function render(slugs, catalogo, containerId) {
       const numeroLimpo = tel.replace(/\s/g, "");
       const eMovel = numeroLimpo.startsWith("+3519");
       const classeCondicional = (ehIlhavo && !eMovel) ? " ligar-condicional" : "";
-      return `<div>${tel}<a class="botao-acao${classeCondicional}" href="tel:${numeroLimpo}" aria-label="Ligar para ${tel}">📞 Ligar</a></div>`;
+      // Nota legal de custo da chamada (DL 59/2021, revisto pela Lei
+      // 14/2023). Obrigatória junto de cada número no sítio da Internet.
+      // Fixos nacionais (geográficos, começam por 2 ou +3512) → "rede fixa
+      // nacional"; móveis (+3519) → "rede móvel nacional". Escondida no
+      // modo montra (TV) via CSS .modo-montra .nota-custo-chamada.
+      const notaCusto = eMovel
+        ? "Chamada para a rede móvel nacional"
+        : "Chamada para a rede fixa nacional";
+      return `<div>${tel}<a class="botao-acao${classeCondicional}" href="tel:${numeroLimpo}" aria-label="Ligar para ${tel}">📞 Ligar</a><span class="nota-custo-chamada">${notaCusto}</span></div>`;
     }).join("");
 
     return `
@@ -1945,6 +1970,16 @@ function popularTabelaHorario(refs, calendario, dados, p) {
   // ter múltiplos sites (Netlify) a servir o mesmo index.html com
   // comportamentos diferentes, sem branching de código.
   aplicarConfigPorHostname();
+
+  // Modo montra: a TV2 da montra mostra o site principal (mesmo URL "/"
+  // que um visitante normal). O parâmetro ?montra=1 marca o body com a
+  // classe "modo-montra", usada apenas para esconder elementos só-web
+  // que não fazem sentido num display físico de montra (ex.: a nota
+  // legal "Chamada para a rede fixa nacional", obrigatória no sítio da
+  // Internet mas não num ecrã visto da rua). NÃO afecta visitantes.
+  if (new URLSearchParams(location.search).has("montra")) {
+    document.body.classList.add("modo-montra");
+  }
 
   // Inicializa o overlay do horário (criado no DOM apenas se ?horario=1
   // estiver presente na URL). Quando activo, ocupa o ecrã todo de forma

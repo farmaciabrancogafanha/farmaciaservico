@@ -70,7 +70,7 @@ Disponibilidades da Farmácia Branco são lidas exclusivamente de `farmacias.jso
 - Cada página tem no fundo uma linha de diagnóstico com o formato `LxA dpr:N.NN (fis:WxH) mq:breakpoint`, **única fonte fidedigna** para confirmar a configuração corrente. `fis` é o canvas lógico (`largura_CSS × DPR`), não a resolução física do ecrã. Aparece no rodapé do site principal e do overlay do horário
 - Duas TVs na montra:
   - TV 1: `/farmaciabranco/horario` → horário semanal em ecrã cheio
-  - TV 2: `/` → site de serviço
+  - TV 2: `/?montra=1` → site de serviço em modo montra (esconde a nota legal de custo das chamadas; ver "Modo montra" abaixo)
 
 ## Relógio analógico militar (site principal)
 
@@ -217,6 +217,18 @@ No `index.html`, a função `inicializarHorario()` activa o overlay se e só se:
 ```
 
 O parâmetro de query antigo `?horario=1` foi descontinuado.
+
+### Modo montra (`?montra=1`)
+
+A TV2 da montra mostra o site principal no mesmo URL `/` que qualquer visitante. Como não há forma de distinguir a TV de um visitante normal, o Start URL do Fully Kiosk da TV2 inclui o parâmetro `?montra=1`. No arranque, o `index.html` lê esse parâmetro e adiciona a classe `modo-montra` ao `<body>`.
+
+Essa classe serve para esconder, via CSS, elementos que só fazem sentido no sítio da Internet mas não num display físico visto da rua. Actualmente esconde apenas a nota legal de custo das chamadas (`.nota-custo-chamada`, ver abaixo). Visitantes normais (sem o parâmetro) vêem tudo.
+
+Nota: o nome `?montra=1` já foi usado no passado para um mecanismo de poster overlay, entretanto removido. O significado actual é apenas marcar o ecrã como TV de montra.
+
+### Nota legal de custo das chamadas
+
+O Decreto-Lei 59/2021, revisto pela Lei 14/2023 (aplicável desde 7 de Abril de 2023), obriga a indicar, junto de cada número de contacto no sítio da Internet, o custo da chamada ou, em alternativa, o tipo de rede. Cada número nos cartões de farmácia tem por isso um `<span class="nota-custo-chamada">` com a frase "Chamada para a rede fixa nacional" (números fixos/geográficos) ou "Chamada para a rede móvel nacional" (móveis, `+3519`). A frase é tipograficamente discreta (10px, cinzento claro, sem negrito) e é escondida no modo montra. A distinção fixo/móvel é automática no render, em `renderFarmacias`.
 
 ### Hostnames especiais
 

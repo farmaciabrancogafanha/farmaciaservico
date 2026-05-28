@@ -24,6 +24,7 @@ Site estático que mostra em tempo real qual a farmácia de serviço nos concelh
 - Na transição de turno (19h45 às 9h), o relógio mostra as datas do turno actual e do próximo, e arcos exteriores azul e amarelo a delimitar visualmente cada um
 - Overlay de horário semanal da Branco em ecrã cheio para a TV em montra (`/farmaciabranco/horario`)
 - Linha de diagnóstico de viewport no rodapé, para confirmar a configuração de cada ecrã
+- Nota legal de custo das chamadas junto de cada número (DL 59/2021), discreta e escondida no modo montra (`?montra=1`)
 
 ## Estrutura do repositório
 
