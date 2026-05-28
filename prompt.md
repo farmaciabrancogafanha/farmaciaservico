@@ -72,6 +72,30 @@ Disponibilidades da Farmácia Branco são lidas exclusivamente de `farmacias.jso
   - TV 1: `/farmaciabranco/horario` → horário semanal em ecrã cheio
   - TV 2: `/` → site de serviço
 
+## Relógio analógico militar (site principal)
+
+O site principal tem um relógio analógico de 24 horas (SVG). O 24 (= 0h) fica no topo, o 9 fica em baixo à direita; o ponteiro das horas dá uma volta completa em 24h. Convenção angular do código: `ângulo = hora × 15° − 90°`, 0° à direita, sentido horário.
+
+Elementos do mostrador:
+- Bezel preto (r=95 a r=98) e mostrador branco (r=95)
+- Anel exterior de progresso do turno de permanência 24h (`#setor-decorrido` cinzento + `#setor-falta` verde dinâmico)
+- Anel interior de progresso da disponibilidade 9h-21h (`#setor-disponibilidade-decorrido` + `#setor-disponibilidade` laranja)
+- Display digital LED a vermelho no centro, com a data civil por baixo
+
+### Datas e arcos exteriores (janela 19h45-9h)
+
+Entre as 19h45 e as 9h00 (transição de turno de permanência), o grupo `#grupo-data-prox` fica visível e mostra:
+- Data do próximo turno (amarelo `#fff59d`): em cima do 24 e junto ao 9
+- Data do turno actual (azul `#bbdefb`): junto ao 9, abaixo da amarela
+- Dois arcos exteriores ao bezel (r=98 a r=101, mesma espessura 3px do bezel), `<path>` estáticos dentro de `#grupo-data-prox`:
+  - **Azul** (`#bbdefb`, turno/data actual): do 9 (135°) ao 24 (360°) no sentido horário, passando pelo fundo e pela esquerda
+  - **Amarelo** (`#fff59d`, próximo turno): do 24 (0°) ao 9 (135°) pela direita
+  - Fronteiras exactamente no 24 (topo) e no 9
+
+Os arcos não têm lógica JS própria; herdam a visibilidade do `display` de `#grupo-data-prox`, controlado em `atualizarDataProximoTurno`. Para testar fora da janela horária, redefinir o construtor `Date` na consola do browser (sem alterar o relógio do sistema).
+
+A data civil debaixo do display digital está SEMPRE visível: fundo amarelo entre 0h e 9h (calendário já avançou mas turno ainda é o de ontem), fundo azul entre 9h e 24h (data corrente do turno).
+
 ## Horário da Farmácia Branco
 
 Regras consoante o tipo de dia (em vigor à data deste prompt; verificar `index.html` se houver dúvidas):
