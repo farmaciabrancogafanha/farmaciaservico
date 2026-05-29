@@ -868,6 +868,10 @@ a { color:#1976d2; }
 #estatistica-overlay .est-lista .est-datas { color: #333; text-align: right; font-variant-numeric: tabular-nums; }
 #estatistica-overlay .est-lista .est-horas { color: #1b5e20; font-weight: bold; text-align: right; font-variant-numeric: tabular-nums; }
 #estatistica-overlay .est-lista .est-causa { color: #555; padding-left: 16px; }
+#estatistica-overlay .est-lista li.inc { background: #fff7e8; }
+#estatistica-overlay .est-lista li.inc .est-sem-inc { color: #9a7b2e; text-decoration: none; cursor: default; }
+#estatistica-overlay .est-lista li.inc .est-horas { color: #9a7b2e; font-weight: normal; }
+#estatistica-overlay .est-lista li.inc .est-causa { color: #8a6d28; font-style: italic; }
 #estatistica-overlay .est-nota { margin-top: 20px; font-size: 13px; color: #888; line-height: 1.5; }
 
 /* Vista do horário de uma semana específica. */
@@ -2252,11 +2256,53 @@ function semanasDoAno(ano, calendario, dados) {
   return semanas;
 }
 
+// Constrói as semanas de fronteira (a que contém 1 de Janeiro e a que
+// contém 31 de Dezembro) quando atravessam a viragem do ano. As datas e
+// o total são truncados aos dias dentro do ano de referência (para os
+// quais há dados); o número da semana ISO usa a segunda-feira real.
+// Ficam fora do histograma e das estatísticas: existem só na listagem,
+// marcadas como incompletas.
+function montarIncompleta(segRealIso, ano, calendario, dados) {
+  const domReal = adicionarDias(segRealIso, 6);
+  const ini = `${ano}-01-01`, fimAno = `${ano}-12-31`;
+  const segMostra = segRealIso < ini ? ini : segRealIso;     // trunca início
+  const domMostra = domReal > fimAno ? fimAno : domReal;      // trunca fim
+  let total = 0, nDias = 0, it = segMostra;
+  while (it <= domMostra) {
+    total += horasAbertoDia(horarioBrancoDia(it, calendario, dados));
+    nDias++;
+    it = adicionarDias(it, 1);
+  }
+  const mSeg = Number(segMostra.split("-")[1]);
+  const mDom = Number(domMostra.split("-")[1]);
+  const mesLabel = mSeg === mDom
+    ? ESTATISTICA_MESES[mSeg - 1]
+    : `${ESTATISTICA_MESES[mSeg - 1]} / ${ESTATISTICA_MESES[mDom - 1]}`;
+  const causa = `Semana incompleta; conta só os ${nDias} dias de ${ano}. Não entra no histograma.`;
+  return { seg: segMostra, dom: domMostra, total, semana: semanaISO(segRealIso), mesLabel, causa, incompleta: true };
+}
+
+function semanasIncompletas(ano, calendario, dados) {
+  const ini = `${ano}-01-01`, fimAno = `${ano}-12-31`;
+  const out = [];
+  // Semana que contém 1 de Janeiro: incompleta se começar no ano anterior.
+  let segIni = ini;
+  while (diaSemanaUTC(segIni) !== 1) segIni = adicionarDias(segIni, -1);
+  if (segIni < ini) out.push(montarIncompleta(segIni, ano, calendario, dados));
+  // Semana que contém 31 de Dezembro: incompleta se terminar no ano seguinte.
+  let segFim = fimAno;
+  while (diaSemanaUTC(segFim) !== 1) segFim = adicionarDias(segFim, -1);
+  if (adicionarDias(segFim, 6) > fimAno) out.push(montarIncompleta(segFim, ano, calendario, dados));
+  return out;
+}
+
 // Renderiza a página de estatística no body. Conteúdo estático (não
 // depende da hora), calculado uma vez a partir dos JSON já carregados.
 function renderEstatistica(dados, calendario) {
   const anoRef = (calendario && calendario.ano) || partesLisboa().ano;
   const semanas = semanasDoAno(anoRef, calendario, dados);
+  const incompletas = semanasIncompletas(anoRef, calendario, dados);   // fronteira do ano, fora do histograma
+  const todasLista = semanas.concat(incompletas);
 
   // Agrupar semanas por total de horas.
   const grupos = {};
@@ -2315,7 +2361,7 @@ function renderEstatistica(dados, calendario) {
         `<div class="est-barras" role="group" aria-label="Distribuição de horas de funcionamento por semana">${barrasHTML}</div>` +
         `<div class="est-eixo-x-titulo">Tempo de funcionamento (horas por semana)</div>` +
         `<div class="est-detalhe" aria-live="polite"></div>` +
-        `<div class="est-nota">Contam-se as ${n} semanas completas (segunda a domingo) inteiramente dentro de ${anoRef}; as semanas que atravessam a viragem do ano não entram. O número da semana segue a norma ISO 8601. As horas contam apenas tempo de porta aberta, sem almoços.</div>` +
+        `<div class="est-nota">O histograma e as estatísticas contam as ${n} semanas completas (segunda a domingo) inteiramente dentro de ${anoRef}. As semanas de fronteira, que atravessam a viragem do ano, aparecem na listagem com as datas e o total truncados aos dias dentro de ${anoRef}, marcadas como incompletas; não entram no histograma nem nas estatísticas e não têm horário detalhado. O número da semana segue a norma ISO 8601. As horas contam apenas tempo de porta aberta, sem almoços.</div>` +
       `</div>` +
       `<div class="est-horario-semana" hidden></div>` +
     `</div>`;
@@ -2348,7 +2394,12 @@ function renderEstatistica(dados, calendario) {
   function comparar(a, b) {
     const dir = estado.asc ? 1 : -1;
     if (estado.campo === "semana") return dir * (a.semana - b.semana);
-    if (estado.campo === "horas")  return dir * (a.total - b.total);
+    if (estado.campo === "horas") {
+      if (a.incompleta && b.incompleta) return 0;
+      if (a.incompleta) return 1;               // parcial, não comparável: vai para o fim
+      if (b.incompleta) return -1;
+      return dir * (a.total - b.total);
+    }
     if (estado.campo === "causa")  return dir * a.causa.localeCompare(b.causa, "pt");
     return dir * (a.seg < b.seg ? -1 : a.seg > b.seg ? 1 : 0); // mês/datas: cronológico
   }
@@ -2361,11 +2412,15 @@ function renderEstatistica(dados, calendario) {
     }).join("") + `</div>`;
   }
   function itemSemana(s) {
-    return `<li>` +
-      `<button type="button" class="est-sem" data-seg="${s.seg}">Semana ${s.semana}</button>` +
+    const cabSemana = s.incompleta
+      ? `<span class="est-sem est-sem-inc">Semana ${s.semana}</span>`
+      : `<button type="button" class="est-sem" data-seg="${s.seg}">Semana ${s.semana}</button>`;
+    const horas = s.total == null ? `n/d` : `${fmtHorasEst(s.total)} h`;
+    return `<li${s.incompleta ? ` class="inc"` : ``}>` +
+      cabSemana +
       `<span class="est-mes">${s.mesLabel}</span>` +
       `<span class="est-datas">${isoBarras(s.seg)} a ${isoBarras(s.dom)}</span>` +
-      `<span class="est-horas">${fmtHorasEst(s.total)} h</span>` +
+      `<span class="est-horas">${horas}</span>` +
       `<span class="est-causa">${s.causa}</span>` +
       `</li>`;
   }
@@ -2377,7 +2432,9 @@ function renderEstatistica(dados, calendario) {
   function aplicarVista() {
     let cab;
     if (estado.modo === "todas") {
-      cab = `<div class="est-detalhe-cab">Todas as semanas · ${semanas.length} semanas</div>`;
+      const ni = incompletas.length;
+      const detalheInc = ni ? ` (${semanas.length} completas + ${ni} ${ni === 1 ? "incompleta" : "incompletas"})` : ``;
+      cab = `<div class="est-detalhe-cab">Todas as semanas · ${todasLista.length}${detalheInc}</div>`;
     } else {
       const nF = estado.lista.length;
       cab = `<div class="est-detalhe-cab">${estado.h} h · ${nF} ${nF === 1 ? "semana" : "semanas"}` +
@@ -2390,7 +2447,7 @@ function renderEstatistica(dados, calendario) {
   function mostrarTodas() {
     barras.classList.remove("modo-foco");
     limparSelecao();
-    estado.modo = "todas"; estado.h = null; estado.lista = semanas.slice();
+    estado.modo = "todas"; estado.h = null; estado.lista = todasLista.slice();
     aplicarVista();
   }
   function mostrarFoco(h) {
