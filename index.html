@@ -2581,6 +2581,19 @@ function renderEstatistica(dados, calendario) {
 }
 
 (async () => {
+  // Estanquidade de marca nos domínios de parceiros (os mesmos que
+  // escondem o Linktree). As rotas /farmaciabranco/* (horário e
+  // estatística) exibem a marca Farmácia Branco e não devem aparecer
+  // nesses domínios. Se uma dessas rotas for aberta aqui, redirecciona
+  // para a raiz do próprio domínio (site de serviço genérico, sem marca
+  // Branco), antes de criar qualquer overlay. location.replace não
+  // polui o histórico de navegação.
+  if (HOSTNAMES_SEM_LINKTREE.includes(location.hostname)
+      && /^\/farmaciabranco\//.test(location.pathname)) {
+    location.replace("/");
+    return;
+  }
+
   // Configura o QR "Você está aqui", o link respectivo, e a visibilidade
   // do Linktree, com base no URL onde a página está a correr. Permite
   // ter múltiplos sites (Netlify) a servir o mesmo index.html com
