@@ -5,3 +5,8 @@
 # o pathname e activa o overlay do horário semanal em ecrã cheio.
 /farmaciabranco/horario   /index.html   200
 /farmaciabranco/horario/  /index.html   200
+# Rota /farmaciabranco/estatistica serve o mesmo index.html. O
+# JavaScript detecta o pathname e renderiza a página de estatística
+# da distribuição de horas de funcionamento semanal.
+/farmaciabranco/estatistica   /index.html   200
+/farmaciabranco/estatistica/  /index.html   200

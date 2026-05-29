@@ -754,6 +754,91 @@ a { color:#1976d2; }
   #horario-overlay th { padding: 0.04em 0.2em; }
 }
 
+/* ===================================================================
+   Página de estatística (/farmaciabranco/estatistica)
+   Histograma da distribuição de horas de funcionamento semanal,
+   com colunas clicáveis que abrem o detalhe das semanas.
+   =================================================================== */
+#estatistica-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: #e8f0e9;
+  overflow-y: auto;
+  display: flex; justify-content: center;
+  padding: 24px 16px;
+}
+#estatistica-overlay .est-caixa {
+  background: #fff; border-radius: 18px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.12);
+  padding: 24px 28px 28px;
+  width: 100%; max-width: 1100px;
+  align-self: flex-start;
+}
+#estatistica-overlay .cruz { width: 48px; height: 48px; flex: none; }
+#estatistica-overlay .titulo { align-items: center; }
+#estatistica-overlay .est-metricas {
+  display: flex; flex-wrap: wrap; gap: 12px; margin: 18px 0 22px;
+}
+#estatistica-overlay .est-metrica {
+  flex: 1; min-width: 120px;
+  background: #f3f6f3; border-radius: 12px; padding: 12px 16px;
+}
+#estatistica-overlay .est-metrica .rotulo { font-size: 14px; color: #666; }
+#estatistica-overlay .est-metrica .valor  { font-size: 28px; font-weight: bold; color: #1b5e20; }
+#estatistica-overlay .est-metrica .valor small { font-size: 14px; font-weight: normal; color: #666; }
+
+#estatistica-overlay .est-eixo-y-titulo { font-size: 14px; color: #666; margin-bottom: 6px; }
+#estatistica-overlay .est-barras {
+  display: flex; align-items: flex-end; gap: 4px;
+  border-bottom: 2px solid #999;
+}
+#estatistica-overlay .est-col {
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column; align-items: center;
+  background: none; border: none; padding: 0; margin: 0;
+  font: inherit; color: inherit;
+}
+#estatistica-overlay .est-col[data-horas] { cursor: pointer; }
+#estatistica-overlay .est-barra-wrap {
+  height: 300px; width: 100%;
+  display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+}
+#estatistica-overlay .est-valor { font-size: 15px; font-weight: bold; color: #333; margin-bottom: 4px; min-height: 18px; }
+#estatistica-overlay .est-barra {
+  width: 100%; max-width: 46px;
+  background: #2e7d32; border-radius: 4px 4px 0 0;
+  transition: background 0.12s ease;
+}
+#estatistica-overlay .est-col[data-horas]:hover .est-barra { background: #1b5e20; }
+#estatistica-overlay .est-col.sel .est-barra { background: #ff9800; }
+#estatistica-overlay .est-col.sel .est-valor { color: #b25f00; }
+#estatistica-overlay .est-rotulo { font-size: 14px; color: #444; padding-top: 6px; }
+#estatistica-overlay .est-col.sel .est-rotulo { font-weight: bold; color: #b25f00; }
+#estatistica-overlay .est-col[data-horas]:focus-visible { outline: 3px solid #ff9800; outline-offset: 2px; border-radius: 4px; }
+#estatistica-overlay .est-eixo-x-titulo { text-align: center; font-size: 14px; color: #666; margin-top: 8px; }
+
+#estatistica-overlay .est-detalhe {
+  margin-top: 22px; border-top: 2px solid #2e7d32; padding-top: 16px; min-height: 60px;
+}
+#estatistica-overlay .est-detalhe-vazio { color: #888; font-size: 16px; }
+#estatistica-overlay .est-detalhe-cab { font-size: 20px; font-weight: bold; color: #1b5e20; margin-bottom: 12px; }
+#estatistica-overlay .est-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+#estatistica-overlay .est-lista li {
+  display: grid; grid-template-columns: 110px 1fr 200px; gap: 12px; align-items: baseline;
+  padding: 8px 10px; background: #f7f9f7; border-radius: 8px; font-size: 16px;
+}
+#estatistica-overlay .est-lista .est-sem  { font-weight: bold; color: #2e7d32; }
+#estatistica-overlay .est-lista .est-mes  { color: #444; }
+#estatistica-overlay .est-lista .est-datas { color: #333; text-align: right; font-variant-numeric: tabular-nums; }
+#estatistica-overlay .est-nota { margin-top: 20px; font-size: 13px; color: #888; line-height: 1.5; }
+
+@media (max-width: 560px) {
+  #estatistica-overlay .est-barra-wrap { height: 220px; }
+  #estatistica-overlay .est-valor { font-size: 13px; }
+  #estatistica-overlay .est-rotulo { font-size: 12px; }
+  #estatistica-overlay .est-lista li { grid-template-columns: 1fr; gap: 2px; }
+  #estatistica-overlay .est-lista .est-datas { text-align: left; }
+}
+
 </style>
 </head>
 
@@ -1995,6 +2080,169 @@ function popularTabelaHorario(refs, calendario, dados, p) {
   requestAnimationFrame(() => posicionarRelogioHorario(refs));
 }
 
+// =====================================================================
+// PÁGINA DE ESTATÍSTICA (/farmaciabranco/estatistica)
+// Histograma da distribuição de horas de funcionamento semanal, com
+// colunas clicáveis que abrem o detalhe das semanas correspondentes.
+// =====================================================================
+
+const ESTATISTICA_MESES = ["Janeiro","Fevereiro","Março","Abril","Maio",
+  "Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+
+// Número da semana segundo a norma ISO 8601 (semana começa à segunda;
+// a semana 1 é a que contém a primeira quinta-feira do ano).
+function semanaISO(iso) {
+  const [y, mo, d] = iso.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, mo - 1, d));
+  const dow = (dt.getUTCDay() + 6) % 7;          // 0=Seg .. 6=Dom
+  dt.setUTCDate(dt.getUTCDate() - dow + 3);       // quinta-feira da mesma semana
+  const anoISO = dt.getUTCFullYear();
+  const primQuinta = new Date(Date.UTC(anoISO, 0, 4));
+  const dow2 = (primQuinta.getUTCDay() + 6) % 7;
+  primQuinta.setUTCDate(primQuinta.getUTCDate() - dow2 + 3);
+  return 1 + Math.round((dt - primQuinta) / (7 * 86400000));
+}
+
+// Dia da semana 0=Dom..6=Sáb para uma data ISO (aritmética de calendário).
+function diaSemanaUTC(iso) {
+  const [y, mo, d] = iso.split("-").map(Number);
+  return new Date(Date.UTC(y, mo - 1, d)).getUTCDay();
+}
+
+// "YYYY-MM-DD" -> "DD/MM".
+function ddmmEst(iso) {
+  const p = iso.split("-");
+  return `${p[2]}/${p[1]}`;
+}
+
+// Formata horas: inteiro quando não há fracção; vírgula decimal (PT-PT)
+// caso surja meia hora no futuro.
+function fmtHorasEst(x) {
+  return Number.isInteger(x) ? String(x) : x.toFixed(1).replace(".", ",");
+}
+
+// Constrói as semanas completas (segunda a domingo) inteiramente dentro
+// do ano de referência e, para cada uma, calcula o total de horas de
+// porta aberta. Devolve um array de objectos com seg, dom, total,
+// número de semana ISO e etiqueta de mês.
+function semanasDoAno(ano, calendario, dados) {
+  const fim = `${ano}-12-31`;
+  let cur = `${ano}-01-01`;
+  while (diaSemanaUTC(cur) !== 1) cur = adicionarDias(cur, 1); // primeira segunda
+  const semanas = [];
+  while (true) {
+    const dom = adicionarDias(cur, 6);
+    if (dom > fim) break;                          // só semanas inteiras no ano
+    let total = 0;
+    for (let i = 0; i < 7; i++) {
+      total += horasAbertoDia(horarioBrancoDia(adicionarDias(cur, i), calendario, dados));
+    }
+    const mSeg = Number(cur.split("-")[1]);
+    const mDom = Number(dom.split("-")[1]);
+    const mesLabel = mSeg === mDom
+      ? ESTATISTICA_MESES[mSeg - 1]
+      : `${ESTATISTICA_MESES[mSeg - 1]} / ${ESTATISTICA_MESES[mDom - 1]}`;
+    semanas.push({ seg: cur, dom, total, semana: semanaISO(cur), mesLabel });
+    cur = adicionarDias(cur, 7);
+  }
+  return semanas;
+}
+
+// Renderiza a página de estatística no body. Conteúdo estático (não
+// depende da hora), calculado uma vez a partir dos JSON já carregados.
+function renderEstatistica(dados, calendario) {
+  const anoRef = (calendario && calendario.ano) || partesLisboa().ano;
+  const semanas = semanasDoAno(anoRef, calendario, dados);
+
+  // Agrupar semanas por total de horas.
+  const grupos = {};
+  for (const s of semanas) (grupos[s.total] = grupos[s.total] || []).push(s);
+  const totais = Object.keys(grupos).map(Number);
+  const minH = Math.min(...totais);
+  const maxH = Math.max(...totais);
+  let maxFreq = 0;
+  for (const t of totais) maxFreq = Math.max(maxFreq, grupos[t].length);
+
+  // Estatísticas centrais.
+  const n = semanas.length;
+  const media = semanas.reduce((a, s) => a + s.total, 0) / n;
+  const ord = semanas.map(s => s.total).sort((a, b) => a - b);
+  const mediana = n % 2 ? ord[(n - 1) / 2] : (ord[n / 2 - 1] + ord[n / 2]) / 2;
+  let moda = totais[0];
+  for (const t of totais) if (grupos[t].length > grupos[moda].length) moda = t;
+  const modaN = grupos[moda].length;
+
+  // Barras: uma coluna por valor inteiro entre minH e maxH. As colunas
+  // sem semanas (gaps) aparecem vazias, para o vazio ser visível.
+  let barrasHTML = "";
+  for (let h = minH; h <= maxH; h++) {
+    const freq = grupos[h] ? grupos[h].length : 0;
+    if (freq > 0) {
+      const alt = Math.max(3, Math.round(freq / maxFreq * 300));
+      barrasHTML +=
+        `<button class="est-col" data-horas="${h}" aria-label="${h} horas, ${freq} ${freq === 1 ? "semana" : "semanas"}">` +
+          `<span class="est-barra-wrap"><span class="est-valor">${freq}</span>` +
+          `<span class="est-barra" style="height:${alt}px"></span></span>` +
+          `<span class="est-rotulo">${h}</span></button>`;
+    } else {
+      barrasHTML +=
+        `<span class="est-col" aria-hidden="true">` +
+          `<span class="est-barra-wrap"><span class="est-valor"></span></span>` +
+          `<span class="est-rotulo">${h}</span></span>`;
+    }
+  }
+
+  const overlay = document.createElement("div");
+  overlay.id = "estatistica-overlay";
+  overlay.innerHTML =
+    `<div class="est-caixa">` +
+      `<div class="titulo"><div class="cruz"></div><div>` +
+        `<div class="titulo-principal">Farmácia Branco</div>` +
+        `<div class="subtitulo">Tempo de funcionamento semanal — ${anoRef}</div>` +
+      `</div></div>` +
+      `<div class="est-metricas">` +
+        `<div class="est-metrica"><div class="rotulo">Semanas analisadas</div><div class="valor">${n}</div></div>` +
+        `<div class="est-metrica"><div class="rotulo">Moda</div><div class="valor">${fmtHorasEst(moda)} h <small>(${modaN}×)</small></div></div>` +
+        `<div class="est-metrica"><div class="rotulo">Mediana</div><div class="valor">${fmtHorasEst(mediana)} h</div></div>` +
+        `<div class="est-metrica"><div class="rotulo">Média</div><div class="valor">${fmtHorasEst(Math.round(media * 10) / 10)} h</div></div>` +
+      `</div>` +
+      `<div class="est-eixo-y-titulo">Frequência (nº de semanas)</div>` +
+      `<div class="est-barras" role="group" aria-label="Distribuição de horas de funcionamento por semana">${barrasHTML}</div>` +
+      `<div class="est-eixo-x-titulo">Tempo de funcionamento (horas por semana)</div>` +
+      `<div class="est-detalhe" aria-live="polite"><div class="est-detalhe-vazio">Toque numa coluna para ver as semanas correspondentes.</div></div>` +
+      `<div class="est-nota">Contam-se as ${n} semanas completas (segunda a domingo) inteiramente dentro de ${anoRef}; as semanas que atravessam a viragem do ano não entram. O número da semana segue a norma ISO 8601. As horas contam apenas tempo de porta aberta, sem almoços.</div>` +
+    `</div>`;
+  document.body.appendChild(overlay);
+
+  const caixa   = overlay.querySelector(".est-caixa");
+  const detalhe = overlay.querySelector(".est-detalhe");
+  const barras  = overlay.querySelector(".est-barras");
+
+  function selecionar(h) {
+    caixa.querySelectorAll(".est-col.sel").forEach(c => c.classList.remove("sel"));
+    const col = caixa.querySelector(`.est-col[data-horas="${h}"]`);
+    if (col) col.classList.add("sel");
+    const lista = (grupos[h] || []).slice().sort((a, b) => (a.seg < b.seg ? -1 : 1));
+    const itens = lista.map(s =>
+      `<li><span class="est-sem">Semana ${s.semana}</span>` +
+      `<span class="est-mes">${s.mesLabel}</span>` +
+      `<span class="est-datas">2.ª ${ddmmEst(s.seg)} a Dom. ${ddmmEst(s.dom)}</span></li>`
+    ).join("");
+    detalhe.innerHTML =
+      `<div class="est-detalhe-cab">${h} h · ${lista.length} ${lista.length === 1 ? "semana" : "semanas"}</div>` +
+      `<ul class="est-lista">${itens}</ul>`;
+  }
+
+  barras.addEventListener("click", (e) => {
+    const col = e.target.closest(".est-col[data-horas]");
+    if (!col) return;
+    selecionar(Number(col.getAttribute("data-horas")));
+  });
+
+  // Estado inicial: abrir a coluna mais frequente (moda).
+  selecionar(moda);
+}
+
 (async () => {
   // Configura o QR "Você está aqui", o link respectivo, e a visibilidade
   // do Linktree, com base no URL onde a página está a correr. Permite
@@ -2017,6 +2265,9 @@ function popularTabelaHorario(refs, calendario, dados, p) {
   // permanente — caso de uso: TV dedicada ao horário semanal.
   const horarioRefs    = inicializarHorario();
   const temHorario     = !!horarioRefs;
+
+  // Página de estatística: activa-se pelo pathname, à imagem do horário.
+  const estatisticaAtiva = /^\/farmaciabranco\/estatistica\/?$/.test(location.pathname);
 
   // Cor cinzenta dos setores decorridos (centralizada em COR_DECORRIDO).
   dom.setorDecorrido.setAttribute("fill", COR_DECORRIDO);
@@ -2066,7 +2317,7 @@ function popularTabelaHorario(refs, calendario, dados, p) {
   // só é estritamente necessário se ?horario=1 estiver activo.
   const [dados, calendario] = await Promise.all([
     carregarDados(),
-    temHorario ? carregarCalendario() : Promise.resolve(null),
+    (temHorario || estatisticaAtiva) ? carregarCalendario() : Promise.resolve(null),
   ]);
 
   if (!dados) {
@@ -2080,6 +2331,12 @@ function popularTabelaHorario(refs, calendario, dados, p) {
     return;
   }
   tick(dados);
+
+  // Página de estatística: render único (conteúdo estático), depois de
+  // dados e calendário carregados. O overlay tapa o site por baixo.
+  if (estatisticaAtiva && calendario) {
+    renderEstatistica(dados, calendario);
+  }
 
   // Estado de população da tabela do horário: registamos o dia do
   // último redraw para repopular só quando muda de dia (à meia-noite).
