@@ -866,7 +866,8 @@ a { color:#1976d2; }
 #estatistica-overlay .est-th:hover { color: #2e7d32; text-decoration: underline; }
 #estatistica-overlay .est-th:focus-visible { outline: 2px solid #2e7d32; outline-offset: 2px; border-radius: 3px; }
 #estatistica-overlay .est-th.activo { color: #2e7d32; }
-#estatistica-overlay .est-th.est-h-datas, #estatistica-overlay .est-th.est-h-horas { justify-content: flex-end; }
+#estatistica-overlay .est-th.est-h-datas { justify-content: center; }
+#estatistica-overlay .est-th.est-h-horas { justify-content: center; }
 #estatistica-overlay .est-th.est-h-causa { padding-left: 16px; }
 #estatistica-overlay .est-seta { font-size: 11px; }
 
@@ -882,8 +883,8 @@ a { color:#1976d2; }
 #estatistica-overlay .est-lista .est-sem:hover { color: #1b5e20; }
 #estatistica-overlay .est-lista .est-sem:focus-visible { outline: 2px solid #2e7d32; outline-offset: 2px; border-radius: 3px; }
 #estatistica-overlay .est-lista .est-mes  { color: #444; white-space: nowrap; }
-#estatistica-overlay .est-lista .est-datas { color: #333; text-align: right; font-variant-numeric: tabular-nums; }
-#estatistica-overlay .est-lista .est-horas { color: #1b5e20; font-weight: bold; text-align: right; font-variant-numeric: tabular-nums; }
+#estatistica-overlay .est-lista .est-datas { color: #333; text-align: center; font-variant-numeric: tabular-nums; }
+#estatistica-overlay .est-lista .est-horas { color: #1b5e20; font-weight: bold; text-align: center; font-variant-numeric: tabular-nums; }
 #estatistica-overlay .est-lista .est-causa { color: #555; padding-left: 16px; }
 #estatistica-overlay .est-lista li.inc { background: #fff7e8; }
 #estatistica-overlay .est-lista li.inc .est-horas { color: #9a7b2e; }
@@ -895,7 +896,8 @@ a { color:#1976d2; }
   background: #eaf3ea; font-weight: bold; margin-top: 4px;
 }
 #estatistica-overlay .est-total-label { grid-column: 1 / 4; color: #1b5e20; }
-#estatistica-overlay .est-total-horas { grid-column: 4 / 5; color: #1b5e20; text-align: right; font-variant-numeric: tabular-nums; }
+#estatistica-overlay .est-total-horas { grid-column: 4 / 5; color: #1b5e20; text-align: center; font-variant-numeric: tabular-nums; }
+#estatistica-overlay .est-total-causa { grid-column: 5 / 6; color: #8a6d28; font-weight: normal; font-style: italic; padding-left: 16px; }
 #estatistica-overlay .est-nota { margin-top: 20px; font-size: 13px; color: #888; line-height: 1.5; }
 
 /* Vista do horário de uma semana específica. */
@@ -941,7 +943,7 @@ a { color:#1976d2; }
   #estatistica-overlay .est-lista .est-datas,
   #estatistica-overlay .est-lista .est-horas { text-align: left; }
   #estatistica-overlay .est-lista .est-causa { color: #2e7d32; font-size: 15px; padding-left: 0; }
-  #estatistica-overlay .est-total-label, #estatistica-overlay .est-total-horas { grid-column: 1 / 2; text-align: left; }
+  #estatistica-overlay .est-total-label, #estatistica-overlay .est-total-horas, #estatistica-overlay .est-total-causa { grid-column: 1 / 2; text-align: left; padding-left: 0; }
   #estatistica-overlay .est-tab-horario { font-size: 12px; }
   #estatistica-overlay .est-tab-horario th, #estatistica-overlay .est-tab-horario td { padding: 4px 2px; }
 }
@@ -2463,11 +2465,12 @@ function renderEstatistica(dados, calendario) {
   function renderTabela() {
     const lista = estado.lista.slice().sort(comparar);
     const soma = lista.reduce((acc, s) => acc + (s.total || 0), 0);
+    const causaTotal = lista.some(s => s.incompleta) ? "Consideradas semanas incompletas" : "";
     const linhaTotal =
       `<li class="est-total-row">` +
         `<span class="est-total-label">Total (${lista.length} ${lista.length === 1 ? "semana" : "semanas"})</span>` +
         `<span class="est-total-horas">${fmtHorasEst(soma)} h</span>` +
-        `<span></span>` +
+        `<span class="est-total-causa">${causaTotal}</span>` +
       `</li>`;
     detalhe.querySelector(".est-tabela").innerHTML =
       headHTML() + `<ul class="est-lista">${lista.map(itemSemana).join("") + linhaTotal}</ul>`;
