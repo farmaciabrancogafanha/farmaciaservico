@@ -809,34 +809,53 @@ a { color:#1976d2; }
   transition: background 0.12s ease;
 }
 #estatistica-overlay .est-col[data-horas]:hover .est-barra { background: #1b5e20; }
-#estatistica-overlay .est-col.sel .est-barra { background: #ff9800; }
-#estatistica-overlay .est-col.sel .est-valor { color: #b25f00; }
+/* Modo foco: todas as colunas ficam baças; só a considerada fica viva. */
+#estatistica-overlay .est-barras.modo-foco .est-barra { background: #c8e6c9; }
+#estatistica-overlay .est-barras.modo-foco .est-valor { color: #b7b7b7; }
+#estatistica-overlay .est-barras.modo-foco .est-col.sel .est-barra { background: #2e7d32; }
+#estatistica-overlay .est-barras.modo-foco .est-col.sel .est-valor { color: #1b5e20; }
+#estatistica-overlay .est-barras.modo-foco .est-col[data-horas]:hover .est-barra { background: #8fc593; }
+#estatistica-overlay .est-barras.modo-foco .est-col.sel:hover .est-barra { background: #1b5e20; }
 #estatistica-overlay .est-rotulo { font-size: 14px; color: #444; padding-top: 6px; }
-#estatistica-overlay .est-col.sel .est-rotulo { font-weight: bold; color: #b25f00; }
-#estatistica-overlay .est-col[data-horas]:focus-visible { outline: 3px solid #ff9800; outline-offset: 2px; border-radius: 4px; }
+#estatistica-overlay .est-barras.modo-foco .est-rotulo { color: #b0b0b0; }
+#estatistica-overlay .est-barras.modo-foco .est-col.sel .est-rotulo { font-weight: bold; color: #1b5e20; }
+#estatistica-overlay .est-col[data-horas]:focus-visible { outline: 3px solid #2e7d32; outline-offset: 2px; border-radius: 4px; }
 #estatistica-overlay .est-eixo-x-titulo { text-align: center; font-size: 14px; color: #666; margin-top: 8px; }
 
 #estatistica-overlay .est-detalhe {
   margin-top: 22px; border-top: 2px solid #2e7d32; padding-top: 16px; min-height: 60px;
 }
-#estatistica-overlay .est-detalhe-vazio { color: #888; font-size: 16px; }
-#estatistica-overlay .est-detalhe-cab { font-size: 20px; font-weight: bold; color: #1b5e20; margin-bottom: 12px; }
+#estatistica-overlay .est-detalhe-cab {
+  display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
+  font-size: 20px; font-weight: bold; color: #1b5e20; margin-bottom: 12px;
+}
+#estatistica-overlay .est-btn-todas {
+  font: inherit; font-size: 15px; font-weight: normal;
+  color: #1b5e20; background: #eef4ee; border: 1px solid #b7d3b9;
+  border-radius: 8px; padding: 4px 12px; cursor: pointer;
+}
+#estatistica-overlay .est-btn-todas:hover { background: #e0ece1; }
+#estatistica-overlay .est-btn-todas:focus-visible { outline: 3px solid #2e7d32; outline-offset: 2px; }
 #estatistica-overlay .est-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 #estatistica-overlay .est-lista li {
-  display: grid; grid-template-columns: 110px 1fr 200px; gap: 12px; align-items: baseline;
+  display: grid; grid-template-columns: 120px 1fr 250px; gap: 12px; align-items: baseline;
   padding: 8px 10px; background: #f7f9f7; border-radius: 8px; font-size: 16px;
 }
+#estatistica-overlay .est-lista.com-horas li { grid-template-columns: 120px 1fr 250px 64px; }
 #estatistica-overlay .est-lista .est-sem  { font-weight: bold; color: #2e7d32; }
 #estatistica-overlay .est-lista .est-mes  { color: #444; }
 #estatistica-overlay .est-lista .est-datas { color: #333; text-align: right; font-variant-numeric: tabular-nums; }
+#estatistica-overlay .est-lista .est-horas { color: #1b5e20; font-weight: bold; text-align: right; font-variant-numeric: tabular-nums; }
 #estatistica-overlay .est-nota { margin-top: 20px; font-size: 13px; color: #888; line-height: 1.5; }
 
 @media (max-width: 560px) {
   #estatistica-overlay .est-barra-wrap { height: 220px; }
   #estatistica-overlay .est-valor { font-size: 13px; }
   #estatistica-overlay .est-rotulo { font-size: 12px; }
-  #estatistica-overlay .est-lista li { grid-template-columns: 1fr; gap: 2px; }
-  #estatistica-overlay .est-lista .est-datas { text-align: left; }
+  #estatistica-overlay .est-lista li,
+  #estatistica-overlay .est-lista.com-horas li { grid-template-columns: 1fr; gap: 2px; }
+  #estatistica-overlay .est-lista .est-datas,
+  #estatistica-overlay .est-lista .est-horas { text-align: left; }
 }
 
 </style>
@@ -2109,12 +2128,6 @@ function diaSemanaUTC(iso) {
   return new Date(Date.UTC(y, mo - 1, d)).getUTCDay();
 }
 
-// "YYYY-MM-DD" -> "DD/MM".
-function ddmmEst(iso) {
-  const p = iso.split("-");
-  return `${p[2]}/${p[1]}`;
-}
-
 // Formata horas: inteiro quando não há fracção; vírgula decimal (PT-PT)
 // caso surja meia hora no futuro.
 function fmtHorasEst(x) {
@@ -2209,7 +2222,7 @@ function renderEstatistica(dados, calendario) {
       `<div class="est-eixo-y-titulo">Frequência (nº de semanas)</div>` +
       `<div class="est-barras" role="group" aria-label="Distribuição de horas de funcionamento por semana">${barrasHTML}</div>` +
       `<div class="est-eixo-x-titulo">Tempo de funcionamento (horas por semana)</div>` +
-      `<div class="est-detalhe" aria-live="polite"><div class="est-detalhe-vazio">Toque numa coluna para ver as semanas correspondentes.</div></div>` +
+      `<div class="est-detalhe" aria-live="polite"></div>` +
       `<div class="est-nota">Contam-se as ${n} semanas completas (segunda a domingo) inteiramente dentro de ${anoRef}; as semanas que atravessam a viragem do ano não entram. O número da semana segue a norma ISO 8601. As horas contam apenas tempo de porta aberta, sem almoços.</div>` +
     `</div>`;
   document.body.appendChild(overlay);
@@ -2218,29 +2231,64 @@ function renderEstatistica(dados, calendario) {
   const detalhe = overlay.querySelector(".est-detalhe");
   const barras  = overlay.querySelector(".est-barras");
 
-  function selecionar(h) {
-    caixa.querySelectorAll(".est-col.sel").forEach(c => c.classList.remove("sel"));
-    const col = caixa.querySelector(`.est-col[data-horas="${h}"]`);
-    if (col) col.classList.add("sel");
-    const lista = (grupos[h] || []).slice().sort((a, b) => (a.seg < b.seg ? -1 : 1));
-    const itens = lista.map(s =>
-      `<li><span class="est-sem">Semana ${s.semana}</span>` +
+  function ordenarPorData(arr) {
+    return arr.slice().sort((a, b) => (a.seg < b.seg ? -1 : 1));
+  }
+  function isoBarras(iso) { return iso.replace(/-/g, "/"); }
+  function itemSemana(s, comHoras) {
+    return `<li><span class="est-sem">Semana ${s.semana}</span>` +
       `<span class="est-mes">${s.mesLabel}</span>` +
-      `<span class="est-datas">2.ª ${ddmmEst(s.seg)} a Dom. ${ddmmEst(s.dom)}</span></li>`
-    ).join("");
-    detalhe.innerHTML =
-      `<div class="est-detalhe-cab">${h} h · ${lista.length} ${lista.length === 1 ? "semana" : "semanas"}</div>` +
-      `<ul class="est-lista">${itens}</ul>`;
+      `<span class="est-datas">${isoBarras(s.seg)} a ${isoBarras(s.dom)}</span>` +
+      (comHoras ? `<span class="est-horas">${fmtHorasEst(s.total)} h</span>` : ``) +
+      `</li>`;
+  }
+  function limparSelecao() {
+    caixa.querySelectorAll(".est-col.sel").forEach(c => {
+      c.classList.remove("sel");
+      c.removeAttribute("aria-pressed");
+    });
   }
 
+  // Estado "todas": todas as colunas vivas; o detalhe lista todas as
+  // semanas do ano, por ordem de data, com as horas de cada uma.
+  function mostrarTodas() {
+    barras.classList.remove("modo-foco");
+    limparSelecao();
+    const lista = ordenarPorData(semanas);
+    detalhe.innerHTML =
+      `<div class="est-detalhe-cab">Todas as semanas · ${lista.length} ${lista.length === 1 ? "semana" : "semanas"}</div>` +
+      `<ul class="est-lista com-horas">${lista.map(s => itemSemana(s, true)).join("")}</ul>`;
+  }
+
+  // Estado "foco": só a coluna h fica viva, as restantes baças; o
+  // detalhe lista apenas as semanas desse total e oferece o botão para
+  // voltar a considerar todas.
+  function mostrarFoco(h) {
+    barras.classList.add("modo-foco");
+    limparSelecao();
+    const col = caixa.querySelector(`.est-col[data-horas="${h}"]`);
+    if (col) { col.classList.add("sel"); col.setAttribute("aria-pressed", "true"); }
+    const lista = ordenarPorData(grupos[h] || []);
+    detalhe.innerHTML =
+      `<div class="est-detalhe-cab">${h} h · ${lista.length} ${lista.length === 1 ? "semana" : "semanas"}` +
+      `<button type="button" class="est-btn-todas">Considerar todas</button></div>` +
+      `<ul class="est-lista">${lista.map(s => itemSemana(s, false)).join("")}</ul>`;
+  }
+
+  let focoActual = null;
   barras.addEventListener("click", (e) => {
     const col = e.target.closest(".est-col[data-horas]");
     if (!col) return;
-    selecionar(Number(col.getAttribute("data-horas")));
+    const h = Number(col.getAttribute("data-horas"));
+    if (focoActual === h) { focoActual = null; mostrarTodas(); }   // interruptor: volta a todas
+    else { focoActual = h; mostrarFoco(h); }
+  });
+  detalhe.addEventListener("click", (e) => {
+    if (e.target.closest(".est-btn-todas")) { focoActual = null; mostrarTodas(); }
   });
 
-  // Estado inicial: abrir a coluna mais frequente (moda).
-  selecionar(moda);
+  // Estado inicial: todas as semanas consideradas.
+  mostrarTodas();
 }
 
 (async () => {
