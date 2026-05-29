@@ -838,7 +838,7 @@ a { color:#1976d2; }
 #estatistica-overlay .est-btn-todas:focus-visible { outline: 3px solid #2e7d32; outline-offset: 2px; }
 #estatistica-overlay .est-tabela { margin-top: 4px; }
 #estatistica-overlay .est-lista-head {
-  display: grid; grid-template-columns: 96px 150px 210px 56px 1fr; gap: 14px;
+  display: grid; grid-template-columns: 90px 185px 210px 54px 1fr; gap: 14px;
   padding: 4px 10px 8px; border-bottom: 1px solid #cdddce; margin-bottom: 6px;
 }
 #estatistica-overlay .est-th {
@@ -855,7 +855,7 @@ a { color:#1976d2; }
 
 #estatistica-overlay .est-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 #estatistica-overlay .est-lista li {
-  display: grid; grid-template-columns: 96px 150px 210px 56px 1fr; gap: 14px; align-items: baseline;
+  display: grid; grid-template-columns: 90px 185px 210px 54px 1fr; gap: 14px; align-items: baseline;
   padding: 8px 10px; background: #f7f9f7; border-radius: 8px; font-size: 16px;
 }
 #estatistica-overlay .est-lista .est-sem {
@@ -864,14 +864,18 @@ a { color:#1976d2; }
 }
 #estatistica-overlay .est-lista .est-sem:hover { color: #1b5e20; }
 #estatistica-overlay .est-lista .est-sem:focus-visible { outline: 2px solid #2e7d32; outline-offset: 2px; border-radius: 3px; }
-#estatistica-overlay .est-lista .est-mes  { color: #444; }
+#estatistica-overlay .est-lista .est-mes  { color: #444; white-space: nowrap; }
 #estatistica-overlay .est-lista .est-datas { color: #333; text-align: right; font-variant-numeric: tabular-nums; }
 #estatistica-overlay .est-lista .est-horas { color: #1b5e20; font-weight: bold; text-align: right; font-variant-numeric: tabular-nums; }
 #estatistica-overlay .est-lista .est-causa { color: #555; padding-left: 16px; }
 #estatistica-overlay .est-lista li.inc { background: #fff7e8; }
-#estatistica-overlay .est-lista li.inc .est-sem-inc { color: #9a7b2e; text-decoration: none; cursor: default; }
-#estatistica-overlay .est-lista li.inc .est-horas { color: #9a7b2e; font-weight: normal; }
+#estatistica-overlay .est-lista li.inc .est-horas { color: #9a7b2e; }
 #estatistica-overlay .est-lista li.inc .est-causa { color: #8a6d28; font-style: italic; }
+#estatistica-overlay .est-lista li.est-total-row {
+  background: #eaf3ea; font-weight: bold; margin-top: 4px;
+}
+#estatistica-overlay .est-total-label { grid-column: 1 / 4; color: #1b5e20; }
+#estatistica-overlay .est-total-horas { grid-column: 4 / 5; color: #1b5e20; text-align: right; font-variant-numeric: tabular-nums; }
 #estatistica-overlay .est-nota { margin-top: 20px; font-size: 13px; color: #888; line-height: 1.5; }
 
 /* Vista do horário de uma semana específica. */
@@ -901,6 +905,10 @@ a { color:#1976d2; }
 #estatistica-overlay .est-tab-horario td.hs-extra   { background: #ff9800; color: #fff; }
 #estatistica-overlay .est-tab-horario td.hs-almoco  { background: #cfcfcf; color: #555; }
 #estatistica-overlay .est-tab-horario td.hs-fechado { background: #f0f0f0; color: #bbb; }
+#estatistica-overlay .est-tab-horario td.hs-fora { background: #fafafa; color: #ccc; }
+#estatistica-overlay .est-tab-horario thead th.fora .dia,
+#estatistica-overlay .est-tab-horario thead th.fora .data { color: #bbb; }
+#estatistica-overlay .leg-fora { background: #fafafa; border: 1px dashed #ccc; }
 
 @media (max-width: 760px) {
   #estatistica-overlay .est-barra-wrap { height: 220px; }
@@ -911,6 +919,7 @@ a { color:#1976d2; }
   #estatistica-overlay .est-lista .est-datas,
   #estatistica-overlay .est-lista .est-horas { text-align: left; }
   #estatistica-overlay .est-lista .est-causa { color: #2e7d32; font-size: 15px; padding-left: 0; }
+  #estatistica-overlay .est-total-label, #estatistica-overlay .est-total-horas { grid-column: 1 / 2; text-align: left; }
   #estatistica-overlay .est-tab-horario { font-size: 12px; }
   #estatistica-overlay .est-tab-horario th, #estatistica-overlay .est-tab-horario td { padding: 4px 2px; }
 }
@@ -2279,7 +2288,7 @@ function montarIncompleta(segRealIso, ano, calendario, dados) {
     ? ESTATISTICA_MESES[mSeg - 1]
     : `${ESTATISTICA_MESES[mSeg - 1]} / ${ESTATISTICA_MESES[mDom - 1]}`;
   const causa = `Semana incompleta; conta só os ${nDias} dias de ${ano}. Não entra no histograma.`;
-  return { seg: segMostra, dom: domMostra, total, semana: semanaISO(segRealIso), mesLabel, causa, incompleta: true };
+  return { seg: segMostra, dom: domMostra, segReal: segRealIso, total, semana: semanaISO(segRealIso), mesLabel, causa, incompleta: true };
 }
 
 function semanasIncompletas(ano, calendario, dados) {
@@ -2361,7 +2370,7 @@ function renderEstatistica(dados, calendario) {
         `<div class="est-barras" role="group" aria-label="Distribuição de horas de funcionamento por semana">${barrasHTML}</div>` +
         `<div class="est-eixo-x-titulo">Tempo de funcionamento (horas por semana)</div>` +
         `<div class="est-detalhe" aria-live="polite"></div>` +
-        `<div class="est-nota">O histograma e as estatísticas contam as ${n} semanas completas (segunda a domingo) inteiramente dentro de ${anoRef}. As semanas de fronteira, que atravessam a viragem do ano, aparecem na listagem com as datas e o total truncados aos dias dentro de ${anoRef}, marcadas como incompletas; não entram no histograma nem nas estatísticas e não têm horário detalhado. O número da semana segue a norma ISO 8601. As horas contam apenas tempo de porta aberta, sem almoços.</div>` +
+        `<div class="est-nota">O histograma e as estatísticas contam as ${n} semanas completas (segunda a domingo) inteiramente dentro de ${anoRef}. As semanas de fronteira, que atravessam a viragem do ano, aparecem na listagem com as datas e o total truncados aos dias dentro de ${anoRef}, marcadas como incompletas; não entram no histograma nem nas estatísticas, e no respectivo horário os dias fora do ano aparecem sem dados. O total no fundo da lista soma as horas das semanas visualizadas. O número da semana segue a norma ISO 8601. As horas contam apenas tempo de porta aberta, sem almoços.</div>` +
       `</div>` +
       `<div class="est-horario-semana" hidden></div>` +
     `</div>`;
@@ -2394,12 +2403,7 @@ function renderEstatistica(dados, calendario) {
   function comparar(a, b) {
     const dir = estado.asc ? 1 : -1;
     if (estado.campo === "semana") return dir * (a.semana - b.semana);
-    if (estado.campo === "horas") {
-      if (a.incompleta && b.incompleta) return 0;
-      if (a.incompleta) return 1;               // parcial, não comparável: vai para o fim
-      if (b.incompleta) return -1;
-      return dir * (a.total - b.total);
-    }
+    if (estado.campo === "horas")  return dir * (a.total - b.total);
     if (estado.campo === "causa")  return dir * a.causa.localeCompare(b.causa, "pt");
     return dir * (a.seg < b.seg ? -1 : a.seg > b.seg ? 1 : 0); // mês/datas: cronológico
   }
@@ -2412,12 +2416,10 @@ function renderEstatistica(dados, calendario) {
     }).join("") + `</div>`;
   }
   function itemSemana(s) {
-    const cabSemana = s.incompleta
-      ? `<span class="est-sem est-sem-inc">Semana ${s.semana}</span>`
-      : `<button type="button" class="est-sem" data-seg="${s.seg}">Semana ${s.semana}</button>`;
+    const segHorario = s.segReal || s.seg;
     const horas = s.total == null ? `n/d` : `${fmtHorasEst(s.total)} h`;
     return `<li${s.incompleta ? ` class="inc"` : ``}>` +
-      cabSemana +
+      `<button type="button" class="est-sem" data-seg="${segHorario}">Semana ${s.semana}</button>` +
       `<span class="est-mes">${s.mesLabel}</span>` +
       `<span class="est-datas">${isoBarras(s.seg)} a ${isoBarras(s.dom)}</span>` +
       `<span class="est-horas">${horas}</span>` +
@@ -2426,8 +2428,15 @@ function renderEstatistica(dados, calendario) {
   }
   function renderTabela() {
     const lista = estado.lista.slice().sort(comparar);
+    const soma = lista.reduce((acc, s) => acc + (s.total || 0), 0);
+    const linhaTotal =
+      `<li class="est-total-row">` +
+        `<span class="est-total-label">Total (${lista.length} ${lista.length === 1 ? "semana" : "semanas"})</span>` +
+        `<span class="est-total-horas">${fmtHorasEst(soma)} h</span>` +
+        `<span></span>` +
+      `</li>`;
     detalhe.querySelector(".est-tabela").innerHTML =
-      headHTML() + `<ul class="est-lista">${lista.map(itemSemana).join("")}</ul>`;
+      headHTML() + `<ul class="est-lista">${lista.map(itemSemana).join("") + linhaTotal}</ul>`;
   }
   function aplicarVista() {
     let cab;
@@ -2461,17 +2470,21 @@ function renderEstatistica(dados, calendario) {
 
   // --- Vista do horário de uma semana específica -----------------------
   function htmlHorarioSemana(segIso) {
+    const iniAno = `${anoRef}-01-01`, fimAno = `${anoRef}-12-31`;
     const isos = [];
     for (let i = 0; i < 7; i++) isos.push(adicionarDias(segIso, i));
     const domIso = isos[6];
+    const fora = isos.map(iso => iso < iniAno || iso > fimAno);
+    const haFora = fora.some(Boolean);
     let cab = `<th>Hora</th>`;
     for (let i = 0; i < 7; i++) {
-      cab += `<th><span class="dia">${HORARIO_DIAS_NOMES[i]}</span><span class="data">${ddmm(isos[i])}</span></th>`;
+      cab += `<th class="${fora[i] ? "fora" : ""}"><span class="dia">${HORARIO_DIAS_NOMES[i]}</span><span class="data">${ddmm(isos[i])}</span></th>`;
     }
     let corpo = "";
     for (let hh = HORARIO_HORA_INI; hh < HORARIO_HORA_FIM; hh++) {
       let tds = `<th class="hora">${String(hh).padStart(2, "0")}h-${String(hh + 1).padStart(2, "0")}h</th>`;
       for (let i = 0; i < 7; i++) {
+        if (fora[i]) { tds += `<td class="hs-fora">—</td>`; continue; }
         const horario = horarioBrancoDia(isos[i], calendario, dados);
         const est = estadoCelula(horario, hh);
         let cls = "fechado", txt = "";
@@ -2490,6 +2503,7 @@ function renderEstatistica(dados, calendario) {
         `<span><i class="leg leg-extra"></i>Aberta (alargado)</span>` +
         `<span><i class="leg leg-almoco"></i>Almoço</span>` +
         `<span><i class="leg leg-fechado"></i>Fechada</span>` +
+        (haFora ? `<span><i class="leg leg-fora"></i>Fora do ano (sem dados)</span>` : ``) +
       `</div>` +
       `<table class="est-tab-horario"><thead><tr>${cab}</tr></thead><tbody>${corpo}</tbody></table>`;
   }
