@@ -836,28 +836,79 @@ a { color:#1976d2; }
 }
 #estatistica-overlay .est-btn-todas:hover { background: #e0ece1; }
 #estatistica-overlay .est-btn-todas:focus-visible { outline: 3px solid #2e7d32; outline-offset: 2px; }
+#estatistica-overlay .est-tabela { margin-top: 4px; }
+#estatistica-overlay .est-lista-head {
+  display: grid; grid-template-columns: 96px 150px 210px 56px 1fr; gap: 14px;
+  padding: 4px 10px 8px; border-bottom: 1px solid #cdddce; margin-bottom: 6px;
+}
+#estatistica-overlay .est-th {
+  font: inherit; font-size: 14px; font-weight: bold; color: #1b5e20;
+  background: none; border: none; padding: 0; cursor: pointer; text-align: left;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+#estatistica-overlay .est-th:hover { color: #2e7d32; text-decoration: underline; }
+#estatistica-overlay .est-th:focus-visible { outline: 2px solid #2e7d32; outline-offset: 2px; border-radius: 3px; }
+#estatistica-overlay .est-th.activo { color: #2e7d32; }
+#estatistica-overlay .est-th.est-h-datas, #estatistica-overlay .est-th.est-h-horas { justify-content: flex-end; }
+#estatistica-overlay .est-th.est-h-causa { padding-left: 16px; }
+#estatistica-overlay .est-seta { font-size: 11px; }
+
 #estatistica-overlay .est-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 #estatistica-overlay .est-lista li {
-  display: grid; grid-template-columns: 100px 150px 220px 1fr; gap: 12px; align-items: baseline;
+  display: grid; grid-template-columns: 96px 150px 210px 56px 1fr; gap: 14px; align-items: baseline;
   padding: 8px 10px; background: #f7f9f7; border-radius: 8px; font-size: 16px;
 }
-#estatistica-overlay .est-lista.com-horas li { grid-template-columns: 100px 150px 220px 60px 1fr; }
-#estatistica-overlay .est-lista .est-sem  { font-weight: bold; color: #2e7d32; }
+#estatistica-overlay .est-lista .est-sem {
+  font: inherit; font-size: 16px; font-weight: bold; color: #2e7d32;
+  background: none; border: none; padding: 0; cursor: pointer; text-align: left; text-decoration: underline;
+}
+#estatistica-overlay .est-lista .est-sem:hover { color: #1b5e20; }
+#estatistica-overlay .est-lista .est-sem:focus-visible { outline: 2px solid #2e7d32; outline-offset: 2px; border-radius: 3px; }
 #estatistica-overlay .est-lista .est-mes  { color: #444; }
 #estatistica-overlay .est-lista .est-datas { color: #333; text-align: right; font-variant-numeric: tabular-nums; }
 #estatistica-overlay .est-lista .est-horas { color: #1b5e20; font-weight: bold; text-align: right; font-variant-numeric: tabular-nums; }
-#estatistica-overlay .est-lista .est-causa { color: #555; }
+#estatistica-overlay .est-lista .est-causa { color: #555; padding-left: 16px; }
 #estatistica-overlay .est-nota { margin-top: 20px; font-size: 13px; color: #888; line-height: 1.5; }
+
+/* Vista do horário de uma semana específica. */
+#estatistica-overlay .est-voltar {
+  font: inherit; font-size: 15px; font-weight: normal;
+  color: #1b5e20; background: #eef4ee; border: 1px solid #b7d3b9;
+  border-radius: 8px; padding: 4px 12px; cursor: pointer;
+}
+#estatistica-overlay .est-voltar:hover { background: #e0ece1; }
+#estatistica-overlay .est-voltar:focus-visible { outline: 3px solid #2e7d32; outline-offset: 2px; }
+#estatistica-overlay .est-hs-legenda { display: flex; flex-wrap: wrap; gap: 16px; margin: 6px 0 14px; font-size: 14px; color: #555; }
+#estatistica-overlay .est-hs-legenda span { display: inline-flex; align-items: center; gap: 6px; }
+#estatistica-overlay .est-hs-legenda .leg { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
+#estatistica-overlay .leg-aberto  { background: #2e7d32; }
+#estatistica-overlay .leg-extra   { background: #ff9800; }
+#estatistica-overlay .leg-almoco  { background: #cfcfcf; }
+#estatistica-overlay .leg-fechado { background: #f0f0f0; border: 1px solid #ddd; }
+#estatistica-overlay .est-tab-horario { width: 100%; border-collapse: collapse; font-size: 15px; }
+#estatistica-overlay .est-tab-horario th, #estatistica-overlay .est-tab-horario td {
+  border: 1px solid #fff; padding: 6px 4px; text-align: center;
+}
+#estatistica-overlay .est-tab-horario thead th { background: #eef4ee; color: #1b5e20; }
+#estatistica-overlay .est-tab-horario thead th .dia { font-weight: bold; display: block; }
+#estatistica-overlay .est-tab-horario thead th .data { font-size: 12px; font-weight: normal; color: #666; }
+#estatistica-overlay .est-tab-horario th.hora { background: #f3f6f3; color: #333; font-weight: normal; white-space: nowrap; font-variant-numeric: tabular-nums; }
+#estatistica-overlay .est-tab-horario td.hs-aberto  { background: #2e7d32; color: #fff; }
+#estatistica-overlay .est-tab-horario td.hs-extra   { background: #ff9800; color: #fff; }
+#estatistica-overlay .est-tab-horario td.hs-almoco  { background: #cfcfcf; color: #555; }
+#estatistica-overlay .est-tab-horario td.hs-fechado { background: #f0f0f0; color: #bbb; }
 
 @media (max-width: 760px) {
   #estatistica-overlay .est-barra-wrap { height: 220px; }
   #estatistica-overlay .est-valor { font-size: 13px; }
   #estatistica-overlay .est-rotulo { font-size: 12px; }
-  #estatistica-overlay .est-lista li,
-  #estatistica-overlay .est-lista.com-horas li { grid-template-columns: 1fr; gap: 2px; }
+  #estatistica-overlay .est-lista-head { display: none; }
+  #estatistica-overlay .est-lista li { grid-template-columns: 1fr; gap: 2px; }
   #estatistica-overlay .est-lista .est-datas,
   #estatistica-overlay .est-lista .est-horas { text-align: left; }
-  #estatistica-overlay .est-lista .est-causa { color: #2e7d32; font-size: 15px; }
+  #estatistica-overlay .est-lista .est-causa { color: #2e7d32; font-size: 15px; padding-left: 0; }
+  #estatistica-overlay .est-tab-horario { font-size: 12px; }
+  #estatistica-overlay .est-tab-horario th, #estatistica-overlay .est-tab-horario td { padding: 4px 2px; }
 }
 
 </style>
@@ -2251,81 +2302,174 @@ function renderEstatistica(dados, calendario) {
     `<div class="est-caixa">` +
       `<div class="titulo"><div class="cruz"></div><div>` +
         `<div class="titulo-principal">Farmácia Branco</div>` +
-        `<div class="subtitulo">Tempo de funcionamento semanal — ${anoRef}</div>` +
+        `<div class="subtitulo">Tempo de funcionamento semanal - ${anoRef}</div>` +
       `</div></div>` +
-      `<div class="est-metricas">` +
-        `<div class="est-metrica"><div class="rotulo">Semanas analisadas</div><div class="valor">${n}</div></div>` +
-        `<div class="est-metrica"><div class="rotulo">Moda</div><div class="valor">${fmtHorasEst(moda)} h <small>(${modaN}×)</small></div></div>` +
-        `<div class="est-metrica"><div class="rotulo">Mediana</div><div class="valor">${fmtHorasEst(mediana)} h</div></div>` +
-        `<div class="est-metrica"><div class="rotulo">Média</div><div class="valor">${fmtHorasEst(Math.round(media * 10) / 10)} h</div></div>` +
+      `<div class="est-principal">` +
+        `<div class="est-metricas">` +
+          `<div class="est-metrica"><div class="rotulo">Semanas analisadas</div><div class="valor">${n}</div></div>` +
+          `<div class="est-metrica"><div class="rotulo">Moda</div><div class="valor">${fmtHorasEst(moda)} h <small>(${modaN}×)</small></div></div>` +
+          `<div class="est-metrica"><div class="rotulo">Mediana</div><div class="valor">${fmtHorasEst(mediana)} h</div></div>` +
+          `<div class="est-metrica"><div class="rotulo">Média</div><div class="valor">${fmtHorasEst(Math.round(media * 10) / 10)} h</div></div>` +
+        `</div>` +
+        `<div class="est-eixo-y-titulo">Frequência (nº de semanas)</div>` +
+        `<div class="est-barras" role="group" aria-label="Distribuição de horas de funcionamento por semana">${barrasHTML}</div>` +
+        `<div class="est-eixo-x-titulo">Tempo de funcionamento (horas por semana)</div>` +
+        `<div class="est-detalhe" aria-live="polite"></div>` +
+        `<div class="est-nota">Contam-se as ${n} semanas completas (segunda a domingo) inteiramente dentro de ${anoRef}; as semanas que atravessam a viragem do ano não entram. O número da semana segue a norma ISO 8601. As horas contam apenas tempo de porta aberta, sem almoços.</div>` +
       `</div>` +
-      `<div class="est-eixo-y-titulo">Frequência (nº de semanas)</div>` +
-      `<div class="est-barras" role="group" aria-label="Distribuição de horas de funcionamento por semana">${barrasHTML}</div>` +
-      `<div class="est-eixo-x-titulo">Tempo de funcionamento (horas por semana)</div>` +
-      `<div class="est-detalhe" aria-live="polite"></div>` +
-      `<div class="est-nota">Contam-se as ${n} semanas completas (segunda a domingo) inteiramente dentro de ${anoRef}; as semanas que atravessam a viragem do ano não entram. O número da semana segue a norma ISO 8601. As horas contam apenas tempo de porta aberta, sem almoços.</div>` +
+      `<div class="est-horario-semana" hidden></div>` +
     `</div>`;
   document.body.appendChild(overlay);
 
-  const caixa   = overlay.querySelector(".est-caixa");
-  const detalhe = overlay.querySelector(".est-detalhe");
-  const barras  = overlay.querySelector(".est-barras");
+  const caixa        = overlay.querySelector(".est-caixa");
+  const principal    = overlay.querySelector(".est-principal");
+  const detalhe      = overlay.querySelector(".est-detalhe");
+  const barras       = overlay.querySelector(".est-barras");
+  const vistaHorario = overlay.querySelector(".est-horario-semana");
 
-  function ordenarPorData(arr) {
-    return arr.slice().sort((a, b) => (a.seg < b.seg ? -1 : 1));
-  }
   function isoBarras(iso) { return iso.replace(/-/g, "/"); }
-  function itemSemana(s, comHoras) {
-    return `<li><span class="est-sem">Semana ${s.semana}</span>` +
-      `<span class="est-mes">${s.mesLabel}</span>` +
-      `<span class="est-datas">${isoBarras(s.seg)} a ${isoBarras(s.dom)}</span>` +
-      (comHoras ? `<span class="est-horas">${fmtHorasEst(s.total)} h</span>` : ``) +
-      `<span class="est-causa">${s.causa}</span>` +
-      `</li>`;
-  }
+  function ddmm(iso) { return iso.slice(8) + "/" + iso.slice(5, 7); }
   function limparSelecao() {
     caixa.querySelectorAll(".est-col.sel").forEach(c => {
-      c.classList.remove("sel");
-      c.removeAttribute("aria-pressed");
+      c.classList.remove("sel"); c.removeAttribute("aria-pressed");
     });
   }
 
-  // Estado "todas": todas as colunas vivas; o detalhe lista todas as
-  // semanas do ano, por ordem de data, com as horas de cada uma.
+  // --- Tabela de semanas: cabeçalhos ordenáveis + linhas ---------------
+  const COLS = [
+    { campo: "semana", rotulo: "Semana", cls: "est-h-sem" },
+    { campo: "mes",    rotulo: "Mês",    cls: "est-h-mes" },
+    { campo: "datas",  rotulo: "Datas",  cls: "est-h-datas" },
+    { campo: "horas",  rotulo: "Horas",  cls: "est-h-horas" },
+    { campo: "causa",  rotulo: "Causa",  cls: "est-h-causa" },
+  ];
+  const estado = { modo: "todas", h: null, lista: semanas.slice(), campo: "semana", asc: true };
+
+  function comparar(a, b) {
+    const dir = estado.asc ? 1 : -1;
+    if (estado.campo === "semana") return dir * (a.semana - b.semana);
+    if (estado.campo === "horas")  return dir * (a.total - b.total);
+    if (estado.campo === "causa")  return dir * a.causa.localeCompare(b.causa, "pt");
+    return dir * (a.seg < b.seg ? -1 : a.seg > b.seg ? 1 : 0); // mês/datas: cronológico
+  }
+  function headHTML() {
+    return `<div class="est-lista-head">` + COLS.map(c => {
+      const activo = estado.campo === c.campo;
+      const seta = activo ? (estado.asc ? "▲" : "▼") : "";
+      return `<button type="button" class="est-th ${c.cls}${activo ? " activo" : ""}" data-campo="${c.campo}">` +
+             `${c.rotulo}<span class="est-seta">${seta}</span></button>`;
+    }).join("") + `</div>`;
+  }
+  function itemSemana(s) {
+    return `<li>` +
+      `<button type="button" class="est-sem" data-seg="${s.seg}">Semana ${s.semana}</button>` +
+      `<span class="est-mes">${s.mesLabel}</span>` +
+      `<span class="est-datas">${isoBarras(s.seg)} a ${isoBarras(s.dom)}</span>` +
+      `<span class="est-horas">${fmtHorasEst(s.total)} h</span>` +
+      `<span class="est-causa">${s.causa}</span>` +
+      `</li>`;
+  }
+  function renderTabela() {
+    const lista = estado.lista.slice().sort(comparar);
+    detalhe.querySelector(".est-tabela").innerHTML =
+      headHTML() + `<ul class="est-lista">${lista.map(itemSemana).join("")}</ul>`;
+  }
+  function aplicarVista() {
+    let cab;
+    if (estado.modo === "todas") {
+      cab = `<div class="est-detalhe-cab">Todas as semanas · ${semanas.length} semanas</div>`;
+    } else {
+      const nF = estado.lista.length;
+      cab = `<div class="est-detalhe-cab">${estado.h} h · ${nF} ${nF === 1 ? "semana" : "semanas"}` +
+            `<button type="button" class="est-btn-todas">Considerar todas</button></div>`;
+    }
+    detalhe.innerHTML = cab + `<div class="est-tabela"></div>`;
+    renderTabela();
+  }
+
   function mostrarTodas() {
     barras.classList.remove("modo-foco");
     limparSelecao();
-    const lista = ordenarPorData(semanas);
-    detalhe.innerHTML =
-      `<div class="est-detalhe-cab">Todas as semanas · ${lista.length} ${lista.length === 1 ? "semana" : "semanas"}</div>` +
-      `<ul class="est-lista com-horas">${lista.map(s => itemSemana(s, true)).join("")}</ul>`;
+    estado.modo = "todas"; estado.h = null; estado.lista = semanas.slice();
+    aplicarVista();
   }
-
-  // Estado "foco": só a coluna h fica viva, as restantes baças; o
-  // detalhe lista apenas as semanas desse total e oferece o botão para
-  // voltar a considerar todas.
   function mostrarFoco(h) {
     barras.classList.add("modo-foco");
     limparSelecao();
     const col = caixa.querySelector(`.est-col[data-horas="${h}"]`);
     if (col) { col.classList.add("sel"); col.setAttribute("aria-pressed", "true"); }
-    const lista = ordenarPorData(grupos[h] || []);
-    detalhe.innerHTML =
-      `<div class="est-detalhe-cab">${h} h · ${lista.length} ${lista.length === 1 ? "semana" : "semanas"}` +
-      `<button type="button" class="est-btn-todas">Considerar todas</button></div>` +
-      `<ul class="est-lista">${lista.map(s => itemSemana(s, false)).join("")}</ul>`;
+    estado.modo = "foco"; estado.h = h; estado.lista = (grupos[h] || []).slice();
+    aplicarVista();
   }
 
-  let focoActual = null;
+  // --- Vista do horário de uma semana específica -----------------------
+  function htmlHorarioSemana(segIso) {
+    const isos = [];
+    for (let i = 0; i < 7; i++) isos.push(adicionarDias(segIso, i));
+    const domIso = isos[6];
+    let cab = `<th>Hora</th>`;
+    for (let i = 0; i < 7; i++) {
+      cab += `<th><span class="dia">${HORARIO_DIAS_NOMES[i]}</span><span class="data">${ddmm(isos[i])}</span></th>`;
+    }
+    let corpo = "";
+    for (let hh = HORARIO_HORA_INI; hh < HORARIO_HORA_FIM; hh++) {
+      let tds = `<th class="hora">${String(hh).padStart(2, "0")}h-${String(hh + 1).padStart(2, "0")}h</th>`;
+      for (let i = 0; i < 7; i++) {
+        const horario = horarioBrancoDia(isos[i], calendario, dados);
+        const est = estadoCelula(horario, hh);
+        let cls = "fechado", txt = "";
+        if (est === "aberto") {
+          cls = eHoraExtra(isos[i], hh, calendario, dados) ? "extra" : "aberto";
+          txt = "Aberta";
+        } else if (est === "almoco") { cls = "almoco"; txt = "Almoço"; }
+        tds += `<td class="hs-${cls}">${txt}</td>`;
+      }
+      corpo += `<tr>${tds}</tr>`;
+    }
+    return `<div class="est-detalhe-cab">Horário da Semana ${semanaISO(segIso)} · ${isoBarras(segIso)} a ${isoBarras(domIso)}` +
+      `<button type="button" class="est-voltar">Voltar à tabela</button></div>` +
+      `<div class="est-hs-legenda">` +
+        `<span><i class="leg leg-aberto"></i>Aberta</span>` +
+        `<span><i class="leg leg-extra"></i>Aberta (alargado)</span>` +
+        `<span><i class="leg leg-almoco"></i>Almoço</span>` +
+        `<span><i class="leg leg-fechado"></i>Fechada</span>` +
+      `</div>` +
+      `<table class="est-tab-horario"><thead><tr>${cab}</tr></thead><tbody>${corpo}</tbody></table>`;
+  }
+  function abrirHorarioSemana(segIso) {
+    vistaHorario.innerHTML = htmlHorarioSemana(segIso);
+    principal.hidden = true;
+    vistaHorario.hidden = false;
+    overlay.scrollTop = 0;
+  }
+  function voltarTabela() {
+    vistaHorario.hidden = true;
+    principal.hidden = false;
+  }
+
+  // --- Eventos ---------------------------------------------------------
   barras.addEventListener("click", (e) => {
     const col = e.target.closest(".est-col[data-horas]");
     if (!col) return;
     const h = Number(col.getAttribute("data-horas"));
-    if (focoActual === h) { focoActual = null; mostrarTodas(); }   // interruptor: volta a todas
-    else { focoActual = h; mostrarFoco(h); }
+    if (estado.modo === "foco" && estado.h === h) mostrarTodas();   // interruptor: volta a todas
+    else mostrarFoco(h);
   });
   detalhe.addEventListener("click", (e) => {
-    if (e.target.closest(".est-btn-todas")) { focoActual = null; mostrarTodas(); }
+    const th = e.target.closest(".est-th");
+    if (th) {
+      const campo = th.getAttribute("data-campo");
+      if (estado.campo === campo) estado.asc = !estado.asc;
+      else { estado.campo = campo; estado.asc = true; }
+      renderTabela();
+      return;
+    }
+    if (e.target.closest(".est-btn-todas")) { mostrarTodas(); return; }
+    const sem = e.target.closest(".est-sem[data-seg]");
+    if (sem) { abrirHorarioSemana(sem.getAttribute("data-seg")); return; }
+  });
+  vistaHorario.addEventListener("click", (e) => {
+    if (e.target.closest(".est-voltar")) voltarTabela();
   });
 
   // Estado inicial: todas as semanas consideradas.
