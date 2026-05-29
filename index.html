@@ -840,6 +840,19 @@ a { color:#1976d2; }
 }
 #estatistica-overlay .est-btn-todas:hover { background: #e0ece1; }
 #estatistica-overlay .est-btn-todas:focus-visible { outline: 3px solid #2e7d32; outline-offset: 2px; }
+#estatistica-overlay .est-link-horario {
+  margin-left: auto; align-self: center;
+  font: inherit; font-size: 15px; font-weight: normal;
+  color: #1b5e20; background: #eef4ee; border: 1px solid #b7d3b9;
+  border-radius: 8px; padding: 4px 12px; cursor: pointer;
+  text-decoration: none; display: inline-block; white-space: nowrap;
+}
+#estatistica-overlay .est-link-horario:link,
+#estatistica-overlay .est-link-horario:visited,
+#estatistica-overlay .est-link-horario:hover,
+#estatistica-overlay .est-link-horario:active { color: #1b5e20; text-decoration: none; }
+#estatistica-overlay .est-link-horario:hover { background: #e0ece1; }
+#estatistica-overlay .est-link-horario:focus-visible { outline: 3px solid #2e7d32; outline-offset: 2px; }
 #estatistica-overlay .est-tabela { margin-top: 4px; }
 #estatistica-overlay .est-lista-head {
   display: grid; grid-template-columns: 90px 185px 210px 54px 1fr; gap: 14px;
@@ -875,6 +888,9 @@ a { color:#1976d2; }
 #estatistica-overlay .est-lista li.inc { background: #fff7e8; }
 #estatistica-overlay .est-lista li.inc .est-horas { color: #9a7b2e; }
 #estatistica-overlay .est-lista li.inc .est-causa { color: #8a6d28; font-style: italic; }
+#estatistica-overlay .est-lista li.atual { background: #d8eafc; }
+#estatistica-overlay .est-lista li.inc.atual { background: #d8eafc; }
+#estatistica-overlay .est-causa-nota { display: block; margin-top: 2px; }
 #estatistica-overlay .est-lista li.est-total-row {
   background: #eaf3ea; font-weight: bold; margin-top: 4px;
 }
@@ -915,6 +931,8 @@ a { color:#1976d2; }
 #estatistica-overlay .leg-fora { background: #fafafa; border: 1px dashed #ccc; }
 
 @media (max-width: 760px) {
+  #estatistica-overlay .titulo { flex-wrap: wrap; }
+  #estatistica-overlay .est-link-horario { margin-left: 0; margin-top: 8px; }
   #estatistica-overlay .est-barra-wrap { height: 220px; }
   #estatistica-overlay .est-valor { font-size: 13px; }
   #estatistica-overlay .est-rotulo { font-size: 12px; }
@@ -2293,8 +2311,8 @@ function montarIncompleta(segRealIso, ano, calendario, dados) {
   const mesLabel = mSeg === mDom
     ? ESTATISTICA_MESES[mSeg - 1]
     : `${ESTATISTICA_MESES[mSeg - 1]} / ${ESTATISTICA_MESES[mDom - 1]}`;
-  const causa = `Semana incompleta; conta só os ${nDias} dias de ${ano}. Não entra no histograma.`;
-  return { seg: segMostra, dom: domMostra, segReal: segRealIso, total, semana: semanaISO(segRealIso), mesLabel, causa, incompleta: true };
+  const causa = `Semana incompleta; conta só os ${nDias} dias de ${ano}.`;
+  return { seg: segMostra, dom: domMostra, segReal: segRealIso, total, semana: semanaISO(segRealIso), mesLabel, causa, causaNota: "Não entra no histograma.", incompleta: true };
 }
 
 function semanasIncompletas(ano, calendario, dados) {
@@ -2315,6 +2333,7 @@ function semanasIncompletas(ano, calendario, dados) {
 // depende da hora), calculado uma vez a partir dos JSON já carregados.
 function renderEstatistica(dados, calendario) {
   const anoRef = (calendario && calendario.ano) || partesLisboa().ano;
+  const hojeIso = isoLisboa(partesLisboa());          // para destacar a semana actual
   const semanas = semanasDoAno(anoRef, calendario, dados);
   const incompletas = semanasIncompletas(anoRef, calendario, dados);   // fronteira do ano, fora do histograma
   const todasLista = semanas.concat(incompletas);
@@ -2364,7 +2383,9 @@ function renderEstatistica(dados, calendario) {
       `<div class="titulo"><div class="cruz"></div><div>` +
         `<div class="titulo-principal">Farmácia Branco</div>` +
         `<div class="subtitulo">Tempo de funcionamento semanal - ${anoRef}</div>` +
-      `</div></div>` +
+      `</div>` +
+      `<a class="est-link-horario" href="https://farmaciaservicoilhavoaveiro.netlify.app/farmaciabranco/horario">Voltar ao Horário desta semana</a>` +
+      `</div>` +
       `<div class="est-principal">` +
         `<div class="est-metricas">` +
           `<div class="est-metrica"><div class="rotulo">Semanas analisadas</div><div class="valor">${n}</div></div>` +
@@ -2423,13 +2444,19 @@ function renderEstatistica(dados, calendario) {
   }
   function itemSemana(s) {
     const segHorario = s.segReal || s.seg;
+    const domReal = adicionarDias(segHorario, 6);
+    const atual = hojeIso >= segHorario && hojeIso <= domReal;     // semana que contém hoje
     const horas = s.total == null ? `n/d` : `${fmtHorasEst(s.total)} h`;
-    return `<li${s.incompleta ? ` class="inc"` : ``}>` +
+    const causaHtml = s.causaNota
+      ? `${s.causa}<span class="est-causa-nota">${s.causaNota}</span>`
+      : s.causa;
+    const cls = [s.incompleta ? "inc" : "", atual ? "atual" : ""].filter(Boolean).join(" ");
+    return `<li${cls ? ` class="${cls}"` : ``}>` +
       `<button type="button" class="est-sem" data-seg="${segHorario}">Semana ${s.semana}</button>` +
       `<span class="est-mes">${s.mesLabel}</span>` +
       `<span class="est-datas">${isoBarras(s.seg)} a ${isoBarras(s.dom)}</span>` +
       `<span class="est-horas">${horas}</span>` +
-      `<span class="est-causa">${s.causa}</span>` +
+      `<span class="est-causa">${causaHtml}</span>` +
       `</li>`;
   }
   function renderTabela() {
