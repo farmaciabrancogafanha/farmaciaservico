@@ -855,7 +855,7 @@ a { color:#1976d2; }
 #estatistica-overlay .est-link-horario:focus-visible { outline: 3px solid #2e7d32; outline-offset: 2px; }
 #estatistica-overlay .est-tabela { margin-top: 4px; }
 #estatistica-overlay .est-lista-head {
-  display: grid; grid-template-columns: 90px 185px 210px 54px 1fr; gap: 14px;
+  display: grid; grid-template-columns: 90px 185px 210px 54px 54px 1fr; gap: 14px;
   padding: 4px 10px 8px; border-bottom: 1px solid #cdddce; margin-bottom: 6px;
 }
 #estatistica-overlay .est-th {
@@ -867,13 +867,14 @@ a { color:#1976d2; }
 #estatistica-overlay .est-th:focus-visible { outline: 2px solid #2e7d32; outline-offset: 2px; border-radius: 3px; }
 #estatistica-overlay .est-th.activo { color: #2e7d32; }
 #estatistica-overlay .est-th.est-h-datas { justify-content: center; }
+#estatistica-overlay .est-th.est-h-dias { justify-content: center; }
 #estatistica-overlay .est-th.est-h-horas { justify-content: center; }
 #estatistica-overlay .est-th.est-h-causa { padding-left: 16px; }
 #estatistica-overlay .est-seta { font-size: 11px; }
 
 #estatistica-overlay .est-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 #estatistica-overlay .est-lista li {
-  display: grid; grid-template-columns: 90px 185px 210px 54px 1fr; gap: 14px; align-items: baseline;
+  display: grid; grid-template-columns: 90px 185px 210px 54px 54px 1fr; gap: 14px; align-items: baseline;
   padding: 8px 10px; background: #f7f9f7; border-radius: 8px; font-size: 16px;
 }
 #estatistica-overlay .est-lista .est-sem {
@@ -884,10 +885,12 @@ a { color:#1976d2; }
 #estatistica-overlay .est-lista .est-sem:focus-visible { outline: 2px solid #2e7d32; outline-offset: 2px; border-radius: 3px; }
 #estatistica-overlay .est-lista .est-mes  { color: #444; white-space: nowrap; }
 #estatistica-overlay .est-lista .est-datas { color: #333; text-align: center; font-variant-numeric: tabular-nums; }
+#estatistica-overlay .est-lista .est-dias { color: #333; text-align: center; font-variant-numeric: tabular-nums; }
 #estatistica-overlay .est-lista .est-horas { color: #1b5e20; font-weight: bold; text-align: center; font-variant-numeric: tabular-nums; }
 #estatistica-overlay .est-lista .est-causa { color: #555; padding-left: 16px; }
 #estatistica-overlay .est-lista li.inc { background: #fff7e8; }
 #estatistica-overlay .est-lista li.inc .est-horas { color: #9a7b2e; }
+#estatistica-overlay .est-lista li.inc .est-dias { color: #9a7b2e; }
 #estatistica-overlay .est-lista li.inc .est-causa { color: #8a6d28; font-style: italic; }
 #estatistica-overlay .est-lista li.atual { background: #d8eafc; }
 #estatistica-overlay .est-lista li.inc.atual { background: #d8eafc; }
@@ -896,8 +899,9 @@ a { color:#1976d2; }
   background: #eaf3ea; font-weight: bold; margin-top: 4px;
 }
 #estatistica-overlay .est-total-label { grid-column: 1 / 4; color: #1b5e20; }
-#estatistica-overlay .est-total-horas { grid-column: 4 / 5; color: #1b5e20; text-align: center; font-variant-numeric: tabular-nums; }
-#estatistica-overlay .est-total-causa { grid-column: 5 / 6; color: #8a6d28; font-weight: normal; font-style: italic; padding-left: 16px; }
+#estatistica-overlay .est-total-dias { grid-column: 4 / 5; color: #1b5e20; text-align: center; font-variant-numeric: tabular-nums; }
+#estatistica-overlay .est-total-horas { grid-column: 5 / 6; color: #1b5e20; text-align: center; font-variant-numeric: tabular-nums; }
+#estatistica-overlay .est-total-causa { grid-column: 6 / 7; color: #8a6d28; font-weight: normal; font-style: italic; padding-left: 16px; }
 #estatistica-overlay .est-nota { margin-top: 20px; font-size: 13px; color: #888; line-height: 1.5; }
 
 /* Vista do horário de uma semana específica. */
@@ -941,9 +945,10 @@ a { color:#1976d2; }
   #estatistica-overlay .est-lista-head { display: none; }
   #estatistica-overlay .est-lista li { grid-template-columns: 1fr; gap: 2px; }
   #estatistica-overlay .est-lista .est-datas,
+  #estatistica-overlay .est-lista .est-dias,
   #estatistica-overlay .est-lista .est-horas { text-align: left; }
   #estatistica-overlay .est-lista .est-causa { color: #2e7d32; font-size: 15px; padding-left: 0; }
-  #estatistica-overlay .est-total-label, #estatistica-overlay .est-total-horas, #estatistica-overlay .est-total-causa { grid-column: 1 / 2; text-align: left; padding-left: 0; }
+  #estatistica-overlay .est-total-label, #estatistica-overlay .est-total-dias, #estatistica-overlay .est-total-horas, #estatistica-overlay .est-total-causa { grid-column: 1 / 2; text-align: left; padding-left: 0; }
   #estatistica-overlay .est-tab-horario { font-size: 12px; }
   #estatistica-overlay .est-tab-horario th, #estatistica-overlay .est-tab-horario td { padding: 4px 2px; }
 }
@@ -2275,16 +2280,18 @@ function semanasDoAno(ano, calendario, dados) {
   while (true) {
     const dom = adicionarDias(cur, 6);
     if (dom > fim) break;                          // só semanas inteiras no ano
-    let total = 0;
+    let total = 0, dias = 0;
     for (let i = 0; i < 7; i++) {
-      total += horasAbertoDia(horarioBrancoDia(adicionarDias(cur, i), calendario, dados));
+      const h = horasAbertoDia(horarioBrancoDia(adicionarDias(cur, i), calendario, dados));
+      total += h;
+      if (h > 0) dias++;
     }
     const mSeg = Number(cur.split("-")[1]);
     const mDom = Number(dom.split("-")[1]);
     const mesLabel = mSeg === mDom
       ? ESTATISTICA_MESES[mSeg - 1]
       : `${ESTATISTICA_MESES[mSeg - 1]} / ${ESTATISTICA_MESES[mDom - 1]}`;
-    semanas.push({ seg: cur, dom, total, semana: semanaISO(cur), mesLabel,
+    semanas.push({ seg: cur, dom, total, dias, semana: semanaISO(cur), mesLabel,
                    causa: causaSemana(cur, calendario, dados) });
     cur = adicionarDias(cur, 7);
   }
@@ -2302,9 +2309,11 @@ function montarIncompleta(segRealIso, ano, calendario, dados) {
   const ini = `${ano}-01-01`, fimAno = `${ano}-12-31`;
   const segMostra = segRealIso < ini ? ini : segRealIso;     // trunca início
   const domMostra = domReal > fimAno ? fimAno : domReal;      // trunca fim
-  let total = 0, nDias = 0, it = segMostra;
+  let total = 0, nDias = 0, dias = 0, it = segMostra;
   while (it <= domMostra) {
-    total += horasAbertoDia(horarioBrancoDia(it, calendario, dados));
+    const h = horasAbertoDia(horarioBrancoDia(it, calendario, dados));
+    total += h;
+    if (h > 0) dias++;
     nDias++;
     it = adicionarDias(it, 1);
   }
@@ -2314,7 +2323,7 @@ function montarIncompleta(segRealIso, ano, calendario, dados) {
     ? ESTATISTICA_MESES[mSeg - 1]
     : `${ESTATISTICA_MESES[mSeg - 1]} / ${ESTATISTICA_MESES[mDom - 1]}`;
   const causa = `Semana incompleta; conta só os ${nDias} dias de ${ano}.`;
-  return { seg: segMostra, dom: domMostra, segReal: segRealIso, total, semana: semanaISO(segRealIso), mesLabel, causa, causaNota: "Não entra no histograma.", incompleta: true };
+  return { seg: segMostra, dom: domMostra, segReal: segRealIso, total, dias, semana: semanaISO(segRealIso), mesLabel, causa, causaNota: "Não entra no histograma.", incompleta: true };
 }
 
 function semanasIncompletas(ano, calendario, dados) {
@@ -2425,6 +2434,7 @@ function renderEstatistica(dados, calendario) {
     { campo: "semana", rotulo: "Semana", cls: "est-h-sem" },
     { campo: "mes",    rotulo: "Mês",    cls: "est-h-mes" },
     { campo: "datas",  rotulo: "Datas",  cls: "est-h-datas" },
+    { campo: "dias",   rotulo: "Dias",   cls: "est-h-dias" },
     { campo: "horas",  rotulo: "Horas",  cls: "est-h-horas" },
     { campo: "causa",  rotulo: "Causa",  cls: "est-h-causa" },
   ];
@@ -2434,6 +2444,7 @@ function renderEstatistica(dados, calendario) {
     const dir = estado.asc ? 1 : -1;
     if (estado.campo === "semana") return dir * (a.semana - b.semana);
     if (estado.campo === "horas")  return dir * (a.total - b.total);
+    if (estado.campo === "dias")   return dir * (a.dias - b.dias);
     if (estado.campo === "causa")  return dir * a.causa.localeCompare(b.causa, "pt");
     return dir * (a.seg < b.seg ? -1 : a.seg > b.seg ? 1 : 0); // mês/datas: cronológico
   }
@@ -2458,6 +2469,7 @@ function renderEstatistica(dados, calendario) {
       `<button type="button" class="est-sem" data-seg="${segHorario}">Semana ${s.semana}</button>` +
       `<span class="est-mes">${s.mesLabel}</span>` +
       `<span class="est-datas">${isoBarras(s.seg)} a ${isoBarras(s.dom)}</span>` +
+      `<span class="est-dias">${s.dias == null ? "n/d" : s.dias}</span>` +
       `<span class="est-horas">${horas}</span>` +
       `<span class="est-causa">${causaHtml}</span>` +
       `</li>`;
@@ -2465,10 +2477,12 @@ function renderEstatistica(dados, calendario) {
   function renderTabela() {
     const lista = estado.lista.slice().sort(comparar);
     const soma = lista.reduce((acc, s) => acc + (s.total || 0), 0);
+    const somaDias = lista.reduce((acc, s) => acc + (s.dias || 0), 0);
     const causaTotal = lista.some(s => s.incompleta) ? "As semanas incompletas são consideradas" : "";
     const linhaTotal =
       `<li class="est-total-row">` +
         `<span class="est-total-label">Total (${lista.length} ${lista.length === 1 ? "semana" : "semanas"})</span>` +
+        `<span class="est-total-dias">${somaDias}</span>` +
         `<span class="est-total-horas">${fmtHorasEst(soma)} h</span>` +
         `<span class="est-total-causa">${causaTotal}</span>` +
       `</li>`;
