@@ -2465,7 +2465,7 @@ function renderEstatistica(dados, calendario) {
   function renderTabela() {
     const lista = estado.lista.slice().sort(comparar);
     const soma = lista.reduce((acc, s) => acc + (s.total || 0), 0);
-    const causaTotal = lista.some(s => s.incompleta) ? "Consideradas semanas incompletas" : "";
+    const causaTotal = lista.some(s => s.incompleta) ? "As semanas incompletas são consideradas" : "";
     const linhaTotal =
       `<li class="est-total-row">` +
         `<span class="est-total-label">Total (${lista.length} ${lista.length === 1 ? "semana" : "semanas"})</span>` +
