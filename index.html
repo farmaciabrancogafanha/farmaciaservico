@@ -2408,6 +2408,7 @@ function renderEstatistica(dados, calendario) {
   const detalhe      = overlay.querySelector(".est-detalhe");
   const barras       = overlay.querySelector(".est-barras");
   const vistaHorario = overlay.querySelector(".est-horario-semana");
+  const linkHorario  = overlay.querySelector(".est-link-horario");
 
   function isoBarras(iso) { return iso.replace(/-/g, "/"); }
   function ddmm(iso) { return iso.slice(8) + "/" + iso.slice(5, 7); }
@@ -2544,11 +2545,13 @@ function renderEstatistica(dados, calendario) {
     vistaHorario.innerHTML = htmlHorarioSemana(segIso);
     principal.hidden = true;
     vistaHorario.hidden = false;
+    if (linkHorario) linkHorario.hidden = true;   // na vista da semana só há "Voltar à tabela"
     overlay.scrollTop = 0;
   }
   function voltarTabela() {
     vistaHorario.hidden = true;
     principal.hidden = false;
+    if (linkHorario) linkHorario.hidden = false;
   }
 
   // --- Eventos ---------------------------------------------------------
