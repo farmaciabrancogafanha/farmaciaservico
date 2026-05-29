@@ -838,17 +838,18 @@ a { color:#1976d2; }
 #estatistica-overlay .est-btn-todas:focus-visible { outline: 3px solid #2e7d32; outline-offset: 2px; }
 #estatistica-overlay .est-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 #estatistica-overlay .est-lista li {
-  display: grid; grid-template-columns: 120px 1fr 250px; gap: 12px; align-items: baseline;
+  display: grid; grid-template-columns: 100px 150px 220px 1fr; gap: 12px; align-items: baseline;
   padding: 8px 10px; background: #f7f9f7; border-radius: 8px; font-size: 16px;
 }
-#estatistica-overlay .est-lista.com-horas li { grid-template-columns: 120px 1fr 250px 64px; }
+#estatistica-overlay .est-lista.com-horas li { grid-template-columns: 100px 150px 220px 60px 1fr; }
 #estatistica-overlay .est-lista .est-sem  { font-weight: bold; color: #2e7d32; }
 #estatistica-overlay .est-lista .est-mes  { color: #444; }
 #estatistica-overlay .est-lista .est-datas { color: #333; text-align: right; font-variant-numeric: tabular-nums; }
 #estatistica-overlay .est-lista .est-horas { color: #1b5e20; font-weight: bold; text-align: right; font-variant-numeric: tabular-nums; }
+#estatistica-overlay .est-lista .est-causa { color: #555; }
 #estatistica-overlay .est-nota { margin-top: 20px; font-size: 13px; color: #888; line-height: 1.5; }
 
-@media (max-width: 560px) {
+@media (max-width: 760px) {
   #estatistica-overlay .est-barra-wrap { height: 220px; }
   #estatistica-overlay .est-valor { font-size: 13px; }
   #estatistica-overlay .est-rotulo { font-size: 12px; }
@@ -856,6 +857,7 @@ a { color:#1976d2; }
   #estatistica-overlay .est-lista.com-horas li { grid-template-columns: 1fr; gap: 2px; }
   #estatistica-overlay .est-lista .est-datas,
   #estatistica-overlay .est-lista .est-horas { text-align: left; }
+  #estatistica-overlay .est-lista .est-causa { color: #2e7d32; font-size: 15px; }
 }
 
 </style>
@@ -2134,6 +2136,43 @@ function fmtHorasEst(x) {
   return Number.isInteger(x) ? String(x) : x.toFixed(1).replace(".", ",");
 }
 
+// Descreve a causa dominante do total de horas de uma semana, a partir
+// da sua composição real (não do total). Conta, para cada dia, os
+// eventos que afastam a semana da base de 58 h: dias de disponibilidade
+// (por tipo de dia) e feriados (por tipo de dia e se foram cobertos por
+// disponibilidade). Devolve uma frase curta em PT-PT.
+function causaSemana(segIso, calendario, dados) {
+  let nUtilDisp = 0, nSabDisp = 0, nDomDisp = 0;
+  let nUtilFerFechado = 0, nSabFerFechado = 0;
+  let nUtilFerAberto = 0, nSabFerAberto = 0;
+  for (let i = 0; i < 7; i++) {
+    const iso  = adicionarDias(segIso, i);
+    const disp = eDisponibilidadeBranco(iso, dados);
+    const fer  = eFeriado(iso, calendario);
+    const dow  = diaSemanaUTC(iso);              // 0=Dom .. 6=Sáb
+    if (dow === 0) {                              // domingo
+      if (disp) nDomDisp++;                       // +10 (normal seria fechado)
+    } else if (dow === 6) {                       // sábado
+      if (fer) { if (disp) nSabFerAberto++; else nSabFerFechado++; }
+      else if (disp) nSabDisp++;                  // +2
+    } else {                                      // dia útil
+      if (fer) { if (disp) nUtilFerAberto++; else nUtilFerFechado++; }
+      else if (disp) nUtilDisp++;                 // +1
+    }
+  }
+  const plural = (n, sing, plur) => (n === 1 ? sing : `${n} ${plur}`);
+  const partes = [];
+  if (nUtilFerFechado) partes.push(plural(nUtilFerFechado, "feriado em dia útil", "feriados em dia útil"));
+  if (nSabFerFechado)  partes.push(plural(nSabFerFechado, "feriado ao sábado", "feriados ao sábado"));
+  if (nDomDisp)        partes.push(plural(nDomDisp, "domingo de disponibilidade", "domingos de disponibilidade"));
+  if (nSabDisp)        partes.push(plural(nSabDisp, "sábado de disponibilidade", "sábados de disponibilidade"));
+  if (nSabFerAberto)   partes.push(plural(nSabFerAberto, "feriado ao sábado coberto por disponibilidade", "feriados ao sábado cobertos por disponibilidade"));
+  if (nUtilDisp)       partes.push(nUtilDisp === 1 ? "1 dia útil de disponibilidade" : `${nUtilDisp} dias úteis de disponibilidade`);
+  if (nUtilFerAberto)  partes.push(plural(nUtilFerAberto, "feriado em dia útil coberto por disponibilidade", "feriados em dia útil cobertos por disponibilidade"));
+  const causa = partes.length ? partes.join(" + ") : "sem disponibilidade nem feriado";
+  return causa.charAt(0).toUpperCase() + causa.slice(1);
+}
+
 // Constrói as semanas completas (segunda a domingo) inteiramente dentro
 // do ano de referência e, para cada uma, calcula o total de horas de
 // porta aberta. Devolve um array de objectos com seg, dom, total,
@@ -2155,7 +2194,8 @@ function semanasDoAno(ano, calendario, dados) {
     const mesLabel = mSeg === mDom
       ? ESTATISTICA_MESES[mSeg - 1]
       : `${ESTATISTICA_MESES[mSeg - 1]} / ${ESTATISTICA_MESES[mDom - 1]}`;
-    semanas.push({ seg: cur, dom, total, semana: semanaISO(cur), mesLabel });
+    semanas.push({ seg: cur, dom, total, semana: semanaISO(cur), mesLabel,
+                   causa: causaSemana(cur, calendario, dados) });
     cur = adicionarDias(cur, 7);
   }
   return semanas;
@@ -2240,6 +2280,7 @@ function renderEstatistica(dados, calendario) {
       `<span class="est-mes">${s.mesLabel}</span>` +
       `<span class="est-datas">${isoBarras(s.seg)} a ${isoBarras(s.dom)}</span>` +
       (comHoras ? `<span class="est-horas">${fmtHorasEst(s.total)} h</span>` : ``) +
+      `<span class="est-causa">${s.causa}</span>` +
       `</li>`;
   }
   function limparSelecao() {
