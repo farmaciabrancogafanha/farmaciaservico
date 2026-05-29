@@ -50,6 +50,7 @@ body { font-family: Arial, sans-serif; margin: 0; background: #eef2f3; }
 .titulo { display:flex; gap:12px; border-bottom:2px solid #2e7d32; margin-bottom:10px; }
 .titulo-principal { font-size:32px; font-weight:bold; }
 .subtitulo { font-size:24px; color:#555; }
+.tempo-funcionamento { color:#777; font-weight:normal; }
 
 /* TEXTO UNIFORME */
 .texto, .sub-bloco, .sub-bloco small, .farmacia {
@@ -1587,6 +1588,18 @@ function horarioBrancoDia(iso, calendario, dados) {
   return { aberto: true, manha: [9,13], almoco: [13,14], tarde: [14,20] };
 }
 
+// Devolve o número de horas de porta aberta de um dia, dado o seu
+// horário no formato de horarioBrancoDia. O almoço NÃO conta: é o
+// intervalo entre manha[1] e tarde[0], que não está incluído em
+// nenhuma das duas janelas. Dia fechado conta 0.
+function horasAbertoDia(horario) {
+  if (!horario || !horario.aberto) return 0;
+  let total = 0;
+  if (horario.manha) total += horario.manha[1] - horario.manha[0];
+  if (horario.tarde) total += horario.tarde[1] - horario.tarde[0];
+  return total;
+}
+
 // Para uma hora h (intervalo [h, h+1)), devolve o estado nesse intervalo:
 // "aberto" | "almoco" | "fechado".
 function estadoCelula(horario, h) {
@@ -1666,8 +1679,15 @@ function inicializarHorario() {
   const st = document.createElement("div");
   st.className = "subtitulo";
   st.textContent = "Horário desta semana";
+  // Linha com o total de horas de porta aberta da semana mostrada.
+  // Valor dinâmico (varia conforme a semana), preenchido em
+  // popularTabelaHorario; aqui só se cria o elemento. Partilha a
+  // classe .subtitulo para acompanhar o escalonamento responsivo.
+  const tf = document.createElement("div");
+  tf.className = "subtitulo tempo-funcionamento";
   textos.appendChild(tp);
   textos.appendChild(st);
+  textos.appendChild(tf);
   cabec.appendChild(cruz);
   cabec.appendChild(textos);
   caixa.appendChild(cabec);
@@ -1793,7 +1813,7 @@ function inicializarHorario() {
   footer.querySelector(".fo-meio").appendChild(debugViewport);
   document.body.appendChild(overlay);
 
-  return { overlay, thsDias, celulas, zonaRelogio, relogio, debugViewport, hojeIndice: -1 };
+  return { overlay, thsDias, celulas, zonaRelogio, relogio, debugViewport, tempoFuncionamento: tf, hojeIndice: -1 };
 }
 
 // Devolve a data ISO (YYYY-MM-DD) da segunda-feira da semana de `p`.
@@ -1891,6 +1911,17 @@ function popularTabelaHorario(refs, calendario, dados, p) {
     const iso = adicionarDias(iniSemana, i);
     isosSemana.push(iso);
     horariosSemana.push(horarioBrancoDia(iso, calendario, dados));
+  }
+
+  // Total de horas de porta aberta da semana (soma dos 7 dias; almoços
+  // não contam, ver horasAbertoDia). Formata sem casas decimais quando
+  // inteiro; com vírgula decimal (PT-PT) caso surja meia hora no futuro.
+  if (refs.tempoFuncionamento) {
+    const totalHoras = horariosSemana.reduce((acc, hd) => acc + horasAbertoDia(hd), 0);
+    const txt = Number.isInteger(totalHoras)
+      ? String(totalHoras)
+      : totalHoras.toFixed(1).replace(".", ",");
+    refs.tempoFuncionamento.textContent = `Tempo de funcionamento: ${txt} h`;
   }
 
   // Cabeçalho: data por baixo de cada dia, classificar cronologicamente
