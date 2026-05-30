@@ -887,7 +887,16 @@ a { color:#1976d2; }
 #estatistica-overlay .est-lista .est-datas { color: #333; text-align: center; font-variant-numeric: tabular-nums; }
 #estatistica-overlay .est-lista .est-dias { color: #333; text-align: center; font-variant-numeric: tabular-nums; }
 #estatistica-overlay .est-lista .est-horas { color: #1b5e20; font-weight: bold; text-align: center; font-variant-numeric: tabular-nums; }
-#estatistica-overlay .est-lista .est-causa { color: #555; padding-left: 16px; }
+#estatistica-overlay .est-lista .est-causa { color: #555; padding-left: 16px; text-align: left; }
+/* Células clicáveis (dias, horas, causa) das linhas completas. Reset do
+   button para herdar a aparência da respectiva célula; o alinhamento e a
+   cor vêm das classes .est-dias / .est-horas / .est-causa acima. */
+#estatistica-overlay .est-lista .est-filtro {
+  font: inherit; background: none; border: none; margin: 0; padding: 0; width: 100%; cursor: pointer;
+}
+#estatistica-overlay .est-lista .est-filtro:hover { text-decoration: underline; }
+#estatistica-overlay .est-lista .est-causa.est-filtro { padding-left: 16px; }
+#estatistica-overlay .est-lista .est-filtro:focus-visible { outline: 2px solid #2e7d32; outline-offset: 2px; border-radius: 3px; }
 #estatistica-overlay .est-lista li.inc { background: #fff7e8; }
 #estatistica-overlay .est-lista li.inc .est-horas { color: #9a7b2e; }
 #estatistica-overlay .est-lista li.inc .est-dias { color: #9a7b2e; }
@@ -898,7 +907,8 @@ a { color:#1976d2; }
 #estatistica-overlay .est-lista li.est-total-row {
   background: #eaf3ea; font-weight: bold; margin-top: 4px;
 }
-#estatistica-overlay .est-total-label { grid-column: 1 / 4; color: #1b5e20; }
+#estatistica-overlay .est-total-label { grid-column: 1 / 3; color: #1b5e20; }
+#estatistica-overlay .est-total-datas { grid-column: 3 / 4; color: #1b5e20; text-align: center; font-weight: normal; font-variant-numeric: tabular-nums; }
 #estatistica-overlay .est-total-dias { grid-column: 4 / 5; color: #1b5e20; text-align: center; font-variant-numeric: tabular-nums; }
 #estatistica-overlay .est-total-horas { grid-column: 5 / 6; color: #1b5e20; text-align: center; font-variant-numeric: tabular-nums; }
 #estatistica-overlay .est-total-causa { grid-column: 6 / 7; color: #8a6d28; font-weight: normal; font-style: italic; padding-left: 16px; }
@@ -948,7 +958,8 @@ a { color:#1976d2; }
   #estatistica-overlay .est-lista .est-dias,
   #estatistica-overlay .est-lista .est-horas { text-align: left; }
   #estatistica-overlay .est-lista .est-causa { color: #2e7d32; font-size: 15px; padding-left: 0; }
-  #estatistica-overlay .est-total-label, #estatistica-overlay .est-total-dias, #estatistica-overlay .est-total-horas, #estatistica-overlay .est-total-causa { grid-column: 1 / 2; text-align: left; padding-left: 0; }
+  #estatistica-overlay .est-lista .est-causa.est-filtro { padding-left: 0; }
+  #estatistica-overlay .est-total-label, #estatistica-overlay .est-total-datas, #estatistica-overlay .est-total-dias, #estatistica-overlay .est-total-horas, #estatistica-overlay .est-total-causa { grid-column: 1 / 2; text-align: left; padding-left: 0; }
   #estatistica-overlay .est-tab-horario { font-size: 12px; }
   #estatistica-overlay .est-tab-horario th, #estatistica-overlay .est-tab-horario td { padding: 4px 2px; }
 }
@@ -2423,6 +2434,7 @@ function renderEstatistica(dados, calendario) {
 
   function isoBarras(iso) { return iso.replace(/-/g, "/"); }
   function ddmm(iso) { return iso.slice(8) + "/" + iso.slice(5, 7); }
+  function escAttr(t) { return String(t).replace(/&/g, "&amp;").replace(/"/g, "&quot;"); }
   function limparSelecao() {
     caixa.querySelectorAll(".est-col.sel").forEach(c => {
       c.classList.remove("sel"); c.removeAttribute("aria-pressed");
@@ -2438,7 +2450,7 @@ function renderEstatistica(dados, calendario) {
     { campo: "horas",  rotulo: "Horas",  cls: "est-h-horas" },
     { campo: "causa",  rotulo: "Causa",  cls: "est-h-causa" },
   ];
-  const estado = { modo: "todas", h: null, lista: semanas.slice(), campo: "semana", asc: true };
+  const estado = { modo: "todas", tipo: null, valor: null, lista: semanas.slice(), campo: "semana", asc: true };
 
   function comparar(a, b) {
     const dir = estado.asc ? 1 : -1;
@@ -2465,13 +2477,26 @@ function renderEstatistica(dados, calendario) {
       ? `${s.causa}<span class="est-causa-nota">${s.causaNota}</span>`
       : s.causa;
     const cls = [s.incompleta ? "inc" : "", atual ? "atual" : ""].filter(Boolean).join(" ");
+    // Nas linhas completas, as células de dias, horas e causa são botões
+    // que filtram a listagem por esse critério. As incompletas ficam fora
+    // do universo do histograma, por isso mantêm-se como texto.
+    const filtravel = !s.incompleta;
+    const celDias = filtravel
+      ? `<button type="button" class="est-dias est-filtro" data-ftipo="dias" data-fvalor="${s.dias}">${s.dias}</button>`
+      : `<span class="est-dias">${s.dias == null ? "n/d" : s.dias}</span>`;
+    const celHoras = filtravel
+      ? `<button type="button" class="est-horas est-filtro" data-ftipo="horas" data-fvalor="${s.total}">${horas}</button>`
+      : `<span class="est-horas">${horas}</span>`;
+    const celCausa = filtravel
+      ? `<button type="button" class="est-causa est-filtro" data-ftipo="causa" data-fvalor="${escAttr(s.causa)}">${causaHtml}</button>`
+      : `<span class="est-causa">${causaHtml}</span>`;
     return `<li${cls ? ` class="${cls}"` : ``}>` +
       `<button type="button" class="est-sem" data-seg="${segHorario}">Semana ${s.semana}</button>` +
       `<span class="est-mes">${s.mesLabel}</span>` +
       `<span class="est-datas">${isoBarras(s.seg)} a ${isoBarras(s.dom)}</span>` +
-      `<span class="est-dias">${s.dias == null ? "n/d" : s.dias}</span>` +
-      `<span class="est-horas">${horas}</span>` +
-      `<span class="est-causa">${causaHtml}</span>` +
+      celDias +
+      celHoras +
+      celCausa +
       `</li>`;
   }
   function renderTabela() {
@@ -2479,9 +2504,19 @@ function renderEstatistica(dados, calendario) {
     const soma = lista.reduce((acc, s) => acc + (s.total || 0), 0);
     const somaDias = lista.reduce((acc, s) => acc + (s.dias || 0), 0);
     const causaTotal = lista.some(s => s.incompleta) ? "As semanas incompletas são consideradas" : "";
+    // Intervalo de datas na linha total só no modo "todas": aí a lista é
+    // contígua e cobre o ano inteiro (as incompletas tocam 01/01 e 31/12).
+    // Nos filtros, as semanas podem não ser contíguas, por isso fica vazio.
+    let datasTotal = "";
+    if (estado.modo === "todas" && lista.length) {
+      const minSeg = lista.reduce((a, s) => (s.seg < a ? s.seg : a), lista[0].seg);
+      const maxDom = lista.reduce((a, s) => (s.dom > a ? s.dom : a), lista[0].dom);
+      datasTotal = `${isoBarras(minSeg)} a ${isoBarras(maxDom)}`;
+    }
     const linhaTotal =
       `<li class="est-total-row">` +
         `<span class="est-total-label">Total (${lista.length} ${lista.length === 1 ? "semana" : "semanas"})</span>` +
+        `<span class="est-total-datas">${datasTotal}</span>` +
         `<span class="est-total-dias">${somaDias}</span>` +
         `<span class="est-total-horas">${fmtHorasEst(soma)} h</span>` +
         `<span class="est-total-causa">${causaTotal}</span>` +
@@ -2497,7 +2532,11 @@ function renderEstatistica(dados, calendario) {
       cab = `<div class="est-detalhe-cab">Todas as semanas · ${todasLista.length}${detalheInc}</div>`;
     } else {
       const nF = estado.lista.length;
-      cab = `<div class="est-detalhe-cab">${estado.h} h · ${nF} ${nF === 1 ? "semana" : "semanas"}` +
+      let crit;
+      if (estado.tipo === "horas")     crit = `${fmtHorasEst(estado.valor)} h`;
+      else if (estado.tipo === "dias") crit = `${estado.valor} ${estado.valor === 1 ? "dia de funcionamento" : "dias de funcionamento"}`;
+      else                             crit = estado.valor;
+      cab = `<div class="est-detalhe-cab">${crit} · ${nF} ${nF === 1 ? "semana" : "semanas"}` +
             `<button type="button" class="est-btn-todas">Considerar todas</button></div>`;
     }
     detalhe.innerHTML = cab + `<div class="est-tabela"></div>`;
@@ -2507,15 +2546,30 @@ function renderEstatistica(dados, calendario) {
   function mostrarTodas() {
     barras.classList.remove("modo-foco");
     limparSelecao();
-    estado.modo = "todas"; estado.h = null; estado.lista = todasLista.slice();
+    estado.modo = "todas"; estado.tipo = null; estado.valor = null; estado.lista = todasLista.slice();
     aplicarVista();
   }
-  function mostrarFoco(h) {
-    barras.classList.add("modo-foco");
+  // Lista de semanas completas que satisfazem o critério.
+  function listaFiltrada(tipo, valor) {
+    if (tipo === "horas") return semanas.filter(s => s.total === valor);
+    if (tipo === "dias")  return semanas.filter(s => s.dias === valor);
+    if (tipo === "causa") return semanas.filter(s => s.causa === valor);
+    return semanas.slice();
+  }
+  // Realça no histograma todas as colunas de horas presentes na lista
+  // filtrada (mantém as alturas globais; é destaque, não re-histograma).
+  function realcarHistograma(lista) {
     limparSelecao();
-    const col = caixa.querySelector(`.est-col[data-horas="${h}"]`);
-    if (col) { col.classList.add("sel"); col.setAttribute("aria-pressed", "true"); }
-    estado.modo = "foco"; estado.h = h; estado.lista = (grupos[h] || []).slice();
+    new Set(lista.map(s => s.total)).forEach(h => {
+      const col = caixa.querySelector(`.est-col[data-horas="${h}"]`);
+      if (col) { col.classList.add("sel"); col.setAttribute("aria-pressed", "true"); }
+    });
+  }
+  function aplicarFiltro(tipo, valor) {
+    barras.classList.add("modo-foco");
+    estado.modo = "foco"; estado.tipo = tipo; estado.valor = valor;
+    estado.lista = listaFiltrada(tipo, valor);
+    realcarHistograma(estado.lista);
     aplicarVista();
   }
 
@@ -2576,8 +2630,8 @@ function renderEstatistica(dados, calendario) {
     const col = e.target.closest(".est-col[data-horas]");
     if (!col) return;
     const h = Number(col.getAttribute("data-horas"));
-    if (estado.modo === "foco" && estado.h === h) mostrarTodas();   // interruptor: volta a todas
-    else mostrarFoco(h);
+    if (estado.modo === "foco" && estado.tipo === "horas" && estado.valor === h) mostrarTodas(); // interruptor
+    else aplicarFiltro("horas", h);
   });
   detalhe.addEventListener("click", (e) => {
     const th = e.target.closest(".est-th");
@@ -2589,6 +2643,15 @@ function renderEstatistica(dados, calendario) {
       return;
     }
     if (e.target.closest(".est-btn-todas")) { mostrarTodas(); return; }
+    const cel = e.target.closest(".est-filtro");
+    if (cel) {
+      const tipo = cel.getAttribute("data-ftipo");
+      let valor = cel.getAttribute("data-fvalor");
+      if (tipo === "horas" || tipo === "dias") valor = Number(valor);
+      if (estado.modo === "foco" && estado.tipo === tipo && estado.valor === valor) mostrarTodas(); // interruptor
+      else aplicarFiltro(tipo, valor);
+      return;
+    }
     const sem = e.target.closest(".est-sem[data-seg]");
     if (sem) { abrirHorarioSemana(sem.getAttribute("data-seg")); return; }
   });
