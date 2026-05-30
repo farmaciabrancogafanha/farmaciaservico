@@ -2477,6 +2477,7 @@ function renderEstatistica(dados, calendario) {
   const barras       = overlay.querySelector(".est-barras");
   const vistaHorario = overlay.querySelector(".est-horario-semana");
   const linkHorario  = overlay.querySelector(".est-link-horario");
+  const subtitulo    = overlay.querySelector(".subtitulo");
 
   function isoBarras(iso) { return iso.replace(/-/g, "/"); }
   function ddmm(iso) { return iso.slice(8) + "/" + iso.slice(5, 7); }
@@ -2696,6 +2697,7 @@ function renderEstatistica(dados, calendario) {
       .filter(s => Number(s.seg.split("-")[1]) === mes)
       .sort((a, b) => (a.seg < b.seg ? -1 : a.seg > b.seg ? 1 : 0));
     let haForaQualquer = false;
+    const somaHoras = sems.reduce((a, s) => a + (s.total || 0), 0);
     const blocos = sems.map((s, idx) => {
       const seg = s.segReal || s.seg;
       const r = tabelaHorarioSemanaHTML(seg, idx === 0);   // coluna de horas só no primeiro
@@ -2705,13 +2707,14 @@ function renderEstatistica(dados, calendario) {
         `<div class="est-mes-bloco-tit">Semana ${semanaISO(seg)}<span>${isoBarras(seg)} a ${isoBarras(dom)}</span></div>` +
         r.tabela + `</div>`;
     });
-    return `<div class="est-detalhe-cab">Horários de ${ESTATISTICA_MESES[mes - 1]} de ${anoRef} · ${sems.length} ${sems.length === 1 ? "semana" : "semanas"}` +
+    return `<div class="est-detalhe-cab">Horários de ${ESTATISTICA_MESES[mes - 1]} de ${anoRef} · ${sems.length} ${sems.length === 1 ? "semana" : "semanas"} · ${fmtHorasEst(somaHoras)} h` +
       `<button type="button" class="est-voltar">Voltar à tabela</button></div>` +
       legendaHorarioHTML(haForaQualquer) +
       `<div class="est-mes-tiras">${blocos.join("")}</div>`;
   }
   function abrirHorarioSemana(segIso) {
     overlay.classList.remove("vista-mes");
+    if (subtitulo) subtitulo.textContent = `Tempo de funcionamento semanal - ${anoRef}`;
     vistaHorario.innerHTML = htmlHorarioSemana(segIso);
     principal.hidden = true;
     vistaHorario.hidden = false;
@@ -2720,6 +2723,7 @@ function renderEstatistica(dados, calendario) {
   }
   function abrirHorarioMes(mes) {
     overlay.classList.add("vista-mes");
+    if (subtitulo) subtitulo.textContent = `Tempo de funcionamento mensal - ${anoRef}/${String(mes).padStart(2, "0")}`;
     vistaHorario.innerHTML = htmlHorarioMes(mes);
     principal.hidden = true;
     vistaHorario.hidden = false;
@@ -2728,6 +2732,7 @@ function renderEstatistica(dados, calendario) {
   }
   function voltarTabela() {
     overlay.classList.remove("vista-mes");
+    if (subtitulo) subtitulo.textContent = `Tempo de funcionamento semanal - ${anoRef}`;
     vistaHorario.hidden = true;
     principal.hidden = false;
     if (linkHorario) linkHorario.style.display = "";       // repõe o valor do stylesheet (inline-block)
