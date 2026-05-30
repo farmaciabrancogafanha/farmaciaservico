@@ -923,6 +923,7 @@ a { color:#1976d2; }
 #estatistica-overlay .est-lista li.inc .est-dias { color: #9a7b2e; }
 #estatistica-overlay .est-lista li.inc .est-causa { color: #8a6d28; font-style: italic; }
 #estatistica-overlay .est-lista li.atual { background: #d8eafc; }
+#estatistica-overlay .est-esta-semana { background: #d8eafc; padding: 2px 10px; border-radius: 6px; }
 #estatistica-overlay .est-lista li.inc.atual { background: #d8eafc; }
 #estatistica-overlay .est-causa-nota { display: block; margin-top: 2px; }
 #estatistica-overlay .est-lista li.est-total-row {
@@ -2738,7 +2739,10 @@ function renderEstatistica(dados, calendario) {
     overlay.classList.remove("vista-mes");
     const s = todasLista.find(x => (x.segReal || x.seg) === segIso);
     const atual = hojeIso >= segIso && hojeIso <= adicionarDias(segIso, 6);
-    if (subtitulo) subtitulo.textContent = atual ? "Horário desta semana" : `Horário da semana ${semanaISO(segIso)}`;
+    if (subtitulo) {
+      if (atual) subtitulo.innerHTML = `<span class="est-esta-semana">Horário da semana ${semanaISO(segIso)} - Esta semana</span>`;
+      else subtitulo.textContent = `Horário da semana ${semanaISO(segIso)}`;
+    }
     if (topoTf) { topoTf.hidden = false; topoTf.textContent = `Tempo de funcionamento: ${s ? fmtHorasEst(s.total) : "n/d"} h`; }
     vistaHorario.innerHTML = htmlHorarioSemana(segIso);
     principal.hidden = true;
