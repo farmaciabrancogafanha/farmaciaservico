@@ -900,6 +900,11 @@ a { color:#1976d2; }
 #estatistica-overlay .est-lista .est-sem:hover { color: #1b5e20; }
 #estatistica-overlay .est-lista .est-sem:focus-visible { outline: 2px solid #2e7d32; outline-offset: 2px; border-radius: 3px; }
 #estatistica-overlay .est-lista .est-mes  { color: #444; white-space: nowrap; }
+#estatistica-overlay .est-lista .est-mes-btn {
+  font: inherit; background: none; border: none; padding: 0; margin: 0; cursor: pointer; text-align: left;
+}
+#estatistica-overlay .est-lista .est-mes-btn:hover { text-decoration: underline; color: #1b5e20; }
+#estatistica-overlay .est-lista .est-mes-btn:focus-visible { outline: 2px solid #2e7d32; outline-offset: 2px; border-radius: 3px; }
 #estatistica-overlay .est-lista .est-datas { color: #333; text-align: center; font-variant-numeric: tabular-nums; }
 #estatistica-overlay .est-lista .est-dias { color: #333; text-align: center; font-variant-numeric: tabular-nums; }
 #estatistica-overlay .est-lista .est-horas { color: #1b5e20; font-weight: bold; text-align: center; font-variant-numeric: tabular-nums; }
@@ -946,6 +951,20 @@ a { color:#1976d2; }
 #estatistica-overlay .leg-almoco  { background: #cfcfcf; }
 #estatistica-overlay .leg-fechado { background: #f0f0f0; border: 1px solid #ddd; }
 #estatistica-overlay .est-tab-horario { width: 100%; border-collapse: collapse; font-size: 15px; }
+/* Vista de mês: horários das semanas lado a lado, numa só linha, com
+   scroll horizontal. Cada tira mantém a largura natural da tabela. */
+#estatistica-overlay .est-mes-tiras {
+  display: flex; flex-wrap: nowrap; gap: 16px; overflow-x: auto;
+  padding-bottom: 10px; align-items: flex-start;
+}
+#estatistica-overlay .est-mes-bloco { flex: 0 0 auto; }
+#estatistica-overlay .est-mes-bloco-tit {
+  font-size: 15px; font-weight: bold; color: #1b5e20; text-align: center; margin-bottom: 6px;
+}
+#estatistica-overlay .est-mes-bloco-tit span {
+  display: block; font-size: 12px; font-weight: normal; color: #666; font-variant-numeric: tabular-nums;
+}
+#estatistica-overlay .est-mes-bloco .est-tab-horario { width: auto; }
 #estatistica-overlay .est-tab-horario th, #estatistica-overlay .est-tab-horario td {
   border: 1px solid #fff; padding: 6px 4px; text-align: center;
 }
@@ -2506,6 +2525,7 @@ function renderEstatistica(dados, calendario) {
     // que filtram a listagem por esse critério. As incompletas ficam fora
     // do universo do histograma, por isso mantêm-se como texto.
     const filtravel = !s.incompleta;
+    const mesNum = Number(s.seg.split("-")[1]);   // mês de início (parte por mês primário)
     const celDias = filtravel
       ? `<button type="button" class="est-dias est-filtro" data-ftipo="dias" data-fvalor="${s.dias}">${s.dias}</button>`
       : `<span class="est-dias">${s.dias == null ? "n/d" : s.dias}</span>`;
@@ -2517,7 +2537,7 @@ function renderEstatistica(dados, calendario) {
       : `<span class="est-causa">${causaHtml}</span>`;
     return `<li${cls ? ` class="${cls}"` : ``}>` +
       `<button type="button" class="est-sem" data-seg="${segHorario}">Semana ${s.semana}</button>` +
-      `<span class="est-mes">${s.mesLabel}</span>` +
+      `<button type="button" class="est-mes est-mes-btn" data-fmes="${mesNum}" aria-label="Ver horários de ${ESTATISTICA_MESES[mesNum - 1]} de ${anoRef}">${s.mesLabel}</button>` +
       `<span class="est-datas">${isoBarras(s.seg)} a ${isoBarras(s.dom)}</span>` +
       celDias +
       celHoras +
@@ -2613,11 +2633,12 @@ function renderEstatistica(dados, calendario) {
   }
 
   // --- Vista do horário de uma semana específica -----------------------
-  function htmlHorarioSemana(segIso) {
+  // Gera apenas a tabela de horário de uma semana (cabeçalho de dias +
+  // corpo de horas). Reutilizada pela vista de semana e pela de mês.
+  function tabelaHorarioSemanaHTML(segIso) {
     const iniAno = `${anoRef}-01-01`, fimAno = `${anoRef}-12-31`;
     const isos = [];
     for (let i = 0; i < 7; i++) isos.push(adicionarDias(segIso, i));
-    const domIso = isos[6];
     const fora = isos.map(iso => iso < iniAno || iso > fimAno);
     const haFora = fora.some(Boolean);
     let cab = `<th>Hora</th>`;
@@ -2640,22 +2661,59 @@ function renderEstatistica(dados, calendario) {
       }
       corpo += `<tr>${tds}</tr>`;
     }
-    return `<div class="est-detalhe-cab">Horário da Semana ${semanaISO(segIso)} · ${isoBarras(segIso)} a ${isoBarras(domIso)}` +
-      `<button type="button" class="est-voltar">Voltar à tabela</button></div>` +
-      `<div class="est-hs-legenda">` +
+    return { tabela: `<table class="est-tab-horario"><thead><tr>${cab}</tr></thead><tbody>${corpo}</tbody></table>`, haFora, domIso: isos[6] };
+  }
+  function legendaHorarioHTML(haFora) {
+    return `<div class="est-hs-legenda">` +
         `<span><i class="leg leg-aberto"></i>Aberta</span>` +
         `<span><i class="leg leg-extra"></i>Aberta (alargado)</span>` +
         `<span><i class="leg leg-almoco"></i>Almoço</span>` +
         `<span><i class="leg leg-fechado"></i>Fechada</span>` +
         (haFora ? `<span><i class="leg leg-fora"></i>Fora do ano (sem dados)</span>` : ``) +
-      `</div>` +
-      `<table class="est-tab-horario"><thead><tr>${cab}</tr></thead><tbody>${corpo}</tbody></table>`;
+      `</div>`;
+  }
+  function htmlHorarioSemana(segIso) {
+    const { tabela, haFora, domIso } = tabelaHorarioSemanaHTML(segIso);
+    return `<div class="est-detalhe-cab">Horário da Semana ${semanaISO(segIso)} · ${isoBarras(segIso)} a ${isoBarras(domIso)}` +
+      `<button type="button" class="est-voltar">Voltar à tabela</button></div>` +
+      legendaHorarioHTML(haFora) + tabela;
+  }
+  // Vista de mês: horários de todas as semanas cujo mês de início (a
+  // segunda-feira mostrada) é o mês escolhido, lado a lado numa só
+  // linha com scroll horizontal. A semana incompleta de fronteira entra
+  // pelo mês que a sua etiqueta mostra; o horário usa a semana real,
+  // marcando os dias fora do ano.
+  function htmlHorarioMes(mes) {
+    const sems = todasLista
+      .filter(s => Number(s.seg.split("-")[1]) === mes)
+      .sort((a, b) => (a.seg < b.seg ? -1 : a.seg > b.seg ? 1 : 0));
+    let haForaQualquer = false;
+    const blocos = sems.map(s => {
+      const seg = s.segReal || s.seg;
+      const r = tabelaHorarioSemanaHTML(seg);
+      if (r.haFora) haForaQualquer = true;
+      const dom = adicionarDias(seg, 6);
+      return `<div class="est-mes-bloco">` +
+        `<div class="est-mes-bloco-tit">Semana ${semanaISO(seg)}<span>${isoBarras(seg)} a ${isoBarras(dom)}</span></div>` +
+        r.tabela + `</div>`;
+    });
+    return `<div class="est-detalhe-cab">Horários de ${ESTATISTICA_MESES[mes - 1]} de ${anoRef} · ${sems.length} ${sems.length === 1 ? "semana" : "semanas"}` +
+      `<button type="button" class="est-voltar">Voltar à tabela</button></div>` +
+      legendaHorarioHTML(haForaQualquer) +
+      `<div class="est-mes-tiras">${blocos.join("")}</div>`;
   }
   function abrirHorarioSemana(segIso) {
     vistaHorario.innerHTML = htmlHorarioSemana(segIso);
     principal.hidden = true;
     vistaHorario.hidden = false;
     if (linkHorario) linkHorario.style.display = "none";   // na vista da semana só há "Voltar à tabela"
+    overlay.scrollTop = 0;
+  }
+  function abrirHorarioMes(mes) {
+    vistaHorario.innerHTML = htmlHorarioMes(mes);
+    principal.hidden = true;
+    vistaHorario.hidden = false;
+    if (linkHorario) linkHorario.style.display = "none";
     overlay.scrollTop = 0;
   }
   function voltarTabela() {
@@ -2691,6 +2749,8 @@ function renderEstatistica(dados, calendario) {
       else aplicarFiltro(tipo, valor);
       return;
     }
+    const mesBtn = e.target.closest(".est-mes-btn[data-fmes]");
+    if (mesBtn) { abrirHorarioMes(Number(mesBtn.getAttribute("data-fmes"))); return; }
     const sem = e.target.closest(".est-sem[data-seg]");
     if (sem) { abrirHorarioSemana(sem.getAttribute("data-seg")); return; }
   });
