@@ -958,6 +958,9 @@ a { color:#1976d2; }
    sem scroll. Em janelas estreitas, min-width impede que encolham demais
    e o overflow-x passa a permitir scroll. */
 #estatistica-overlay.vista-mes .est-caixa { max-width: 1880px; }
+/* Total mensal com a identidade gráfica do "Tempo de funcionamento" do
+   horário (cinza, peso normal); ocupa linha própria sob o título. */
+#estatistica-overlay .est-mes-tf { flex-basis: 100%; font-size: 16px; font-weight: normal; }
 #estatistica-overlay .est-mes-tiras {
   display: flex; flex-wrap: nowrap; gap: 16px; overflow-x: auto;
   padding-bottom: 10px; align-items: flex-start;
@@ -2707,8 +2710,11 @@ function renderEstatistica(dados, calendario) {
         `<div class="est-mes-bloco-tit">Semana ${semanaISO(seg)}<span>${isoBarras(seg)} a ${isoBarras(dom)}</span></div>` +
         r.tabela + `</div>`;
     });
-    return `<div class="est-detalhe-cab">Horários de ${ESTATISTICA_MESES[mes - 1]} de ${anoRef} · ${sems.length} ${sems.length === 1 ? "semana" : "semanas"} · ${fmtHorasEst(somaHoras)} h` +
-      `<button type="button" class="est-voltar">Voltar à tabela</button></div>` +
+    return `<div class="est-detalhe-cab est-cab-mes">` +
+        `<span>Horários de ${ESTATISTICA_MESES[mes - 1]} de ${anoRef} · ${sems.length} ${sems.length === 1 ? "semana" : "semanas"}</span>` +
+        `<button type="button" class="est-voltar">Voltar à tabela</button>` +
+        `<div class="tempo-funcionamento est-mes-tf">Tempo de funcionamento: ${fmtHorasEst(somaHoras)} h</div>` +
+      `</div>` +
       legendaHorarioHTML(haForaQualquer) +
       `<div class="est-mes-tiras">${blocos.join("")}</div>`;
   }
