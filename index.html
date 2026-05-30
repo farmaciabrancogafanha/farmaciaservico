@@ -2286,6 +2286,11 @@ function fmtHorasEst(x) {
   return Number.isInteger(x) ? String(x) : x.toFixed(1).replace(".", ",");
 }
 
+// Número da semana sempre com dois dígitos (01, 02, ... 52, 53).
+function fmtSemana(n) {
+  return String(n).padStart(2, "0");
+}
+
 // Descreve a causa dominante do total de horas de uma semana, a partir
 // da sua composição real (não do total). Conta, para cada dia, os
 // eventos que afastam a semana da base de 58 h: dias de disponibilidade
@@ -2555,7 +2560,7 @@ function renderEstatistica(dados, calendario) {
       ? `<button type="button" class="est-causa est-filtro" data-ftipo="causa" data-fvalor="${escAttr(s.causa)}">${causaHtml}</button>`
       : `<span class="est-causa">${causaHtml}</span>`;
     return `<li${cls ? ` class="${cls}"` : ``}>` +
-      `<button type="button" class="est-sem" data-seg="${segHorario}">Semana ${s.semana}</button>` +
+      `<button type="button" class="est-sem" data-seg="${segHorario}">Semana ${fmtSemana(s.semana)}</button>` +
       celMes +
       `<span class="est-datas">${isoBarras(s.seg)} a ${isoBarras(s.dom)}</span>` +
       celDias +
@@ -2728,7 +2733,7 @@ function renderEstatistica(dados, calendario) {
       if (r.haFora) haForaQualquer = true;
       const dom = adicionarDias(seg, 6);
       return `<div class="est-mes-bloco">` +
-        `<div class="est-mes-bloco-tit">Semana ${semanaISO(seg)}<span>${isoBarras(seg)} a ${isoBarras(dom)}</span></div>` +
+        `<div class="est-mes-bloco-tit">Semana ${fmtSemana(semanaISO(seg))}<span>${isoBarras(seg)} a ${isoBarras(dom)}</span></div>` +
         r.tabela + `</div>`;
     });
     return `<div class="est-detalhe-cab"><button type="button" class="est-voltar">Voltar à tabela</button></div>` +
@@ -2740,8 +2745,8 @@ function renderEstatistica(dados, calendario) {
     const s = todasLista.find(x => (x.segReal || x.seg) === segIso);
     const atual = hojeIso >= segIso && hojeIso <= adicionarDias(segIso, 6);
     if (subtitulo) {
-      if (atual) subtitulo.innerHTML = `<span class="est-esta-semana">Horário da semana ${semanaISO(segIso)} - Esta semana</span>`;
-      else subtitulo.textContent = `Horário da semana ${semanaISO(segIso)}`;
+      if (atual) subtitulo.innerHTML = `<span class="est-esta-semana">Horário da semana ${fmtSemana(semanaISO(segIso))} - Esta semana</span>`;
+      else subtitulo.textContent = `Horário da semana ${fmtSemana(semanaISO(segIso))}`;
     }
     if (topoTf) { topoTf.hidden = false; topoTf.textContent = `Tempo de funcionamento: ${s ? fmtHorasEst(s.total) : "n/d"} h`; }
     vistaHorario.innerHTML = htmlHorarioSemana(segIso);
