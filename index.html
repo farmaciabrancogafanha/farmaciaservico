@@ -861,8 +861,9 @@ a { color:#1976d2; }
   font: inherit; font-size: 15px; font-weight: normal;
   color: #1b5e20; background: #eef4ee; border: 1px solid #b7d3b9;
   border-radius: 8px; padding: 4px 12px; cursor: pointer;
-  text-decoration: none; display: inline-block; white-space: nowrap;
+  text-decoration: none; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
 }
+#estatistica-overlay .est-link-icone { flex: none; }
 #estatistica-overlay .est-link-horario:link,
 #estatistica-overlay .est-link-horario:visited,
 #estatistica-overlay .est-link-horario:hover,
@@ -2458,7 +2459,7 @@ function renderEstatistica(dados, calendario) {
         `<div class="subtitulo">Tempo de funcionamento semanal - ${anoRef}</div>` +
         `<div class="subtitulo tempo-funcionamento est-topo-tf" hidden></div>` +
       `</div>` +
-      `<a class="est-link-horario" href="https://farmaciaservicoilhavoaveiro.netlify.app/farmaciabranco/horario">Voltar ao Horário desta semana</a>` +
+      `<a class="est-link-horario" href="https://farmaciaservicoilhavoaveiro.netlify.app/farmaciabranco/horario"><svg class="est-link-icone" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 1.5"/></svg>Voltar ao Horário desta semana</a>` +
       `</div>` +
       `<div class="est-principal">` +
         `<div class="est-metricas">` +
@@ -2752,7 +2753,7 @@ function renderEstatistica(dados, calendario) {
     vistaHorario.innerHTML = htmlHorarioSemana(segIso);
     principal.hidden = true;
     vistaHorario.hidden = false;
-    if (linkHorario) linkHorario.style.display = "none";   // na vista da semana só há "Voltar à tabela"
+    if (linkHorario) linkHorario.style.display = atual ? "" : "none";   // só a semana actual liga ao "Horário desta semana"
     overlay.scrollTop = 0;
   }
   function abrirHorarioMes(mes) {
