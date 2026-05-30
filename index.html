@@ -958,9 +958,6 @@ a { color:#1976d2; }
    sem scroll. Em janelas estreitas, min-width impede que encolham demais
    e o overflow-x passa a permitir scroll. */
 #estatistica-overlay.vista-mes .est-caixa { max-width: 1880px; }
-/* Total mensal com a identidade gráfica do "Tempo de funcionamento" do
-   horário (cinza, peso normal); ocupa linha própria sob o título. */
-#estatistica-overlay .est-mes-tf { flex-basis: 100%; font-size: 16px; font-weight: normal; }
 #estatistica-overlay .est-mes-tiras {
   display: flex; flex-wrap: nowrap; gap: 16px; overflow-x: auto;
   padding-bottom: 10px; align-items: flex-start;
@@ -2453,6 +2450,7 @@ function renderEstatistica(dados, calendario) {
       `<div class="titulo"><div class="cruz"></div><div>` +
         `<div class="titulo-principal">Farmácia Branco</div>` +
         `<div class="subtitulo">Tempo de funcionamento semanal - ${anoRef}</div>` +
+        `<div class="subtitulo tempo-funcionamento est-topo-tf" hidden></div>` +
       `</div>` +
       `<a class="est-link-horario" href="https://farmaciaservicoilhavoaveiro.netlify.app/farmaciabranco/horario">Voltar ao Horário desta semana</a>` +
       `</div>` +
@@ -2481,6 +2479,7 @@ function renderEstatistica(dados, calendario) {
   const vistaHorario = overlay.querySelector(".est-horario-semana");
   const linkHorario  = overlay.querySelector(".est-link-horario");
   const subtitulo    = overlay.querySelector(".subtitulo");
+  const topoTf       = overlay.querySelector(".est-topo-tf");
 
   function isoBarras(iso) { return iso.replace(/-/g, "/"); }
   function ddmm(iso) { return iso.slice(8) + "/" + iso.slice(5, 7); }
@@ -2537,7 +2536,14 @@ function renderEstatistica(dados, calendario) {
     // que filtram a listagem por esse critério. As incompletas ficam fora
     // do universo do histograma, por isso mantêm-se como texto.
     const filtravel = !s.incompleta;
-    const mesNum = Number(s.seg.split("-")[1]);   // mês de início (parte por mês primário)
+    // Célula do mês: um link por mês que a etiqueta mostra. Nos meses
+    // compostos há dois links, um para cada mês.
+    const mSeg = Number(s.seg.split("-")[1]);
+    const mDom = Number(s.dom.split("-")[1]);
+    const linkMes = (mes) => `<button type="button" class="est-mes-btn" data-fmes="${mes}" aria-label="Ver horários de ${ESTATISTICA_MESES[mes - 1]} de ${anoRef}">${ESTATISTICA_MESES[mes - 1]}</button>`;
+    const celMes = mSeg === mDom
+      ? `<span class="est-mes">${linkMes(mSeg)}</span>`
+      : `<span class="est-mes">${linkMes(mSeg)} / ${linkMes(mDom)}</span>`;
     const celDias = filtravel
       ? `<button type="button" class="est-dias est-filtro" data-ftipo="dias" data-fvalor="${s.dias}">${s.dias}</button>`
       : `<span class="est-dias">${s.dias == null ? "n/d" : s.dias}</span>`;
@@ -2549,7 +2555,7 @@ function renderEstatistica(dados, calendario) {
       : `<span class="est-causa">${causaHtml}</span>`;
     return `<li${cls ? ` class="${cls}"` : ``}>` +
       `<button type="button" class="est-sem" data-seg="${segHorario}">Semana ${s.semana}</button>` +
-      `<button type="button" class="est-mes est-mes-btn" data-fmes="${mesNum}" aria-label="Ver horários de ${ESTATISTICA_MESES[mesNum - 1]} de ${anoRef}">${s.mesLabel}</button>` +
+      celMes +
       `<span class="est-datas">${isoBarras(s.seg)} a ${isoBarras(s.dom)}</span>` +
       celDias +
       celHoras +
@@ -2644,14 +2650,15 @@ function renderEstatistica(dados, calendario) {
     aplicarVista();
   }
 
-  // --- Vista do horário de uma semana específica -----------------------
-  // Gera apenas a tabela de horário de uma semana (cabeçalho de dias +
-  // corpo de horas). Reutilizada pela vista de semana e pela de mês.
-  function tabelaHorarioSemanaHTML(segIso, comColunaHora = true) {
+  // --- Vistas de horário (semana e mês) --------------------------------
+  // Gera a tabela de horário de uma semana. Marca como "fora" (esbatido)
+  // os dias fora do ano e, quando mesFiltro é dado, os dias de outro mês.
+  function tabelaHorarioSemanaHTML(segIso, comColunaHora = true, mesFiltro = null) {
     const iniAno = `${anoRef}-01-01`, fimAno = `${anoRef}-12-31`;
     const isos = [];
     for (let i = 0; i < 7; i++) isos.push(adicionarDias(segIso, i));
-    const fora = isos.map(iso => iso < iniAno || iso > fimAno);
+    const fora = isos.map(iso =>
+      iso < iniAno || iso > fimAno || (mesFiltro != null && Number(iso.split("-")[1]) !== mesFiltro));
     const haFora = fora.some(Boolean);
     let cab = comColunaHora ? `<th>Hora</th>` : ``;
     for (let i = 0; i < 7; i++) {
@@ -2675,52 +2682,64 @@ function renderEstatistica(dados, calendario) {
     }
     return { tabela: `<table class="est-tab-horario"><thead><tr>${cab}</tr></thead><tbody>${corpo}</tbody></table>`, haFora, domIso: isos[6] };
   }
-  function legendaHorarioHTML(haFora) {
+  function legendaHorarioHTML(haFora, rotuloFora) {
     return `<div class="est-hs-legenda">` +
         `<span><i class="leg leg-aberto"></i>Aberta</span>` +
         `<span><i class="leg leg-extra"></i>Aberta (alargado)</span>` +
         `<span><i class="leg leg-almoco"></i>Almoço</span>` +
         `<span><i class="leg leg-fechado"></i>Fechada</span>` +
-        (haFora ? `<span><i class="leg leg-fora"></i>Fora do ano (sem dados)</span>` : ``) +
+        (haFora ? `<span><i class="leg leg-fora"></i>${rotuloFora || "Fora do ano (sem dados)"}</span>` : ``) +
       `</div>`;
   }
+  // Soma das horas de porta aberta dos dias do mês (dentro do ano). Conta
+  // por dia, não por semana, para as semanas de fronteira não duplicarem.
+  function horasDoMes(mes) {
+    let total = 0;
+    let it = `${anoRef}-${String(mes).padStart(2, "0")}-01`;
+    while (Number(it.split("-")[1]) === mes) {
+      total += horasAbertoDia(horarioBrancoDia(it, calendario, dados));
+      it = adicionarDias(it, 1);
+    }
+    return total;
+  }
+  // Semanas (completas e incompletas) que tocam o mês, isto é, cuja janela
+  // de 7 dias real intersecta o intervalo do mês. Uma semana de fronteira
+  // aparece nos dois meses que toca.
+  function semanasDoMes(mes) {
+    const ini = `${anoRef}-${String(mes).padStart(2, "0")}-01`;
+    let fim = ini;
+    while (Number(adicionarDias(fim, 1).split("-")[1]) === mes) fim = adicionarDias(fim, 1);
+    return todasLista
+      .filter(s => { const seg = s.segReal || s.seg; return seg <= fim && adicionarDias(seg, 6) >= ini; })
+      .sort((a, b) => { const A = a.segReal || a.seg, B = b.segReal || b.seg; return A < B ? -1 : A > B ? 1 : 0; });
+  }
   function htmlHorarioSemana(segIso) {
-    const { tabela, haFora, domIso } = tabelaHorarioSemanaHTML(segIso);
-    return `<div class="est-detalhe-cab">Horário da Semana ${semanaISO(segIso)} · ${isoBarras(segIso)} a ${isoBarras(domIso)}` +
-      `<button type="button" class="est-voltar">Voltar à tabela</button></div>` +
+    const { tabela, haFora } = tabelaHorarioSemanaHTML(segIso);
+    return `<div class="est-detalhe-cab"><button type="button" class="est-voltar">Voltar à tabela</button></div>` +
       legendaHorarioHTML(haFora) + tabela;
   }
-  // Vista de mês: horários de todas as semanas cujo mês de início (a
-  // segunda-feira mostrada) é o mês escolhido, lado a lado numa só
-  // linha com scroll horizontal. A semana incompleta de fronteira entra
-  // pelo mês que a sua etiqueta mostra; o horário usa a semana real,
-  // marcando os dias fora do ano.
   function htmlHorarioMes(mes) {
-    const sems = todasLista
-      .filter(s => Number(s.seg.split("-")[1]) === mes)
-      .sort((a, b) => (a.seg < b.seg ? -1 : a.seg > b.seg ? 1 : 0));
+    const sems = semanasDoMes(mes);
     let haForaQualquer = false;
-    const somaHoras = sems.reduce((a, s) => a + (s.total || 0), 0);
     const blocos = sems.map((s, idx) => {
       const seg = s.segReal || s.seg;
-      const r = tabelaHorarioSemanaHTML(seg, idx === 0);   // coluna de horas só no primeiro
+      const r = tabelaHorarioSemanaHTML(seg, idx === 0, mes);   // coluna de horas só no 1º; dias de outro mês esbatidos
       if (r.haFora) haForaQualquer = true;
       const dom = adicionarDias(seg, 6);
       return `<div class="est-mes-bloco">` +
         `<div class="est-mes-bloco-tit">Semana ${semanaISO(seg)}<span>${isoBarras(seg)} a ${isoBarras(dom)}</span></div>` +
         r.tabela + `</div>`;
     });
-    return `<div class="est-detalhe-cab est-cab-mes">` +
-        `<span>Horários de ${ESTATISTICA_MESES[mes - 1]} de ${anoRef} · ${sems.length} ${sems.length === 1 ? "semana" : "semanas"}</span>` +
-        `<button type="button" class="est-voltar">Voltar à tabela</button>` +
-        `<div class="tempo-funcionamento est-mes-tf">Tempo de funcionamento: ${fmtHorasEst(somaHoras)} h</div>` +
-      `</div>` +
-      legendaHorarioHTML(haForaQualquer) +
+    return `<div class="est-detalhe-cab"><button type="button" class="est-voltar">Voltar à tabela</button></div>` +
+      legendaHorarioHTML(haForaQualquer, "Dia de outro mês") +
       `<div class="est-mes-tiras">${blocos.join("")}</div>`;
   }
   function abrirHorarioSemana(segIso) {
     overlay.classList.remove("vista-mes");
-    if (subtitulo) subtitulo.textContent = `Tempo de funcionamento semanal - ${anoRef}`;
+    const s = todasLista.find(x => (x.segReal || x.seg) === segIso);
+    const atual = hojeIso >= segIso && hojeIso <= adicionarDias(segIso, 6);
+    if (subtitulo) subtitulo.textContent = atual ? "Horário desta semana" : `Horário da semana ${semanaISO(segIso)}`;
+    if (topoTf) { topoTf.hidden = false; topoTf.textContent = `Tempo de funcionamento: ${s ? fmtHorasEst(s.total) : "n/d"} h`; }
     vistaHorario.innerHTML = htmlHorarioSemana(segIso);
     principal.hidden = true;
     vistaHorario.hidden = false;
@@ -2729,7 +2748,8 @@ function renderEstatistica(dados, calendario) {
   }
   function abrirHorarioMes(mes) {
     overlay.classList.add("vista-mes");
-    if (subtitulo) subtitulo.textContent = `Tempo de funcionamento mensal - ${anoRef}/${String(mes).padStart(2, "0")}`;
+    if (subtitulo) subtitulo.textContent = `Horário deste mês - ${anoRef}/${String(mes).padStart(2, "0")}`;
+    if (topoTf) { topoTf.hidden = false; topoTf.textContent = `Tempo de funcionamento: ${fmtHorasEst(horasDoMes(mes))} h`; }
     vistaHorario.innerHTML = htmlHorarioMes(mes);
     principal.hidden = true;
     vistaHorario.hidden = false;
@@ -2739,6 +2759,7 @@ function renderEstatistica(dados, calendario) {
   function voltarTabela() {
     overlay.classList.remove("vista-mes");
     if (subtitulo) subtitulo.textContent = `Tempo de funcionamento semanal - ${anoRef}`;
+    if (topoTf) topoTf.hidden = true;
     vistaHorario.hidden = true;
     principal.hidden = false;
     if (linkHorario) linkHorario.style.display = "";       // repõe o valor do stylesheet (inline-block)
