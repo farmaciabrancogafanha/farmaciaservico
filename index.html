@@ -907,6 +907,11 @@ a { color:#1976d2; }
 #estatistica-overlay .est-lista .est-mes-btn:hover { text-decoration: underline; color: #1b5e20; }
 #estatistica-overlay .est-lista .est-mes-btn:focus-visible { outline: 2px solid #2e7d32; outline-offset: 2px; border-radius: 3px; }
 #estatistica-overlay .est-lista .est-datas { color: #333; text-align: center; font-variant-numeric: tabular-nums; }
+#estatistica-overlay .est-lista .est-datas-btn {
+  font: inherit; background: none; border: none; padding: 0; margin: 0; width: 100%; cursor: pointer; color: inherit;
+}
+#estatistica-overlay .est-lista .est-datas-btn:hover { text-decoration: underline; color: #1b5e20; }
+#estatistica-overlay .est-lista .est-datas-btn:focus-visible { outline: 2px solid #2e7d32; outline-offset: 2px; border-radius: 3px; }
 #estatistica-overlay .est-lista .est-dias { color: #333; text-align: center; font-variant-numeric: tabular-nums; }
 #estatistica-overlay .est-lista .est-horas { color: #1b5e20; font-weight: bold; text-align: center; font-variant-numeric: tabular-nums; }
 #estatistica-overlay .est-lista .est-causa { color: #555; padding-left: 16px; text-align: left; }
@@ -2563,7 +2568,7 @@ function renderEstatistica(dados, calendario) {
     return `<li${cls ? ` class="${cls}"` : ``}>` +
       `<button type="button" class="est-sem" data-seg="${segHorario}">Semana ${fmtSemana(s.semana)}</button>` +
       celMes +
-      `<span class="est-datas">${isoBarras(s.seg)} a ${isoBarras(s.dom)}</span>` +
+      `<button type="button" class="est-datas est-datas-btn" data-seg="${segHorario}">${isoBarras(s.seg)} a ${isoBarras(s.dom)}</button>` +
       celDias +
       celHoras +
       celCausa +
@@ -2804,7 +2809,7 @@ function renderEstatistica(dados, calendario) {
     }
     const mesBtn = e.target.closest(".est-mes-btn[data-fmes]");
     if (mesBtn) { abrirHorarioMes(Number(mesBtn.getAttribute("data-fmes"))); return; }
-    const sem = e.target.closest(".est-sem[data-seg]");
+    const sem = e.target.closest(".est-sem[data-seg], .est-datas-btn[data-seg]");
     if (sem) { abrirHorarioSemana(sem.getAttribute("data-seg")); return; }
   });
   vistaHorario.addEventListener("click", (e) => {
