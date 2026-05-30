@@ -962,7 +962,8 @@ a { color:#1976d2; }
   display: flex; flex-wrap: nowrap; gap: 16px; overflow-x: auto;
   padding-bottom: 10px; align-items: flex-start;
 }
-#estatistica-overlay .est-mes-bloco { flex: 1 1 0; min-width: 300px; }
+#estatistica-overlay .est-mes-bloco { flex: 7 1 0; min-width: 280px; }
+#estatistica-overlay .est-mes-bloco:first-child { flex: 8 1 0; min-width: 320px; }
 #estatistica-overlay .est-mes-bloco-tit {
   font-size: 15px; font-weight: bold; color: #1b5e20; text-align: center; margin-bottom: 6px;
 }
@@ -2642,19 +2643,19 @@ function renderEstatistica(dados, calendario) {
   // --- Vista do horário de uma semana específica -----------------------
   // Gera apenas a tabela de horário de uma semana (cabeçalho de dias +
   // corpo de horas). Reutilizada pela vista de semana e pela de mês.
-  function tabelaHorarioSemanaHTML(segIso) {
+  function tabelaHorarioSemanaHTML(segIso, comColunaHora = true) {
     const iniAno = `${anoRef}-01-01`, fimAno = `${anoRef}-12-31`;
     const isos = [];
     for (let i = 0; i < 7; i++) isos.push(adicionarDias(segIso, i));
     const fora = isos.map(iso => iso < iniAno || iso > fimAno);
     const haFora = fora.some(Boolean);
-    let cab = `<th>Hora</th>`;
+    let cab = comColunaHora ? `<th>Hora</th>` : ``;
     for (let i = 0; i < 7; i++) {
       cab += `<th class="${fora[i] ? "fora" : ""}"><span class="dia">${HORARIO_DIAS_NOMES[i]}</span><span class="data">${ddmm(isos[i])}</span></th>`;
     }
     let corpo = "";
     for (let hh = HORARIO_HORA_INI; hh < HORARIO_HORA_FIM; hh++) {
-      let tds = `<th class="hora">${String(hh).padStart(2, "0")}h-${String(hh + 1).padStart(2, "0")}h</th>`;
+      let tds = comColunaHora ? `<th class="hora">${String(hh).padStart(2, "0")}h-${String(hh + 1).padStart(2, "0")}h</th>` : ``;
       for (let i = 0; i < 7; i++) {
         if (fora[i]) { tds += `<td class="hs-fora">—</td>`; continue; }
         const horario = horarioBrancoDia(isos[i], calendario, dados);
@@ -2695,9 +2696,9 @@ function renderEstatistica(dados, calendario) {
       .filter(s => Number(s.seg.split("-")[1]) === mes)
       .sort((a, b) => (a.seg < b.seg ? -1 : a.seg > b.seg ? 1 : 0));
     let haForaQualquer = false;
-    const blocos = sems.map(s => {
+    const blocos = sems.map((s, idx) => {
       const seg = s.segReal || s.seg;
-      const r = tabelaHorarioSemanaHTML(seg);
+      const r = tabelaHorarioSemanaHTML(seg, idx === 0);   // coluna de horas só no primeiro
       if (r.haFora) haForaQualquer = true;
       const dom = adicionarDias(seg, 6);
       return `<div class="est-mes-bloco">` +
