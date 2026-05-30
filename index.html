@@ -2748,7 +2748,7 @@ function renderEstatistica(dados, calendario) {
   }
   function abrirHorarioMes(mes) {
     overlay.classList.add("vista-mes");
-    if (subtitulo) subtitulo.textContent = `Horário deste mês - ${anoRef}/${String(mes).padStart(2, "0")}`;
+    if (subtitulo) subtitulo.textContent = `Horário do mês - ${anoRef}/${String(mes).padStart(2, "0")}`;
     if (topoTf) { topoTf.hidden = false; topoTf.textContent = `Tempo de funcionamento: ${fmtHorasEst(horasDoMes(mes))} h`; }
     vistaHorario.innerHTML = htmlHorarioMes(mes);
     principal.hidden = true;
