@@ -953,18 +953,25 @@ a { color:#1976d2; }
 #estatistica-overlay .est-tab-horario { width: 100%; border-collapse: collapse; font-size: 15px; }
 /* Vista de mês: horários das semanas lado a lado, numa só linha, com
    scroll horizontal. Cada tira mantém a largura natural da tabela. */
+/* Vista de mês: horários das semanas lado a lado. As cinco tiras dividem
+   a largura por igual; a caixa alarga (até 1880px) para caberem a 1920px
+   sem scroll. Em janelas estreitas, min-width impede que encolham demais
+   e o overflow-x passa a permitir scroll. */
+#estatistica-overlay.vista-mes .est-caixa { max-width: 1880px; }
 #estatistica-overlay .est-mes-tiras {
   display: flex; flex-wrap: nowrap; gap: 16px; overflow-x: auto;
   padding-bottom: 10px; align-items: flex-start;
 }
-#estatistica-overlay .est-mes-bloco { flex: 0 0 auto; }
+#estatistica-overlay .est-mes-bloco { flex: 1 1 0; min-width: 300px; }
 #estatistica-overlay .est-mes-bloco-tit {
   font-size: 15px; font-weight: bold; color: #1b5e20; text-align: center; margin-bottom: 6px;
 }
 #estatistica-overlay .est-mes-bloco-tit span {
   display: block; font-size: 12px; font-weight: normal; color: #666; font-variant-numeric: tabular-nums;
 }
-#estatistica-overlay .est-mes-bloco .est-tab-horario { width: auto; }
+#estatistica-overlay .est-mes-bloco .est-tab-horario { width: 100%; font-size: 12px; }
+#estatistica-overlay .est-mes-bloco .est-tab-horario th,
+#estatistica-overlay .est-mes-bloco .est-tab-horario td { padding: 3px 2px; }
 #estatistica-overlay .est-tab-horario th, #estatistica-overlay .est-tab-horario td {
   border: 1px solid #fff; padding: 6px 4px; text-align: center;
 }
@@ -2703,6 +2710,7 @@ function renderEstatistica(dados, calendario) {
       `<div class="est-mes-tiras">${blocos.join("")}</div>`;
   }
   function abrirHorarioSemana(segIso) {
+    overlay.classList.remove("vista-mes");
     vistaHorario.innerHTML = htmlHorarioSemana(segIso);
     principal.hidden = true;
     vistaHorario.hidden = false;
@@ -2710,6 +2718,7 @@ function renderEstatistica(dados, calendario) {
     overlay.scrollTop = 0;
   }
   function abrirHorarioMes(mes) {
+    overlay.classList.add("vista-mes");
     vistaHorario.innerHTML = htmlHorarioMes(mes);
     principal.hidden = true;
     vistaHorario.hidden = false;
@@ -2717,6 +2726,7 @@ function renderEstatistica(dados, calendario) {
     overlay.scrollTop = 0;
   }
   function voltarTabela() {
+    overlay.classList.remove("vista-mes");
     vistaHorario.hidden = true;
     principal.hidden = false;
     if (linkHorario) linkHorario.style.display = "";       // repõe o valor do stylesheet (inline-block)
