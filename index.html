@@ -808,18 +808,30 @@ a { color:#1976d2; }
 }
 #estatistica-overlay .est-valor { font-size: 15px; font-weight: bold; color: #333; margin-bottom: 4px; min-height: 18px; }
 #estatistica-overlay .est-barra {
-  width: 100%; max-width: 46px;
+  width: 100%; max-width: 46px; position: relative;
   background: #2e7d32; border-radius: 4px 4px 0 0;
   transition: background 0.12s ease;
 }
+/* Fracção da barra que corresponde ao critério filtrado (cor viva),
+   ancorada ao fundo. Altura definida por JS; nula fora de filtro. */
+#estatistica-overlay .est-barra-vivo {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 0;
+  background: #2e7d32; border-radius: 4px 4px 0 0;
+}
+/* Número da fracção filtrada, no topo da parte viva. */
+#estatistica-overlay .est-valor-vivo {
+  position: absolute; left: 0; right: 0; top: -20px; text-align: center;
+  font-size: 15px; font-weight: bold; color: #1b5e20; display: none;
+}
 #estatistica-overlay .est-col[data-horas]:hover .est-barra { background: #1b5e20; }
-/* Modo foco: todas as colunas ficam baças; só a considerada fica viva. */
+/* Modo foco: todas as barras ficam baças (o "resto"); a parte viva
+   filtrada de cada coluna considerada é desenhada por cima, no fundo. */
 #estatistica-overlay .est-barras.modo-foco .est-barra { background: #c8e6c9; }
 #estatistica-overlay .est-barras.modo-foco .est-valor { color: #b7b7b7; }
-#estatistica-overlay .est-barras.modo-foco .est-col.sel .est-barra { background: #2e7d32; }
-#estatistica-overlay .est-barras.modo-foco .est-col.sel .est-valor { color: #1b5e20; }
+#estatistica-overlay .est-barras.modo-foco .est-col.sel .est-valor-vivo { display: block; }
+#estatistica-overlay .est-barras.modo-foco .est-col.sel.cheia .est-valor { display: none; }
 #estatistica-overlay .est-barras.modo-foco .est-col[data-horas]:hover .est-barra { background: #8fc593; }
-#estatistica-overlay .est-barras.modo-foco .est-col.sel:hover .est-barra { background: #1b5e20; }
+#estatistica-overlay .est-barras.modo-foco .est-col.sel:hover .est-barra-vivo { background: #1b5e20; }
 #estatistica-overlay .est-rotulo { font-size: 14px; color: #444; padding-top: 6px; }
 #estatistica-overlay .est-barras.modo-foco .est-rotulo { color: #b0b0b0; }
 #estatistica-overlay .est-barras.modo-foco .est-col.sel .est-rotulo { font-weight: bold; color: #1b5e20; }
@@ -2388,7 +2400,9 @@ function renderEstatistica(dados, calendario) {
       barrasHTML +=
         `<button class="est-col" data-horas="${h}" aria-label="${h} horas, ${freq} ${freq === 1 ? "semana" : "semanas"}">` +
           `<span class="est-barra-wrap"><span class="est-valor">${freq}</span>` +
-          `<span class="est-barra" style="height:${alt}px"></span></span>` +
+          `<span class="est-barra" style="height:${alt}px">` +
+            `<span class="est-barra-vivo"><span class="est-valor-vivo"></span></span>` +
+          `</span></span>` +
           `<span class="est-rotulo">${h}</span></button>`;
     } else {
       barrasHTML +=
@@ -2437,7 +2451,13 @@ function renderEstatistica(dados, calendario) {
   function escAttr(t) { return String(t).replace(/&/g, "&amp;").replace(/"/g, "&quot;"); }
   function limparSelecao() {
     caixa.querySelectorAll(".est-col.sel").forEach(c => {
-      c.classList.remove("sel"); c.removeAttribute("aria-pressed");
+      c.classList.remove("sel", "cheia");
+      c.removeAttribute("aria-pressed");
+      const v = c.querySelector(".est-barra-vivo"); if (v) v.style.height = "0";
+      const nv = c.querySelector(".est-valor-vivo"); if (nv) nv.textContent = "";
+      const h = c.getAttribute("data-horas");
+      const f = grupos[h] ? grupos[h].length : 0;
+      c.setAttribute("aria-label", `${h} horas, ${f} ${f === 1 ? "semana" : "semanas"}`);
     });
   }
 
@@ -2556,13 +2576,27 @@ function renderEstatistica(dados, calendario) {
     if (tipo === "causa") return semanas.filter(s => s.causa === valor);
     return semanas.slice();
   }
-  // Realça no histograma todas as colunas de horas presentes na lista
-  // filtrada (mantém as alturas globais; é destaque, não re-histograma).
+  // Realça no histograma as colunas de horas presentes na lista filtrada.
+  // Mantém a altura global da barra; desenha por cima, ancorada ao fundo,
+  // a fracção que obedece ao critério (cor viva), deixando o resto baço.
   function realcarHistograma(lista) {
     limparSelecao();
-    new Set(lista.map(s => s.total)).forEach(h => {
+    const contagem = {};
+    lista.forEach(s => { contagem[s.total] = (contagem[s.total] || 0) + 1; });
+    Object.keys(contagem).forEach(h => {
       const col = caixa.querySelector(`.est-col[data-horas="${h}"]`);
-      if (col) { col.classList.add("sel"); col.setAttribute("aria-pressed", "true"); }
+      if (!col) return;
+      const total = grupos[h] ? grupos[h].length : 0;
+      const filtrado = contagem[h];
+      col.classList.add("sel");
+      col.setAttribute("aria-pressed", "true");
+      if (filtrado >= total) col.classList.add("cheia");
+      const vivo = col.querySelector(".est-barra-vivo");
+      const numVivo = col.querySelector(".est-valor-vivo");
+      if (vivo) vivo.style.height = total ? (filtrado / total * 100) + "%" : "0";
+      if (numVivo) numVivo.textContent = filtrado;
+      col.setAttribute("aria-label",
+        `${h} horas, ${filtrado} de ${total} ${total === 1 ? "semana corresponde" : "semanas correspondem"} ao filtro`);
     });
   }
   function aplicarFiltro(tipo, valor) {
