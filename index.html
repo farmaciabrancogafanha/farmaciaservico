@@ -867,7 +867,7 @@ a { color:#1976d2; }
 #estatistica-overlay .est-link-horario:focus-visible { outline: 3px solid #2e7d32; outline-offset: 2px; }
 #estatistica-overlay .est-tabela { margin-top: 4px; }
 #estatistica-overlay .est-lista-head {
-  display: grid; grid-template-columns: 90px 185px 210px 104px 54px 1fr; gap: 14px;
+  display: grid; grid-template-columns: 90px 185px 210px 104px 104px 1fr; gap: 14px;
   padding: 4px 10px 8px; border-bottom: 1px solid #cdddce; margin-bottom: 6px;
 }
 #estatistica-overlay .est-th {
@@ -880,13 +880,13 @@ a { color:#1976d2; }
 #estatistica-overlay .est-th.activo { color: #2e7d32; }
 #estatistica-overlay .est-th.est-h-datas { justify-content: center; }
 #estatistica-overlay .est-th.est-h-dias { justify-content: center; text-align: center; line-height: 1.2; }
-#estatistica-overlay .est-th.est-h-horas { justify-content: center; }
+#estatistica-overlay .est-th.est-h-horas { justify-content: center; text-align: center; line-height: 1.2; }
 #estatistica-overlay .est-th.est-h-causa { padding-left: 16px; }
 #estatistica-overlay .est-seta { font-size: 11px; }
 
 #estatistica-overlay .est-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 #estatistica-overlay .est-lista li {
-  display: grid; grid-template-columns: 90px 185px 210px 104px 54px 1fr; gap: 14px; align-items: baseline;
+  display: grid; grid-template-columns: 90px 185px 210px 104px 104px 1fr; gap: 14px; align-items: baseline;
   padding: 8px 10px; background: #f7f9f7; border-radius: 8px; font-size: 16px;
 }
 #estatistica-overlay .est-lista .est-sem {
@@ -2467,7 +2467,7 @@ function renderEstatistica(dados, calendario) {
     { campo: "mes",    rotulo: "Mês",    cls: "est-h-mes" },
     { campo: "datas",  rotulo: "Datas",  cls: "est-h-datas" },
     { campo: "dias",   rotulo: "Dias de funcionamento", cls: "est-h-dias" },
-    { campo: "horas",  rotulo: "Horas",  cls: "est-h-horas" },
+    { campo: "horas",  rotulo: "Horas de funcionamento", cls: "est-h-horas" },
     { campo: "causa",  rotulo: "Causa",  cls: "est-h-causa" },
   ];
   const estado = { modo: "todas", tipo: null, valor: null, lista: semanas.slice(), campo: "semana", asc: true };
