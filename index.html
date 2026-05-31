@@ -55,6 +55,11 @@ body { font-family: Arial, sans-serif; margin: 0; background: #eef2f3; }
 .tempo-funcionamento:visited,
 .tempo-funcionamento:hover,
 .tempo-funcionamento:active { color:#777; font-weight:normal; text-decoration:none; }
+.horario-link-est,
+.horario-link-est:link,
+.horario-link-est:visited,
+.horario-link-est:hover,
+.horario-link-est:active { color:inherit; text-decoration:none; }
 
 /* TEXTO UNIFORME */
 .texto, .sub-bloco, .sub-bloco small, .farmacia {
@@ -929,15 +934,6 @@ a { color:#1976d2; }
 #estatistica-overlay .est-lista li.inc .est-dias { color: #9a7b2e; }
 #estatistica-overlay .est-lista li.inc .est-causa { color: #8a6d28; font-style: italic; }
 #estatistica-overlay .est-lista li.atual { background: #d8eafc; }
-#estatistica-overlay .est-esta-semana { background: #d8eafc; padding: 2px 10px; border-radius: 6px; }
-/* Botões com aparência de texto, na semana actual, que levam à tabela. */
-#estatistica-overlay .est-voltar-tabela {
-  font: inherit; color: inherit; border: none; cursor: pointer; text-align: left;
-}
-#estatistica-overlay button.est-esta-semana { font-weight: bold; }
-#estatistica-overlay .est-metricas-link { background: none; padding: 0; text-decoration: underline; text-underline-offset: 2px; }
-#estatistica-overlay .est-voltar-tabela:hover { color: #2e7d32; }
-#estatistica-overlay .est-voltar-tabela:focus-visible { outline: 2px solid #2e7d32; outline-offset: 2px; border-radius: 4px; }
 #estatistica-overlay .est-lista li.inc.atual { background: #d8eafc; }
 #estatistica-overlay .est-causa-nota { display: block; margin-top: 2px; }
 #estatistica-overlay .est-lista li.est-total-row {
@@ -2120,7 +2116,7 @@ function inicializarHorario() {
   footer.querySelector(".fo-meio").appendChild(debugViewport);
   document.body.appendChild(overlay);
 
-  return { overlay, thsDias, celulas, zonaRelogio, relogio, debugViewport, tempoFuncionamento: tf, hojeIndice: -1 };
+  return { overlay, thsDias, celulas, zonaRelogio, relogio, debugViewport, tempoFuncionamento: tf, subtitulo: st, hojeIndice: -1 };
 }
 
 // Devolve a data ISO (YYYY-MM-DD) da segunda-feira da semana de `p`.
@@ -2223,12 +2219,22 @@ function popularTabelaHorario(refs, calendario, dados, p) {
   // Total de horas de porta aberta da semana (soma dos 7 dias; almoços
   // não contam, ver horasAbertoDia). Formata sem casas decimais quando
   // inteiro; com vírgula decimal (PT-PT) caso surja meia hora no futuro.
+  // Número da semana, dias de funcionamento (dias com porta aberta) e
+  // total de horas, para o subtítulo e a linha de métricas.
+  const numSemana = fmtSemana(semanaISO(iniSemana));
+  const diasFunc = horariosSemana.reduce((acc, hd) => acc + (horasAbertoDia(hd) > 0 ? 1 : 0), 0);
+  const URL_EST = "https://farmaciaservicoilhavoaveiro.netlify.app/farmaciabranco/estatistica";
+  if (refs.subtitulo) {
+    // Subtítulo com o nº da semana, ligado à tabela de estatística.
+    refs.subtitulo.innerHTML = `<a class="horario-link-est" href="${URL_EST}">Horário desta semana (Semana ${numSemana})</a>`;
+  }
   if (refs.tempoFuncionamento) {
     const totalHoras = horariosSemana.reduce((acc, hd) => acc + horasAbertoDia(hd), 0);
     const txt = Number.isInteger(totalHoras)
       ? String(totalHoras)
       : totalHoras.toFixed(1).replace(".", ",");
-    refs.tempoFuncionamento.textContent = `Tempo de funcionamento: ${txt} h`;
+    refs.tempoFuncionamento.textContent =
+      `Dias de funcionamento: ${diasFunc} ${diasFunc === 1 ? "dia" : "dias"}\u00A0\u00A0Horas de funcionamento: ${txt} h`;
   }
 
   // Cabeçalho: data por baixo de cada dia, classificar cronologicamente
@@ -2852,17 +2858,12 @@ function renderEstatistica(dados, calendario) {
     overlay.classList.remove("vista-mes");
     const s = todasLista.find(x => (x.segReal || x.seg) === segIso);
     const atual = hojeIso >= segIso && hojeIso <= adicionarDias(segIso, 6);
-    if (subtitulo) {
-      if (atual) subtitulo.innerHTML = `<button type="button" class="est-esta-semana est-voltar-tabela">Horário desta semana (Semana ${fmtSemana(semanaISO(segIso))})</button>`;
-      else subtitulo.textContent = `Horário da semana ${fmtSemana(semanaISO(segIso))}`;
-    }
+    if (subtitulo) subtitulo.textContent = `Horário da semana ${fmtSemana(semanaISO(segIso))}`;
     if (topoTf) {
       topoTf.hidden = false;
       const horasTxt = s ? fmtHorasEst(s.total) : "n/d";
       const diasTxt = s && s.dias != null ? `${s.dias} ${s.dias === 1 ? "dia" : "dias"}` : "n/d";
-      const metricas = `Dias de funcionamento: ${diasTxt}&nbsp;&nbsp;Horas de funcionamento: ${horasTxt} h`;
-      // Na semana actual, as métricas são clicáveis e levam à tabela.
-      topoTf.innerHTML = atual ? `<button type="button" class="est-voltar-tabela est-metricas-link">${metricas}</button>` : metricas;
+      topoTf.innerHTML = `Dias de funcionamento: ${diasTxt}&nbsp;&nbsp;Horas de funcionamento: ${horasTxt} h`;
     }
     vistaHorario.innerHTML = htmlHorarioSemana(segIso);
     principal.hidden = true;
@@ -2944,11 +2945,7 @@ function renderEstatistica(dados, calendario) {
     if (e.target.closest(".est-voltar")) voltarTabela();
   });
   if (subtitulo) subtitulo.addEventListener("click", (e) => {
-    if (e.target.closest(".est-voltar-tabela")) { voltarTabela(); return; }
     if (e.target.closest(".est-ano-link")) abrirHorarioAno();
-  });
-  if (topoTf) topoTf.addEventListener("click", (e) => {
-    if (e.target.closest(".est-voltar-tabela")) voltarTabela();
   });
 
   // Estado inicial: todas as semanas consideradas.
