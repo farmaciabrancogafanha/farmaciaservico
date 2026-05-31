@@ -2738,21 +2738,31 @@ function renderEstatistica(dados, calendario) {
         (haFora ? `<span><i class="leg leg-fora"></i>${rotuloFora || "Fora do ano (sem dados)"}</span>` : ``) +
       `</div>`;
   }
-  // Soma das horas de porta aberta dos dias do mês (dentro do ano). Conta
-  // por dia, não por semana, para as semanas de fronteira não duplicarem.
-  function horasDoMes(mes) {
-    let total = 0;
+  // Métricas do mês contadas dia a dia (de calendário), não por semana,
+  // para as semanas de fronteira não duplicarem: total de horas de porta
+  // aberta e número de dias com pelo menos uma hora aberta.
+  function metricasDoMes(mes) {
+    let horas = 0, dias = 0;
     let it = `${anoRef}-${String(mes).padStart(2, "0")}-01`;
     while (Number(it.split("-")[1]) === mes) {
-      total += horasAbertoDia(horarioBrancoDia(it, calendario, dados));
+      const hd = horasAbertoDia(horarioBrancoDia(it, calendario, dados));
+      horas += hd;
+      if (hd > 0) dias += 1;
       it = adicionarDias(it, 1);
     }
-    return total;
+    return { horas, dias };
   }
+  function horasDoMes(mes) { return metricasDoMes(mes).horas; }
   function horasDoAno() {
     let total = 0;
     for (let m = 1; m <= 12; m++) total += horasDoMes(m);
     return total;
+  }
+  // Texto da linha de métricas (dias + horas) usado nos cabeçalhos de mês.
+  function textoMetricasMes(mes) {
+    const m = metricasDoMes(mes);
+    return `Dias de funcionamento: ${m.dias} ${m.dias === 1 ? "dia" : "dias"}` +
+      `&nbsp;&nbsp;Horas de funcionamento: ${fmtHorasEst(m.horas)} h`;
   }
   // Semanas (completas e incompletas) que tocam o mês, isto é, cuja janela
   // de 7 dias real intersecta o intervalo do mês. Uma semana de fronteira
@@ -2802,7 +2812,7 @@ function renderEstatistica(dados, calendario) {
       if (haFora) haForaQualquer = true;
       return `<div class="est-ano-faixa">` +
         `<div class="est-ano-mes-cab">${nome} de ${anoRef}` +
-          `<span class="tempo-funcionamento">Tempo de funcionamento: ${fmtHorasEst(horasDoMes(mes))} h</span></div>` +
+          `<span class="tempo-funcionamento">${textoMetricasMes(mes)}</span></div>` +
         html + `</div>`;
     });
     return `<div class="est-detalhe-cab"><button type="button" class="est-voltar">Voltar à tabela</button></div>` +
@@ -2853,8 +2863,8 @@ function renderEstatistica(dados, calendario) {
   }
   function abrirHorarioMes(mes) {
     overlay.classList.add("vista-mes");
-    if (subtitulo) subtitulo.textContent = `Horário do mês - ${anoRef}/${String(mes).padStart(2, "0")}`;
-    if (topoTf) { topoTf.hidden = false; topoTf.textContent = `Tempo de funcionamento: ${fmtHorasEst(horasDoMes(mes))} h`; }
+    if (subtitulo) subtitulo.innerHTML = `Horário do mês - <button type="button" class="est-ano-link">${anoRef}</button>/${String(mes).padStart(2, "0")}`;
+    if (topoTf) { topoTf.hidden = false; topoTf.innerHTML = textoMetricasMes(mes); }
     vistaHorario.innerHTML = htmlHorarioMes(mes);
     principal.hidden = true;
     vistaHorario.hidden = false;
