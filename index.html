@@ -966,11 +966,13 @@ a { color:#1976d2; }
    e o overflow-x passa a permitir scroll. */
 #estatistica-overlay.vista-mes .est-caixa { max-width: 1880px; }
 #estatistica-overlay .est-mes-tiras {
-  display: flex; flex-wrap: nowrap; gap: 16px; overflow-x: auto;
-  padding-bottom: 10px; align-items: flex-start;
+  display: flex; flex-wrap: wrap; gap: 16px;
+  padding-bottom: 10px; align-items: flex-start; justify-content: flex-start;
 }
-#estatistica-overlay .est-mes-bloco { flex: 7 1 0; min-width: 280px; }
-#estatistica-overlay .est-mes-bloco:first-child { flex: 8 1 0; min-width: 320px; }
+/* Cada tira tem largura-base própria e pode encolher; quando não cabem
+   todas numa linha, quebram para a linha seguinte (sem scroll que corta).
+   Como podem descer de linha, cada uma traz a sua coluna de horas. */
+#estatistica-overlay .est-mes-bloco { flex: 1 1 300px; min-width: 280px; max-width: 360px; }
 #estatistica-overlay .est-mes-bloco-tit {
   font-size: 15px; font-weight: bold; color: #1b5e20; text-align: center; margin-bottom: 6px;
 }
@@ -2733,9 +2735,9 @@ function renderEstatistica(dados, calendario) {
   function htmlHorarioMes(mes) {
     const sems = semanasDoMes(mes);
     let haForaQualquer = false;
-    const blocos = sems.map((s, idx) => {
+    const blocos = sems.map((s) => {
       const seg = s.segReal || s.seg;
-      const r = tabelaHorarioSemanaHTML(seg, idx === 0, mes);   // coluna de horas só no 1º; dias de outro mês esbatidos
+      const r = tabelaHorarioSemanaHTML(seg, true, mes);   // cada tira é autossuficiente (pode quebrar de linha)
       if (r.haFora) haForaQualquer = true;
       const dom = adicionarDias(seg, 6);
       return `<div class="est-mes-bloco">` +
