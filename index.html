@@ -969,19 +969,27 @@ a { color:#1976d2; }
   display: flex; flex-wrap: wrap; gap: 16px;
   padding-bottom: 10px; align-items: flex-start; justify-content: flex-start;
 }
-/* Cada tira tem largura-base própria e pode encolher; quando não cabem
-   todas numa linha, quebram para a linha seguinte (sem scroll que corta).
-   Como podem descer de linha, cada uma traz a sua coluna de horas. */
-#estatistica-overlay .est-mes-bloco { flex: 1 1 300px; min-width: 280px; max-width: 360px; }
+/* Cada tira ajusta-se à largura da sua tabela; quando não cabem todas
+   numa fila, quebram para a seguinte (sem scroll que corta). A tira que
+   inicia cada fila é mais larga por incluir a coluna de horas. */
+#estatistica-overlay .est-mes-bloco { flex: 0 0 auto; }
 #estatistica-overlay .est-mes-bloco-tit {
   font-size: 15px; font-weight: bold; color: #1b5e20; text-align: center; margin-bottom: 6px;
 }
 #estatistica-overlay .est-mes-bloco-tit span {
   display: block; font-size: 12px; font-weight: normal; color: #666; font-variant-numeric: tabular-nums;
 }
-#estatistica-overlay .est-mes-bloco .est-tab-horario { width: 100%; font-size: 12px; }
+#estatistica-overlay .est-mes-bloco .est-tab-horario { width: auto; font-size: 12px; table-layout: fixed; }
 #estatistica-overlay .est-mes-bloco .est-tab-horario th,
 #estatistica-overlay .est-mes-bloco .est-tab-horario td { padding: 3px 2px; }
+/* Coluna de horas das tiras de mês: oculta por omissão; visível só nas
+   tiras marcadas (1ª de cada fila). Larguras fixas para as colunas de dia
+   ficarem iguais com ou sem a coluna de horas, alinhando as filas. */
+#estatistica-overlay .est-mes-bloco .est-tab-horario .est-col-hora { display: none; }
+#estatistica-overlay .est-mes-bloco.com-hora .est-tab-horario .est-col-hora { display: table-cell; }
+#estatistica-overlay .est-mes-bloco .est-tab-horario th.hora.est-col-hora { width: 58px; }
+#estatistica-overlay .est-mes-bloco .est-tab-horario thead th:not(.est-col-hora),
+#estatistica-overlay .est-mes-bloco .est-tab-horario tbody td { width: 40px; }
 #estatistica-overlay .est-tab-horario th, #estatistica-overlay .est-tab-horario td {
   border: 1px solid #fff; padding: 6px 4px; text-align: center;
 }
@@ -2667,6 +2675,9 @@ function renderEstatistica(dados, calendario) {
   // --- Vistas de horário (semana e mês) --------------------------------
   // Gera a tabela de horário de uma semana. Marca como "fora" (esbatido)
   // os dias fora do ano e, quando mesFiltro é dado, os dias de outro mês.
+  // comColunaHora: true = sempre visível; false = ausente;
+  // "toggle" = presente mas ocultável por CSS (classe est-col-hora),
+  // para a vista de mês a mostrar só na 1ª tira de cada fila.
   function tabelaHorarioSemanaHTML(segIso, comColunaHora = true, mesFiltro = null) {
     const iniAno = `${anoRef}-01-01`, fimAno = `${anoRef}-12-31`;
     const isos = [];
@@ -2674,13 +2685,15 @@ function renderEstatistica(dados, calendario) {
     const fora = isos.map(iso =>
       iso < iniAno || iso > fimAno || (mesFiltro != null && Number(iso.split("-")[1]) !== mesFiltro));
     const haFora = fora.some(Boolean);
-    let cab = comColunaHora ? `<th>Hora</th>` : ``;
+    const clsHora = comColunaHora === "toggle" ? ` class="est-col-hora"` : ``;
+    const temHora = comColunaHora === true || comColunaHora === "toggle";
+    let cab = temHora ? `<th${clsHora}>Hora</th>` : ``;
     for (let i = 0; i < 7; i++) {
       cab += `<th class="${fora[i] ? "fora" : ""}"><span class="dia">${HORARIO_DIAS_NOMES[i]}</span><span class="data">${ddmm(isos[i])}</span></th>`;
     }
     let corpo = "";
     for (let hh = HORARIO_HORA_INI; hh < HORARIO_HORA_FIM; hh++) {
-      let tds = comColunaHora ? `<th class="hora">${String(hh).padStart(2, "0")}h-${String(hh + 1).padStart(2, "0")}h</th>` : ``;
+      let tds = temHora ? `<th class="hora${comColunaHora === "toggle" ? " est-col-hora" : ""}">${String(hh).padStart(2, "0")}h-${String(hh + 1).padStart(2, "0")}h</th>` : ``;
       for (let i = 0; i < 7; i++) {
         if (fora[i]) { tds += `<td class="hs-fora">—</td>`; continue; }
         const horario = horarioBrancoDia(isos[i], calendario, dados);
@@ -2737,7 +2750,7 @@ function renderEstatistica(dados, calendario) {
     let haForaQualquer = false;
     const blocos = sems.map((s) => {
       const seg = s.segReal || s.seg;
-      const r = tabelaHorarioSemanaHTML(seg, true, mes);   // cada tira é autossuficiente (pode quebrar de linha)
+      const r = tabelaHorarioSemanaHTML(seg, "toggle", mes);   // coluna de horas presente mas só visível na 1ª de cada fila
       if (r.haFora) haForaQualquer = true;
       const dom = adicionarDias(seg, 6);
       return `<div class="est-mes-bloco">` +
@@ -2763,6 +2776,20 @@ function renderEstatistica(dados, calendario) {
     if (linkHorario) linkHorario.style.display = atual ? "" : "none";   // só a semana actual liga ao "Horário desta semana"
     overlay.scrollTop = 0;
   }
+  // Mostra a coluna de horas apenas na primeira tira de cada fila visual.
+  // Deteta o início de fila comparando o topo de cada tira com o da
+  // anterior: se desceu, começou uma fila nova. Recalcula no resize.
+  function ajustarColunasHoraMes() {
+    if (!overlay.classList.contains("vista-mes")) return;
+    const tiras = vistaHorario.querySelectorAll(".est-mes-bloco");
+    let topoAnt = null;
+    tiras.forEach((t) => {
+      const topo = t.offsetTop;
+      const primeiraDaFila = topoAnt === null || topo > topoAnt + 1;   // tolerância de 1px
+      t.classList.toggle("com-hora", primeiraDaFila);
+      topoAnt = topo;
+    });
+  }
   function abrirHorarioMes(mes) {
     overlay.classList.add("vista-mes");
     if (subtitulo) subtitulo.textContent = `Horário do mês - ${anoRef}/${String(mes).padStart(2, "0")}`;
@@ -2772,6 +2799,7 @@ function renderEstatistica(dados, calendario) {
     vistaHorario.hidden = false;
     if (linkHorario) linkHorario.style.display = "none";
     overlay.scrollTop = 0;
+    ajustarColunasHoraMes();   // depois de inserido no DOM, já há posições para medir
   }
   function voltarTabela() {
     overlay.classList.remove("vista-mes");
@@ -2783,6 +2811,7 @@ function renderEstatistica(dados, calendario) {
   }
 
   // --- Eventos ---------------------------------------------------------
+  window.addEventListener("resize", ajustarColunasHoraMes);
   barras.addEventListener("click", (e) => {
     const col = e.target.closest(".est-col[data-horas]");
     if (!col) return;
