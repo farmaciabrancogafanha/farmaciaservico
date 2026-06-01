@@ -1436,6 +1436,12 @@ function render(slugs, catalogo, containerId) {
       ? `<a class="botao-acao" href="${f.maps}" target="_blank" rel="noopener noreferrer" aria-label="Ver localização da Farmácia ${f.nome} no Google Maps">📍 Ver no mapa</a>`
       : "";
 
+    // Só na Farmácia Branco: atalho para o seu horário semanal, à direita
+    // do "Ver no mapa".
+    const linkHorarioBranco = (slug === "branco")
+      ? `<a class="botao-acao" href="https://farmaciaservicoilhavoaveiro.netlify.app/farmaciabranco/horario" aria-label="Ver o horário desta semana da Farmácia Branco">🕒 Horário desta semana</a>`
+      : "";
+
     // Uma linha por cada telefone, com botão "Ligar".
     // Em Ílhavo (Disponibilidade) o botão dos números fixos esconde-se fora
     // do horário 9h–21h15. Os móveis (+351 9xx) mantêm-se sempre visíveis.
@@ -1457,7 +1463,7 @@ function render(slugs, catalogo, containerId) {
 
     return `
       <div class="farmacia">
-        <div class="nome">Farmácia ${f.nome}${linkMapa}</div>
+        <div class="nome">Farmácia ${f.nome}${linkMapa}${linkHorarioBranco}</div>
         <div>${f.morada}</div>
         ${telefonesLinhas}
       </div>
