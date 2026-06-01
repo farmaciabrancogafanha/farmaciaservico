@@ -2226,7 +2226,7 @@ function popularTabelaHorario(refs, calendario, dados, p) {
   const URL_EST = "https://farmaciaservicoilhavoaveiro.netlify.app/farmaciabranco/estatistica";
   if (refs.subtitulo) {
     // Subtítulo com o nº da semana, ligado à tabela de estatística.
-    refs.subtitulo.innerHTML = `<a class="horario-link-est" href="${URL_EST}">Horário desta semana (Semana ${numSemana})</a>`;
+    refs.subtitulo.innerHTML = `<a class="horario-link-est" href="${URL_EST}">Semana ${numSemana} - Horário</a>`;
   }
   if (refs.tempoFuncionamento) {
     const totalHoras = horariosSemana.reduce((acc, hd) => acc + horasAbertoDia(hd), 0);
@@ -2858,7 +2858,7 @@ function renderEstatistica(dados, calendario) {
     overlay.classList.remove("vista-mes");
     const s = todasLista.find(x => (x.segReal || x.seg) === segIso);
     const atual = hojeIso >= segIso && hojeIso <= adicionarDias(segIso, 6);
-    if (subtitulo) subtitulo.textContent = `Horário da semana ${fmtSemana(semanaISO(segIso))}`;
+    if (subtitulo) subtitulo.textContent = `Semana ${fmtSemana(semanaISO(segIso))} - Horário`;
     if (topoTf) {
       topoTf.hidden = false;
       const horasTxt = s ? fmtHorasEst(s.total) : "n/d";
