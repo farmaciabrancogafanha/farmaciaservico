@@ -10,3 +10,7 @@
 # da distribuição de horas de funcionamento semanal.
 /farmaciabranco/estatistica   /index.html   200
 /farmaciabranco/estatistica/  /index.html   200
+# Sub-rotas da estatística (ano, mês ou semana): mesma página. O
+# JavaScript lê o pathname e abre directamente a vista correspondente.
+# Ex.: /farmaciabranco/estatistica/2026, /.../2026/janeiro, /.../2026/semana01
+/farmaciabranco/estatistica/*   /index.html   200

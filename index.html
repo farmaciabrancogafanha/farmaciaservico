@@ -2458,7 +2458,7 @@ function semanasIncompletas(ano, calendario, dados) {
 
 // Renderiza a página de estatística no body. Conteúdo estático (não
 // depende da hora), calculado uma vez a partir dos JSON já carregados.
-function renderEstatistica(dados, calendario) {
+function renderEstatistica(dados, calendario, rotaInicial) {
   const anoRef = (calendario && calendario.ano) || partesLisboa().ano;
   const hojeIso = isoLisboa(partesLisboa());          // para destacar a semana actual
   const semanas = semanasDoAno(anoRef, calendario, dados);
@@ -2671,11 +2671,12 @@ function renderEstatistica(dados, calendario) {
     renderTabela();
   }
 
-  function mostrarTodas() {
+  function mostrarTodas(push = true) {
     barras.classList.remove("modo-foco");
     limparSelecao();
     estado.modo = "todas"; estado.tipo = null; estado.valor = null; estado.lista = todasLista.slice();
     aplicarVista();
+    if (push) definirURL("");
   }
   // Lista de semanas completas que satisfazem o critério.
   function listaFiltrada(tipo, valor) {
@@ -2849,7 +2850,7 @@ function renderEstatistica(dados, calendario) {
       legendaHorarioHTML(haForaQualquer, "Dia de outro mês") +
       faixas.join("");
   }
-  function abrirHorarioAno() {
+  function abrirHorarioAno(push = true) {
     overlay.classList.add("vista-mes", "vista-ano");   // vista-mes alarga a caixa; vista-ano marca o modo
     if (subtitulo) subtitulo.textContent = `Horário do ano - ${anoRef}`;
     if (topoTf) { topoTf.hidden = false; const a = metricasDoAno(); topoTf.innerHTML = textoMetricas(a.dias, a.horas); }
@@ -2859,9 +2860,10 @@ function renderEstatistica(dados, calendario) {
     if (linkHorario) linkHorario.style.display = "none";
     overlay.scrollTop = 0;
     ajustarColunasHoraMes();
+    if (push) definirURL(String(anoRef));
   }
-  function abrirHorarioSemana(segIso) {
-    overlay.classList.remove("vista-mes");
+  function abrirHorarioSemana(segIso, push = true) {
+    overlay.classList.remove("vista-mes", "vista-ano");
     const s = todasLista.find(x => (x.segReal || x.seg) === segIso);
     const atual = hojeIso >= segIso && hojeIso <= adicionarDias(segIso, 6);
     if (subtitulo) subtitulo.textContent = `Semana ${fmtSemana(semanaISO(segIso))} - Horário`;
@@ -2876,6 +2878,7 @@ function renderEstatistica(dados, calendario) {
     vistaHorario.hidden = false;
     if (linkHorario) linkHorario.style.display = atual ? "" : "none";   // só a semana actual liga ao "Horário desta semana"
     overlay.scrollTop = 0;
+    if (push) definirURL(`${anoRef}/semana${fmtSemana(semanaISO(segIso))}`);
   }
   // Mostra a coluna de horas apenas na primeira tira de cada fila visual.
   // Opera por faixa (.est-mes-tiras): cada faixa é tratada de forma
@@ -2893,7 +2896,8 @@ function renderEstatistica(dados, calendario) {
       });
     });
   }
-  function abrirHorarioMes(mes) {
+  function abrirHorarioMes(mes, push = true) {
+    overlay.classList.remove("vista-ano");
     overlay.classList.add("vista-mes");
     if (subtitulo) subtitulo.innerHTML = `Horário do mês - <button type="button" class="est-ano-link">${anoRef}</button>/${String(mes).padStart(2, "0")}`;
     if (topoTf) { topoTf.hidden = false; topoTf.innerHTML = textoMetricasMes(mes); }
@@ -2903,6 +2907,34 @@ function renderEstatistica(dados, calendario) {
     if (linkHorario) linkHorario.style.display = "none";
     overlay.scrollTop = 0;
     ajustarColunasHoraMes();   // depois de inserido no DOM, já há posições para medir
+    if (push) definirURL(`${anoRef}/${MESES_SLUG[mes - 1]}`);
+  }
+  // --- Roteamento por URL ---------------------------------------------
+  // Mapeia vistas para sub-rotas de /farmaciabranco/estatistica e vice-
+  // versa, com hierarquia ano / mês ou semana. pushState mantém a barra
+  // de endereço sincronizada com a vista. O nome do mês vai sem acentos.
+  const EST_BASE = "/farmaciabranco/estatistica";
+  const MESES_SLUG = ESTATISTICA_MESES.map(n =>
+    n.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
+  function definirURL(sub) {
+    const novo = EST_BASE + (sub ? "/" + sub : "");
+    if (location.pathname !== novo) history.pushState({ estSub: sub || "" }, "", novo);
+  }
+  // Abre a vista correspondente a uma sub-rota (sem mexer no URL).
+  function aplicarRota(sub) {
+    if (!sub) { mostrarTodas(false); return; }
+    const partes = sub.split("/");                 // ["2026"] | ["2026","janeiro"] | ["2026","semana01"]
+    if (partes[0] !== String(anoRef)) { mostrarTodas(false); return; }   // ano diferente: cai na tabela
+    const alvo = partes[1] || "";
+    if (alvo === "") { abrirHorarioAno(false); return; }
+    if (/^semana\d{1,2}$/.test(alvo)) {
+      const n = Number(alvo.replace("semana", ""));
+      const s = todasLista.find(x => semanaISO(x.segReal || x.seg) === n);
+      if (s) { abrirHorarioSemana(s.segReal || s.seg, false); return; }
+    }
+    const idxMes = MESES_SLUG.indexOf(alvo);
+    if (idxMes >= 0) { abrirHorarioMes(idxMes + 1, false); return; }
+    mostrarTodas(false);   // rota desconhecida: cai na tabela
   }
   function voltarTabela() {
     overlay.classList.remove("vista-mes", "vista-ano");
@@ -2911,6 +2943,7 @@ function renderEstatistica(dados, calendario) {
     vistaHorario.hidden = true;
     principal.hidden = false;
     if (linkHorario) linkHorario.style.display = "";       // repõe o valor do stylesheet (inline-block)
+    definirURL("");
   }
 
   // --- Eventos ---------------------------------------------------------
@@ -2954,8 +2987,20 @@ function renderEstatistica(dados, calendario) {
     if (e.target.closest(".est-ano-link")) abrirHorarioAno();
   });
 
-  // Estado inicial: todas as semanas consideradas.
-  mostrarTodas();
+  // Estado inicial: aplica a sub-rota do URL (ano, mês ou semana) ou,
+  // na sua ausência, a tabela com todas as semanas. Sem push: o arranque
+  // não deve criar uma entrada extra no histórico.
+  if (rotaInicial) aplicarRota(rotaInicial);
+  else mostrarTodas(false);
+  // Substitui a entrada inicial por uma com estado, para o "voltar" do
+  // browser ter um ponto de partida coerente.
+  history.replaceState({ estSub: rotaInicial || "" }, "", location.pathname);
+  // Botão voltar/avançar do browser: reaplica a vista da sub-rota, sem
+  // voltar a empilhar no histórico.
+  window.addEventListener("popstate", () => {
+    const m = location.pathname.match(/^\/farmaciabranco\/estatistica(?:\/(.*))?\/?$/);
+    aplicarRota(m && m[1] ? m[1].replace(/\/$/, "") : "");
+  });
 }
 
 (async () => {
@@ -2995,7 +3040,11 @@ function renderEstatistica(dados, calendario) {
   const temHorario     = !!horarioRefs;
 
   // Página de estatística: activa-se pelo pathname, à imagem do horário.
-  const estatisticaAtiva = /^\/farmaciabranco\/estatistica\/?$/.test(location.pathname);
+  // Aceita a raiz /estatistica e sub-rotas /estatistica/<algo> (ano, mês
+  // ou semana), que abrem directamente a vista correspondente.
+  const mEst = location.pathname.match(/^\/farmaciabranco\/estatistica(?:\/(.*))?\/?$/);
+  const estatisticaAtiva = !!mEst;
+  const estatisticaRota = mEst && mEst[1] ? mEst[1].replace(/\/$/, "") : "";
 
   // Cor cinzenta dos setores decorridos (centralizada em COR_DECORRIDO).
   dom.setorDecorrido.setAttribute("fill", COR_DECORRIDO);
@@ -3065,7 +3114,7 @@ function renderEstatistica(dados, calendario) {
   // Página de estatística: render único (conteúdo estático), depois de
   // dados e calendário carregados. O overlay tapa o site por baixo.
   if (estatisticaAtiva && calendario) {
-    renderEstatistica(dados, calendario);
+    renderEstatistica(dados, calendario, estatisticaRota);
     atualizarDebugViewport();   // preenche a linha de diagnóstico do overlay recém-criado
   }
 
