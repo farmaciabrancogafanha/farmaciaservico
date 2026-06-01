@@ -802,6 +802,11 @@ a { color:#1976d2; }
 #farmacias-overlay .farmacia {
   background: #f7f9f7; border-radius: 8px; padding: 12px 14px; line-height: 1.5;
 }
+/* Farmácia de serviço hoje: fundo de destaque (verde claro) e barra
+   lateral verde institucional. Só realça; não altera a ordem. */
+#farmacias-overlay .farmacia.de-servico {
+  background: #d6ecd8; box-shadow: inset 4px 0 0 #2e7d32;
+}
 #farmacias-overlay .farmacia .nome { font-weight: bold; color: #1b5e20; font-size: 17px; }
 #farmacias-overlay .nota-custo-chamada { display: block; font-size: 10px; color: #aaa; }
 #farmacias-overlay .farmacias-debug-vp {
@@ -1470,10 +1475,38 @@ function getSlugs(data, calendario) {
 // RENDER
 // =====================================================================
 
+// Ordem canónica de um concelho para a página /farmacias: a sequência
+// real do serviço na primeira volta do ano (ordem da 1a aparição de cada
+// farmácia na escala, cronologicamente), rodada para começar na de nome
+// alfabeticamente mais baixo. Farmácias do catálogo que não entrem na
+// escala vão para o fim, em ordem alfabética. A ordem é fixa: não depende
+// de quem está de serviço hoje.
+function ordemCanonicaConcelho(catalogo, escala) {
+  const nome = (s) => (catalogo[s] && catalogo[s].nome) || s;
+  const primeiraVolta = [];
+  for (const entrada of (escala || [])) {
+    for (const s of (entrada.farmacias || [])) {
+      if (catalogo[s] && !primeiraVolta.includes(s)) primeiraVolta.push(s);
+    }
+  }
+  let ordem = primeiraVolta;
+  if (ordem.length > 1) {
+    let idxMin = 0;
+    for (let i = 1; i < ordem.length; i++) {
+      if (nome(ordem[i]).localeCompare(nome(ordem[idxMin]), "pt") < 0) idxMin = i;
+    }
+    ordem = ordem.slice(idxMin).concat(ordem.slice(0, idxMin));
+  }
+  // Farmácias do catálogo fora da escala: no fim, em ordem alfabética.
+  const foraEscala = Object.keys(catalogo)
+    .filter(s => !ordem.includes(s))
+    .sort((a, b) => nome(a).localeCompare(nome(b), "pt"));
+  return ordem.concat(foraEscala);
+}
 // Monta o HTML de um cartão de farmácia (nome com "Ver no mapa" e, na
 // Branco, "Horário desta semana"; morada; telefones com "Ligar" e nota
 // de custo). Partilhado pela página principal e pela página /farmacias.
-function htmlCartaoFarmacia(f, slug, ehIlhavo) {
+function htmlCartaoFarmacia(f, slug, ehIlhavo, deServico = false) {
   const linkMapa = f.maps
     ? `<a class="botao-acao" href="${f.maps}" target="_blank" rel="noopener noreferrer" aria-label="Ver localização da Farmácia ${f.nome} no Google Maps">📍 Ver no mapa</a>`
     : "";
@@ -1496,25 +1529,32 @@ function htmlCartaoFarmacia(f, slug, ehIlhavo) {
     ? `<span class="acoes-nome">${linkMapa}${linkHorarioBranco}</span>`
     : "";
   return `
-    <div class="farmacia">
+    <div class="farmacia${deServico ? " de-servico" : ""}">
       <div class="nome">Farmácia ${f.nome}${acoesNome}</div>
       <div>${f.morada || ""}</div>
       ${telefonesLinhas}
     </div>
   `;
 }
-// Página /farmacias: lista exaustiva de todas as farmácias de cada
-// concelho, com os mesmos cartões da página principal (links de "Ver no
-// mapa" e "Ligar", e "Horário desta semana" na Branco). Sem relógio nem
-// texto de turno. Cabeçalho por concelho a espelhar a página principal,
-// em plural: "Farmácias de Serviço" sobre "Concelho de X".
-function renderListaFarmacias(dados) {
+// Página /farmacias: lista de todas as farmácias de cada concelho, com
+// os mesmos cartões da página principal. Ordem fixa pela sequência real
+// do serviço (1a volta do ano, cortada na de nome alfabeticamente mais
+// baixo); a farmácia de serviço de hoje recebe fundo de destaque, sem
+// alterar a posição. Cabeçalho por concelho em plural.
+function renderListaFarmacias(dados, calendario) {
   const cat = dados.farmacias || {};
-  const bloco = (reg, ehIlhavo) =>
-    Object.entries(cat[reg] || {})
-      .sort((a, b) => (a[1].nome || "").localeCompare(b[1].nome || "", "pt"))
-      .map(([slug, f]) => htmlCartaoFarmacia(f, slug, ehIlhavo))
+  const escala = (dados.calendario) || {};
+  const p = partesLisboa();
+  const dataServico = obterDataServico(p);
+  const bloco = (reg, ehIlhavo) => {
+    const catalogo = cat[reg] || {};
+    const ordem = ordemCanonicaConcelho(catalogo, escala[reg]);
+    const deServicoHoje = new Set(getSlugs(dataServico, escala[reg] || []));
+    return ordem
+      .filter(slug => catalogo[slug])
+      .map(slug => htmlCartaoFarmacia(catalogo[slug], slug, ehIlhavo, deServicoHoje.has(slug)))
       .join("");
+  };
   const cabecalho = (concelho, regime) =>
     `<div class="titulo"><div class="cruz"></div><div>` +
       `<div class="titulo-principal">Farmácias de Serviço</div>` +
@@ -3416,7 +3456,7 @@ function renderEstatistica(dados, calendario, rotaInicial, anosDisponiveis) {
 
   // Página /farmacias: lista exaustiva de todas as farmácias dos concelhos.
   if (farmaciasAtivo) {
-    renderListaFarmacias(dados);
+    renderListaFarmacias(dados, calendario);
     atualizarDebugViewport();
   }
 
