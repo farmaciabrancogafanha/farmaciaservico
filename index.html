@@ -446,10 +446,8 @@ a { color:#1976d2; }
      scroll. */
 }
 /* Linha de diagnóstico no rodapé do overlay: vive na coluna central
-   (.fo-meio) do grid do rodapé, alinhada na vertical com a base dos
-   URLs das colunas laterais. Espelha a colocação da .update-debug do
-   site principal, que também aparece a meio do rodapé na linha dos
-   links. pointer-events:none por precaução (texto puramente informativo).
+   (.fo-meio) do grid do rodapé, por baixo do QR e do link para a raiz.
+   pointer-events:none por precaução (texto puramente informativo).
    position:static e bottom/left/right:auto desfazem a regra do CSS
    base (@media min-width:900px) que coloca a .update-debug em
    position:absolute; bottom:100% — herança que tirava a linha do
@@ -465,10 +463,10 @@ a { color:#1976d2; }
   pointer-events: none;
 }
 
-/* Rodapé do overlay: dois QR codes (esquerda e direita) com a coluna
-   do meio vazia (sem relógio analógico, ao contrário do site principal).
-   flex: 0 0 auto impede que o rodapé estique e cede o espaço extra para
-   a tabela esticar. */
+/* Rodapé do overlay: três blocos QR com link, esquerda (esta página),
+   centro (raiz do site) e direita (Linktree); a coluna central tem ainda
+   a linha de diagnóstico por baixo. flex: 0 0 auto impede que o rodapé
+   estique e cede o espaço extra para a tabela esticar. */
 #horario-overlay .footer-overlay {
   flex: 0 0 auto;
   margin-top: 16px;
@@ -484,7 +482,7 @@ a { color:#1976d2; }
 #horario-overlay .fo-trio {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
-  align-items: end;
+  align-items: start;
   gap: 30px;
 }
 #horario-overlay .fo-esquerda,
@@ -498,10 +496,14 @@ a { color:#1976d2; }
 }
 #horario-overlay .fo-esquerda { justify-self: start; }
 #horario-overlay .fo-direita  { justify-self: end; }
-/* Coluna central: acomoda a linha de diagnóstico, alinhada pela base
-   ao mesmo nível dos URLs das colunas laterais. */
+/* Coluna central: QR + link para a raiz do site, e por baixo a linha de
+   diagnóstico. Mesma disposição em coluna centrada das laterais. */
 #horario-overlay .fo-meio {
-  align-self: end;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
   justify-self: center;
   min-width: 0;
 }
@@ -2145,7 +2147,12 @@ function inicializarHorario() {
         </div>
         <a class="link-horario" target="_blank" rel="noopener noreferrer"></a>
       </div>
-      <div class="fo-meio"></div>
+      <div class="fo-meio">
+        <div class="qr">
+          <img class="qr-img-raiz" alt="QR code para a página inicial do site">
+        </div>
+        <a class="link-raiz" target="_blank" rel="noopener noreferrer"></a>
+      </div>
       <div class="fo-direita">
         <div class="qr">
           <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://linktr.ee/farmaciabrancogafanha" alt="QR code para o Linktree da Farmácia Branco">
@@ -2169,6 +2176,14 @@ function inicializarHorario() {
   qrImgHorario.src    = apiQrHorario + encodeURIComponent(urlHorario);
   linkHorario.href    = urlHorario;
   linkHorario.textContent = urlHorario;
+
+  // Centro: QR e link para a raiz do site (página inicial). origem já vem
+  // sem barra final; a raiz é origem + "/".
+  const urlRaiz    = origem + "/";
+  const qrImgRaiz  = footer.querySelector(".qr-img-raiz");
+  const linkRaiz   = footer.querySelector(".link-raiz");
+  if (qrImgRaiz) qrImgRaiz.src = apiQrHorario + encodeURIComponent(urlRaiz);
+  if (linkRaiz) { linkRaiz.href = urlRaiz; linkRaiz.textContent = urlRaiz; }
 
   // Em hostnames listados em HOSTNAMES_SEM_LINKTREE (sites partilhados
   // com farmácias parceiras), o bloco do Linktree é escondido.
