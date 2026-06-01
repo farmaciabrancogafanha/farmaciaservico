@@ -2657,8 +2657,8 @@ function renderEstatistica(dados, calendario, rotaInicial, anosDisponiveis) {
       `</div>` +
       `<div class="est-topo-acoes">` +
         `<a class="est-acao est-link-mapa" href="https://farmaciaservicoilhavoaveiro.netlify.app/farmaciabranco/mapa"><svg class="est-link-icone" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5 3 7v12l6-2 6 2 6-2V5l-6 2-6-2Z"/><path d="M9 5v12M15 7v12"/></svg>Mapa do Site</a>` +
-        `<button type="button" class="est-acao est-voltar-tabela" hidden><svg class="est-link-icone" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Voltar à tabela</button>` +
-        `<a class="est-acao est-link-horario" href="https://farmaciaservicoilhavoaveiro.netlify.app/farmaciabranco/horario"><svg class="est-link-icone" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 1.5"/></svg>Voltar ao Horário desta semana</a>` +
+        `<button type="button" class="est-acao est-voltar-tabela" hidden><svg class="est-link-icone" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="1"/><path d="M3 9h18M3 14h18M9 9v11"/></svg>Tabela</button>` +
+        `<a class="est-acao est-link-horario" href="https://farmaciaservicoilhavoaveiro.netlify.app/farmaciabranco/horario"><svg class="est-link-icone" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 1.5"/></svg>Horário desta semana</a>` +
       `</div>` +
       `</div>` +
       `<div class="est-principal">` +
@@ -3002,7 +3002,7 @@ function renderEstatistica(dados, calendario, rotaInicial, anosDisponiveis) {
     vistaHorario.innerHTML = htmlHorarioAno();
     principal.hidden = true;
     vistaHorario.hidden = false;
-    if (linkHorario) linkHorario.style.display = "none";
+    if (linkHorario) linkHorario.style.display = "";   // horário desta semana: destino fixo
     if (linkMapa) linkMapa.style.display = "";   // mapa visível na vista de ano
     if (btnVoltar) btnVoltar.hidden = false;
     if (seletorAnoEl) seletorAnoEl.style.display = "";   // seletor visível no ano
@@ -3024,8 +3024,8 @@ function renderEstatistica(dados, calendario, rotaInicial, anosDisponiveis) {
     vistaHorario.innerHTML = htmlHorarioSemana(segIso);
     principal.hidden = true;
     vistaHorario.hidden = false;
-    if (linkHorario) linkHorario.style.display = atual ? "" : "none";   // só a semana actual liga ao "Horário desta semana"
-    if (linkMapa) linkMapa.style.display = "none";
+    if (linkHorario) linkHorario.style.display = "";   // horário desta semana: destino fixo, sempre disponível
+    if (linkMapa) linkMapa.style.display = "";   // mapa visível nas vistas de semana
     if (btnVoltar) btnVoltar.hidden = false;
     if (seletorAnoEl) seletorAnoEl.style.display = "none";   // semana é de ano fixo
     overlay.scrollTop = 0;
@@ -3055,8 +3055,8 @@ function renderEstatistica(dados, calendario, rotaInicial, anosDisponiveis) {
     vistaHorario.innerHTML = htmlHorarioMes(mes);
     principal.hidden = true;
     vistaHorario.hidden = false;
-    if (linkHorario) linkHorario.style.display = "none";
-    if (linkMapa) linkMapa.style.display = "none";
+    if (linkHorario) linkHorario.style.display = "";   // horário visível na vista de mês
+    if (linkMapa) linkMapa.style.display = "";         // mapa visível na vista de mês
     if (btnVoltar) btnVoltar.hidden = false;
     if (seletorAnoEl) seletorAnoEl.style.display = "none";   // mês é de ano fixo
     overlay.scrollTop = 0;
