@@ -787,9 +787,12 @@ a { color:#1976d2; }
 #farmacias-overlay .titulo-principal { font-size: 32px; font-weight: bold; }
 #farmacias-overlay .subtitulo { font-size: 24px; color: #555; }
 #farmacias-overlay .farmacias-regime { font-size: 16px; color: #1b5e20; font-weight: bold; margin-top: 2px; }
+#farmacias-overlay .farmacias-colunas {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start;
+}
 #farmacias-overlay .farmacias-grupo { margin-top: 28px; }
 #farmacias-overlay .farmacias-lista {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px;
+  display: flex; flex-direction: column; gap: 14px;
 }
 #farmacias-overlay .farmacia {
   background: #f7f9f7; border-radius: 8px; padding: 12px 14px; line-height: 1.5;
@@ -802,6 +805,7 @@ a { color:#1976d2; }
 }
 @media (max-width: 760px) {
   #farmacias-overlay .farmacias-caixa { padding: 18px; }
+  #farmacias-overlay .farmacias-colunas { grid-template-columns: 1fr; gap: 0; }
   #farmacias-overlay .titulo-principal { font-size: 22px; }
   #farmacias-overlay .subtitulo { font-size: 16px; }
   #farmacias-overlay .cruz { width: 34px; height: 34px; }
@@ -1510,13 +1514,15 @@ function renderListaFarmacias(dados) {
   overlay.id = "farmacias-overlay";
   overlay.innerHTML =
     `<div class="farmacias-caixa">` +
-      `<div class="farmacias-grupo">` +
-        cabecalho("Aveiro", "Regime de Permanência") +
-        `<div class="farmacias-lista">${bloco("aveiro", false)}</div>` +
-      `</div>` +
-      `<div class="farmacias-grupo">` +
-        cabecalho("Ílhavo", "Regime de Disponibilidade") +
-        `<div class="farmacias-lista">${bloco("ilhavo", true)}</div>` +
+      `<div class="farmacias-colunas">` +
+        `<div class="farmacias-grupo">` +
+          cabecalho("Aveiro", "Regime de Permanência") +
+          `<div class="farmacias-lista">${bloco("aveiro", false)}</div>` +
+        `</div>` +
+        `<div class="farmacias-grupo">` +
+          cabecalho("Ílhavo", "Regime de Disponibilidade") +
+          `<div class="farmacias-lista">${bloco("ilhavo", true)}</div>` +
+        `</div>` +
       `</div>` +
       `<div class="farmacias-debug-vp"></div>` +
     `</div>`;
