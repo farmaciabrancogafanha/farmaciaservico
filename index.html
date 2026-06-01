@@ -908,26 +908,20 @@ a { color:#1976d2; }
   margin-left: auto; align-self: flex-start;
   display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
 }
-#estatistica-overlay .est-link-mapa,
-#estatistica-overlay .est-link-horario {
+#estatistica-overlay .est-acao {
   font: inherit; font-size: 15px; font-weight: normal;
   color: #1b5e20; background: #eef4ee; border: 1px solid #b7d3b9;
   border-radius: 8px; padding: 4px 12px; cursor: pointer;
   text-decoration: none; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
 }
-#estatistica-overlay .est-link-mapa:link,
-#estatistica-overlay .est-link-mapa:visited,
-#estatistica-overlay .est-link-mapa:hover,
-#estatistica-overlay .est-link-mapa:active { color: #1b5e20; text-decoration: none; }
-#estatistica-overlay .est-link-mapa:hover { background: #e0ece1; }
-#estatistica-overlay .est-link-mapa:focus-visible { outline: 3px solid #2e7d32; outline-offset: 2px; }
+#estatistica-overlay .est-acao:link,
+#estatistica-overlay .est-acao:visited,
+#estatistica-overlay .est-acao:hover,
+#estatistica-overlay .est-acao:active { color: #1b5e20; text-decoration: none; }
+#estatistica-overlay .est-acao:hover { background: #e0ece1; }
+#estatistica-overlay .est-acao:focus-visible { outline: 3px solid #2e7d32; outline-offset: 2px; }
+#estatistica-overlay .est-acao[hidden] { display: none; }
 #estatistica-overlay .est-link-icone { flex: none; }
-#estatistica-overlay .est-link-horario:link,
-#estatistica-overlay .est-link-horario:visited,
-#estatistica-overlay .est-link-horario:hover,
-#estatistica-overlay .est-link-horario:active { color: #1b5e20; text-decoration: none; }
-#estatistica-overlay .est-link-horario:hover { background: #e0ece1; }
-#estatistica-overlay .est-link-horario:focus-visible { outline: 3px solid #2e7d32; outline-offset: 2px; }
 #estatistica-overlay .est-tabela { margin-top: 4px; }
 #estatistica-overlay .est-lista-head {
   display: grid; grid-template-columns: 84px 172px 206px 100px 100px 1fr; gap: 12px;
@@ -999,14 +993,6 @@ a { color:#1976d2; }
 #estatistica-overlay .est-total-causa { grid-column: 6 / 7; color: #8a6d28; font-weight: normal; font-style: italic; padding-left: 16px; }
 #estatistica-overlay .est-nota { margin-top: 20px; font-size: 13px; color: #888; line-height: 1.5; }
 
-/* Vista do horário de uma semana específica. */
-#estatistica-overlay .est-voltar {
-  font: inherit; font-size: 15px; font-weight: normal;
-  color: #1b5e20; background: #eef4ee; border: 1px solid #b7d3b9;
-  border-radius: 8px; padding: 4px 12px; cursor: pointer;
-}
-#estatistica-overlay .est-voltar:hover { background: #e0ece1; }
-#estatistica-overlay .est-voltar:focus-visible { outline: 3px solid #2e7d32; outline-offset: 2px; }
 #estatistica-overlay .est-hs-legenda { display: flex; flex-wrap: wrap; gap: 16px; margin: 6px 0 14px; font-size: 14px; color: #555; }
 #estatistica-overlay .est-hs-legenda span { display: inline-flex; align-items: center; gap: 6px; }
 #estatistica-overlay .est-hs-legenda .leg { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
@@ -2618,8 +2604,9 @@ function renderEstatistica(dados, calendario, rotaInicial) {
         `<div class="subtitulo tempo-funcionamento est-topo-tf" hidden></div>` +
       `</div>` +
       `<div class="est-topo-acoes">` +
-        `<a class="est-link-mapa" href="https://farmaciaservicoilhavoaveiro.netlify.app/farmaciabranco/mapa"><svg class="est-link-icone" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5 3 7v12l6-2 6 2 6-2V5l-6 2-6-2Z"/><path d="M9 5v12M15 7v12"/></svg>Mapa do Site</a>` +
-        `<a class="est-link-horario" href="https://farmaciaservicoilhavoaveiro.netlify.app/farmaciabranco/horario"><svg class="est-link-icone" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 1.5"/></svg>Voltar ao Horário desta semana</a>` +
+        `<a class="est-acao est-link-mapa" href="https://farmaciaservicoilhavoaveiro.netlify.app/farmaciabranco/mapa"><svg class="est-link-icone" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5 3 7v12l6-2 6 2 6-2V5l-6 2-6-2Z"/><path d="M9 5v12M15 7v12"/></svg>Mapa do Site</a>` +
+        `<button type="button" class="est-acao est-voltar-tabela" hidden><svg class="est-link-icone" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Voltar à tabela</button>` +
+        `<a class="est-acao est-link-horario" href="https://farmaciaservicoilhavoaveiro.netlify.app/farmaciabranco/horario"><svg class="est-link-icone" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 1.5"/></svg>Voltar ao Horário desta semana</a>` +
       `</div>` +
       `</div>` +
       `<div class="est-principal">` +
@@ -2647,6 +2634,7 @@ function renderEstatistica(dados, calendario, rotaInicial) {
   const vistaHorario = overlay.querySelector(".est-horario-semana");
   const linkHorario  = overlay.querySelector(".est-link-horario");
   const linkMapa     = overlay.querySelector(".est-link-mapa");
+  const btnVoltar    = overlay.querySelector(".est-voltar-tabela");
   const subtitulo    = overlay.querySelector(".subtitulo");
   const topoTf       = overlay.querySelector(".est-topo-tf");
 
@@ -2913,8 +2901,7 @@ function renderEstatistica(dados, calendario, rotaInicial) {
   }
   function htmlHorarioSemana(segIso) {
     const { tabela, haFora } = tabelaHorarioSemanaHTML(segIso);
-    return `<div class="est-detalhe-cab"><button type="button" class="est-voltar">Voltar à tabela</button></div>` +
-      legendaHorarioHTML(haFora) + tabela;
+    return legendaHorarioHTML(haFora) + tabela;
   }
   // Tiras de horário de um mês (uma por semana que o toca), em modo
   // toggle. Devolve o HTML das tiras e se há dias esbatidos.
@@ -2934,8 +2921,7 @@ function renderEstatistica(dados, calendario, rotaInicial) {
   }
   function htmlHorarioMes(mes) {
     const { html, haFora } = tirasDoMesHTML(mes);
-    return `<div class="est-detalhe-cab"><button type="button" class="est-voltar">Voltar à tabela</button></div>` +
-      legendaHorarioHTML(haFora, "Dia de outro mês") + html;
+    return legendaHorarioHTML(haFora, "Dia de outro mês") + html;
   }
   // Vista de ano: o ano inteiro, uma faixa por mês. Cada faixa tem o nome
   // do mês e o total mensal, e as suas tiras quebram dentro da própria
@@ -2953,8 +2939,7 @@ function renderEstatistica(dados, calendario, rotaInicial) {
         `</div>` +
         html + `</div>`;
     });
-    return `<div class="est-detalhe-cab"><button type="button" class="est-voltar">Voltar à tabela</button></div>` +
-      legendaHorarioHTML(haForaQualquer, "Dia de outro mês") +
+    return legendaHorarioHTML(haForaQualquer, "Dia de outro mês") +
       faixas.join("");
   }
   function abrirHorarioAno(push = true) {
@@ -2966,6 +2951,7 @@ function renderEstatistica(dados, calendario, rotaInicial) {
     vistaHorario.hidden = false;
     if (linkHorario) linkHorario.style.display = "none";
     if (linkMapa) linkMapa.style.display = "";   // mapa visível na vista de ano
+    if (btnVoltar) btnVoltar.hidden = false;
     overlay.scrollTop = 0;
     ajustarColunasHoraMes();
     if (push) definirURL(String(anoRef));
@@ -2986,6 +2972,7 @@ function renderEstatistica(dados, calendario, rotaInicial) {
     vistaHorario.hidden = false;
     if (linkHorario) linkHorario.style.display = atual ? "" : "none";   // só a semana actual liga ao "Horário desta semana"
     if (linkMapa) linkMapa.style.display = "none";
+    if (btnVoltar) btnVoltar.hidden = false;
     overlay.scrollTop = 0;
     if (push) definirURL(`${anoRef}/semana${fmtSemana(semanaISO(segIso))}`);
   }
@@ -3015,6 +3002,7 @@ function renderEstatistica(dados, calendario, rotaInicial) {
     vistaHorario.hidden = false;
     if (linkHorario) linkHorario.style.display = "none";
     if (linkMapa) linkMapa.style.display = "none";
+    if (btnVoltar) btnVoltar.hidden = false;
     overlay.scrollTop = 0;
     ajustarColunasHoraMes();   // depois de inserido no DOM, já há posições para medir
     if (push) definirURL(`${anoRef}/${MESES_SLUG[mes - 1]}`);
@@ -3054,6 +3042,7 @@ function renderEstatistica(dados, calendario, rotaInicial) {
     principal.hidden = false;
     if (linkHorario) linkHorario.style.display = "";       // repõe o valor do stylesheet (inline-block)
     if (linkMapa) linkMapa.style.display = "";             // mapa visível na listagem
+    if (btnVoltar) btnVoltar.hidden = true;                // sem detalhe aberto, não há "Voltar à tabela"
     definirURL("");
   }
 
@@ -3091,8 +3080,9 @@ function renderEstatistica(dados, calendario, rotaInicial) {
     const sem = e.target.closest(".est-sem[data-seg], .est-datas-btn[data-seg]");
     if (sem) { abrirHorarioSemana(sem.getAttribute("data-seg")); return; }
   });
-  vistaHorario.addEventListener("click", (e) => {
-    if (e.target.closest(".est-voltar")) voltarTabela();
+  const acoesTopo = overlay.querySelector(".est-topo-acoes");
+  if (acoesTopo) acoesTopo.addEventListener("click", (e) => {
+    if (e.target.closest(".est-voltar-tabela")) voltarTabela();
   });
   if (subtitulo) subtitulo.addEventListener("click", (e) => {
     if (e.target.closest(".est-ano-link")) abrirHorarioAno();
