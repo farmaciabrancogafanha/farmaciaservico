@@ -787,6 +787,10 @@ a { color:#1976d2; }
   font-size: 19px; color: #1b5e20; margin: 0 0 10px;
   border-bottom: 1px solid #cfe3d2; padding-bottom: 4px;
 }
+#mapa-overlay .mapa-seccao h3 {
+  font-size: 15px; color: #555; margin: 14px 0 6px; font-weight: normal;
+}
+#mapa-overlay .mapa-ano-link { font-size: 14px; font-weight: normal; }
 #mapa-overlay ul { list-style: none; margin: 0; padding: 0; }
 #mapa-overlay li { margin: 4px 0; }
 #mapa-overlay a { color: #1b5e20; text-decoration: none; }
@@ -904,6 +908,13 @@ a { color:#1976d2; }
 }
 #estatistica-overlay .est-btn-todas:hover { background: #e0ece1; }
 #estatistica-overlay .est-btn-todas:focus-visible { outline: 3px solid #2e7d32; outline-offset: 2px; }
+#estatistica-overlay .est-seletor-ano { margin-top: 6px; display: flex; gap: 6px; flex-wrap: wrap; }
+#estatistica-overlay .est-ano-op {
+  font-size: 14px; padding: 2px 10px; border-radius: 12px;
+  border: 1px solid #b7d3b9; color: #1b5e20; text-decoration: none; background: #fff;
+}
+#estatistica-overlay .est-ano-op:hover { background: #e0ece1; }
+#estatistica-overlay .est-ano-op.ativo { background: #2e7d32; color: #fff; border-color: #2e7d32; font-weight: bold; }
 #estatistica-overlay .est-topo-acoes {
   margin-left: auto; align-self: flex-start;
   display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
@@ -1383,13 +1394,15 @@ const dom = {
 // DADOS
 // =====================================================================
 
-async function carregarDados() {
+// Carrega o catálogo de farmácias e a escala de um ano específico, do
+// ficheiro farmacias-AAAA.json. Em caso de falha devolve null.
+async function carregarDados(ano) {
   try {
-    const res = await fetch("/farmacias.json");
+    const res = await fetch(`/farmacias-${ano}.json`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
   } catch (err) {
-    console.error("Erro ao carregar farmacias.json:", err);
+    console.error(`Erro ao carregar farmacias-${ano}.json:`, err);
     const msg = "Erro a carregar dados. Verifique a ligação à internet ou tente recarregar a página.";
     dom.ilhavo.textContent = msg;
     dom.aveiro.textContent = msg;
@@ -1851,14 +1864,27 @@ function aplicarConfigPorHostname() {
 // Carregado em paralelo com farmacias.json. Em caso de falha, o horário
 // fica indisponível, mas o resto do site continua a funcionar.
 
-async function carregarCalendario() {
+async function carregarCalendario(ano) {
   try {
-    const res = await fetch(HORARIO_URL_DADOS);
+    const res = await fetch(`/calendario-${ano}.json`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
   } catch (err) {
-    console.error("Erro ao carregar calendario.json:", err);
+    console.error(`Erro ao carregar calendario-${ano}.json:`, err);
     return null;
+  }
+}
+// Índice dos anos publicados (anos.json). Em caso de falha, devolve uma
+// lista vazia; quem chama trata o recuo.
+async function carregarAnos() {
+  try {
+    const res = await fetch("/anos.json");
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const j = await res.json();
+    return Array.isArray(j.anos) ? j.anos.slice().sort((a, b) => a - b) : [];
+  } catch (err) {
+    console.error("Erro ao carregar anos.json:", err);
+    return [];
   }
 }
 
@@ -2500,35 +2526,51 @@ function semanasIncompletas(ano, calendario, dados) {
 // Página de mapa: índice de todas as rotas do projecto. A parte derivada
 // dos dados (meses e semanas) é gerada a partir dos mesmos JSON da
 // estatística, por isso acompanha automaticamente mudanças de ano.
-function renderMapa(dados, calendario) {
+function renderMapa(dados, calendario, anosDisponiveis) {
   const CANON = "https://farmaciaservicoilhavoaveiro.netlify.app";
-  const anoRef = (calendario && calendario.ano) || partesLisboa().ano;
-  const semanas = semanasDoAno(anoRef, calendario, dados);
-  const incompletas = semanasIncompletas(anoRef, calendario, dados);
-  const todas = semanas.concat(incompletas)
-    .slice().sort((a, b) => semanaISO(a.segReal || a.seg) - semanaISO(b.segReal || b.seg));
+  const anoCarregado = (calendario && calendario.ano) || partesLisboa().ano;
+  const anos = (anosDisponiveis && anosDisponiveis.length) ? anosDisponiveis : [anoCarregado];
   const mesesSlug = ESTATISTICA_MESES.map(n =>
     n.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
   const li = (url, txt, desc) =>
     `<li><a href="${url}">${txt}</a>${desc ? ` <span class="mapa-desc">${desc}</span>` : ""}</li>`;
 
-  // 1) Rotas fixas (conhecidas, escritas à mão).
+  // Rotas fixas (não dependem de ano).
   const fixas = [
     li(`${CANON}/`, `${CANON}/`, "Site de serviço (página inicial)"),
     li(`${CANON}/farmaciabranco/horario`, `${CANON}/farmaciabranco/horario`, "Horário da semana em ecrã cheio (montra)"),
-    li(`${CANON}/farmaciabranco/estatistica`, `${CANON}/farmaciabranco/estatistica`, "Estatística e listagem de semanas"),
+    li(`${CANON}/farmaciabranco/estatistica`, `${CANON}/farmaciabranco/estatistica`, "Estatística do ano corrente"),
     li(`${CANON}/farmaciabranco/mapa`, `${CANON}/farmaciabranco/mapa`, "Este mapa de links"),
   ].join("");
 
-  // 2) Meses (derivado dos dados).
-  const meses = ESTATISTICA_MESES.map((nome, i) =>
-    li(`${CANON}/farmaciabranco/estatistica/${anoRef}/${mesesSlug[i]}`, nome)
-  ).join("");
-
-  // 3) Semanas (derivado dos dados).
-  const sems = todas.map(s => {
-    const n = fmtSemana(semanaISO(s.segReal || s.seg));
-    return li(`${CANON}/farmaciabranco/estatistica/${anoRef}/semana${n}`, `Semana ${n}`);
+  // Uma secção por ano. Os meses não dependem dos dados (nomes fixos), por
+  // isso listam-se para todos os anos. As semanas variam e exigem os dados
+  // do ano; só o ano carregado os tem em memória, logo só esse lista as
+  // semanas uma a uma. Para os outros anos, aponta-se à vista de ano.
+  const seccoesAno = anos.map(ano => {
+    const meses = ESTATISTICA_MESES.map((nome, i) =>
+      li(`${CANON}/farmaciabranco/estatistica/${ano}/${mesesSlug[i]}`, nome)
+    ).join("");
+    let semsHTML;
+    if (ano === anoCarregado) {
+      const todas = semanasDoAno(ano, calendario, dados)
+        .concat(semanasIncompletas(ano, calendario, dados))
+        .slice().sort((a, b) => semanaISO(a.segReal || a.seg) - semanaISO(b.segReal || b.seg));
+      const sems = todas.map(s => {
+        const n = fmtSemana(semanaISO(s.segReal || s.seg));
+        return li(`${CANON}/farmaciabranco/estatistica/${ano}/semana${n}`, `Semana ${n}`);
+      }).join("");
+      semsHTML = `<h3>Semanas</h3><ul class="mapa-grelha">${sems}</ul>`;
+    } else {
+      semsHTML = `<p class="mapa-desc">As semanas de ${ano} estão na ` +
+        `<a href="${CANON}/farmaciabranco/estatistica/${ano}">vista do ano ${ano}</a>.</p>`;
+    }
+    return `<div class="mapa-seccao mapa-ano">` +
+      `<h2>${ano}` +
+        ` <a class="mapa-ano-link" href="${CANON}/farmaciabranco/estatistica/${ano}">ver ano</a></h2>` +
+      `<h3>Meses</h3><ul class="mapa-grelha">${meses}</ul>` +
+      semsHTML +
+    `</div>`;
   }).join("");
 
   const overlay = document.createElement("div");
@@ -2537,17 +2579,16 @@ function renderMapa(dados, calendario) {
     `<div class="mapa-caixa">` +
       `<div class="titulo"><div class="cruz"></div><div>` +
         `<div class="titulo-principal">Farmácia Branco</div>` +
-        `<div class="subtitulo">Mapa de links - ${anoRef}</div>` +
+        `<div class="subtitulo">Mapa de links</div>` +
       `</div></div>` +
       `<div class="mapa-seccao"><h2>Páginas principais</h2><ul>${fixas}</ul></div>` +
-      `<div class="mapa-seccao"><h2>Horário por mês</h2><ul class="mapa-grelha">${meses}</ul></div>` +
-      `<div class="mapa-seccao"><h2>Horário por semana</h2><ul class="mapa-grelha">${sems}</ul></div>` +
+      seccoesAno +
       `<div class="mapa-debug-vp"></div>` +
     `</div>`;
   document.body.appendChild(overlay);
 }
 
-function renderEstatistica(dados, calendario, rotaInicial) {
+function renderEstatistica(dados, calendario, rotaInicial, anosDisponiveis) {
   const anoRef = (calendario && calendario.ano) || partesLisboa().ano;
   const hojeIso = isoLisboa(partesLisboa());          // para destacar a semana actual
   const semanas = semanasDoAno(anoRef, calendario, dados);
@@ -2596,12 +2637,24 @@ function renderEstatistica(dados, calendario, rotaInicial) {
 
   const overlay = document.createElement("div");
   overlay.id = "estatistica-overlay";
+  // Selector de ano: só aparece se houver mais do que um ano publicado.
+  // Cada ano é um link para /estatistica/AAAA; o ano corrente fica activo.
+  const CANON_EST = "https://farmaciaservicoilhavoaveiro.netlify.app/farmaciabranco/estatistica";
+  const listaAnos = (anosDisponiveis && anosDisponiveis.length) ? anosDisponiveis : [anoRef];
+  const seletorAno = listaAnos.length > 1
+    ? `<div class="est-seletor-ano">` +
+        listaAnos.map(a => a === anoRef
+          ? `<span class="est-ano-op ativo">${a}</span>`
+          : `<a class="est-ano-op" href="${CANON_EST}/${a}">${a}</a>`).join("") +
+      `</div>`
+    : "";
   overlay.innerHTML =
     `<div class="est-caixa">` +
       `<div class="titulo"><div class="cruz"></div><div>` +
         `<div class="titulo-principal">Farmácia Branco</div>` +
         `<div class="subtitulo">Tempo de funcionamento - <button type="button" class="est-ano-link">${anoRef}</button></div>` +
         `<div class="subtitulo tempo-funcionamento est-topo-tf" hidden></div>` +
+        seletorAno +
       `</div>` +
       `<div class="est-topo-acoes">` +
         `<a class="est-acao est-link-mapa" href="https://farmaciaservicoilhavoaveiro.netlify.app/farmaciabranco/mapa"><svg class="est-link-icone" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5 3 7v12l6-2 6 2 6-2V5l-6 2-6-2Z"/><path d="M9 5v12M15 7v12"/></svg>Mapa do Site</a>` +
@@ -2635,6 +2688,7 @@ function renderEstatistica(dados, calendario, rotaInicial) {
   const linkHorario  = overlay.querySelector(".est-link-horario");
   const linkMapa     = overlay.querySelector(".est-link-mapa");
   const btnVoltar    = overlay.querySelector(".est-voltar-tabela");
+  const seletorAnoEl = overlay.querySelector(".est-seletor-ano");
   const subtitulo    = overlay.querySelector(".subtitulo");
   const topoTf       = overlay.querySelector(".est-topo-tf");
 
@@ -2952,6 +3006,7 @@ function renderEstatistica(dados, calendario, rotaInicial) {
     if (linkHorario) linkHorario.style.display = "none";
     if (linkMapa) linkMapa.style.display = "";   // mapa visível na vista de ano
     if (btnVoltar) btnVoltar.hidden = false;
+    if (seletorAnoEl) seletorAnoEl.style.display = "";   // seletor visível no ano
     overlay.scrollTop = 0;
     ajustarColunasHoraMes();
     if (push) definirURL(String(anoRef));
@@ -2973,6 +3028,7 @@ function renderEstatistica(dados, calendario, rotaInicial) {
     if (linkHorario) linkHorario.style.display = atual ? "" : "none";   // só a semana actual liga ao "Horário desta semana"
     if (linkMapa) linkMapa.style.display = "none";
     if (btnVoltar) btnVoltar.hidden = false;
+    if (seletorAnoEl) seletorAnoEl.style.display = "none";   // semana é de ano fixo
     overlay.scrollTop = 0;
     if (push) definirURL(`${anoRef}/semana${fmtSemana(semanaISO(segIso))}`);
   }
@@ -3003,6 +3059,7 @@ function renderEstatistica(dados, calendario, rotaInicial) {
     if (linkHorario) linkHorario.style.display = "none";
     if (linkMapa) linkMapa.style.display = "none";
     if (btnVoltar) btnVoltar.hidden = false;
+    if (seletorAnoEl) seletorAnoEl.style.display = "none";   // mês é de ano fixo
     overlay.scrollTop = 0;
     ajustarColunasHoraMes();   // depois de inserido no DOM, já há posições para medir
     if (push) definirURL(`${anoRef}/${MESES_SLUG[mes - 1]}`);
@@ -3043,6 +3100,7 @@ function renderEstatistica(dados, calendario, rotaInicial) {
     if (linkHorario) linkHorario.style.display = "";       // repõe o valor do stylesheet (inline-block)
     if (linkMapa) linkMapa.style.display = "";             // mapa visível na listagem
     if (btnVoltar) btnVoltar.hidden = true;                // sem detalhe aberto, não há "Voltar à tabela"
+    if (seletorAnoEl) seletorAnoEl.style.display = "";     // seletor visível na listagem
     definirURL("");
   }
 
@@ -3197,17 +3255,35 @@ function renderEstatistica(dados, calendario, rotaInicial) {
     if (horarioRefs) posicionarRelogioHorario(horarioRefs);
   });
 
-  // Carrega farmacias.json e calendario.json em paralelo. O calendário
-  // só é estritamente necessário se ?horario=1 estiver activo.
+  // ---------------------------------------------------------------------
+  // Selecção do ano (site multi-ano).
+  // - O ano corrente vem da data de Lisboa; serve a página principal e a TV.
+  // - A estatística/mapa podem pedir um ano específico pelo URL.
+  // - anos.json lista os anos publicados. Se o ano pedido não existir,
+  //   recua-se para o mais próximo disponível (último <= pedido, ou o
+  //   primeiro da lista), para o site nunca ficar vazio.
+  // ---------------------------------------------------------------------
+  const anosDisponiveis = await carregarAnos();
+  const anoCorrente = partesLisboa().ano;
+  // Ano pedido pelo URL da estatística (primeiro segmento da sub-rota).
+  const anoPedidoURL = (estatisticaAtiva && estatisticaRota)
+    ? parseInt(estatisticaRota.split("/")[0], 10) : NaN;
+  function resolverAno(pretendido) {
+    if (!anosDisponiveis.length) return pretendido;          // sem índice: tenta o pretendido
+    if (anosDisponiveis.includes(pretendido)) return pretendido;
+    const menores = anosDisponiveis.filter(a => a <= pretendido);
+    return menores.length ? menores[menores.length - 1] : anosDisponiveis[0];
+  }
+  // Ano a carregar: o do URL se for um número válido, senão o corrente.
+  const anoAlvo = resolverAno(Number.isFinite(anoPedidoURL) ? anoPedidoURL : anoCorrente);
+
+  // Carrega farmacias-AAAA.json e calendario-AAAA.json do ano alvo.
   const [dados, calendario] = await Promise.all([
-    carregarDados(),
-    (temHorario || estatisticaAtiva || mapaAtivo) ? carregarCalendario() : Promise.resolve(null),
+    carregarDados(anoAlvo),
+    carregarCalendario(anoAlvo),
   ]);
 
   if (!dados) {
-    // Falha no fetch dos dados das farmácias — relógio continua, mas
-    // sem dados não conseguimos saber se hoje é disponibilidade, logo
-    // a rotação de overlays fica desactivada.
     setInterval(() => {
       const p = partesLisboa();
       atualizarRelogio(p);
@@ -3216,17 +3292,28 @@ function renderEstatistica(dados, calendario, rotaInicial) {
   }
   tick(dados);
 
-  // Página de estatística: render único (conteúdo estático), depois de
-  // dados e calendário carregados. O overlay tapa o site por baixo.
+  // Página de estatística: render único após carregar dados.
   if (estatisticaAtiva && calendario) {
-    renderEstatistica(dados, calendario, estatisticaRota);
-    atualizarDebugViewport();   // preenche a linha de diagnóstico do overlay recém-criado
+    renderEstatistica(dados, calendario, estatisticaRota, anosDisponiveis);
+    atualizarDebugViewport();
   }
 
   // Página de mapa: índice de rotas, render único após carregar dados.
   if (mapaAtivo && calendario) {
-    renderMapa(dados, calendario);
+    renderMapa(dados, calendario, anosDisponiveis);
     atualizarDebugViewport();
+  }
+
+  // Virada de ano: a TV/página principal carrega o ano corrente e mantém-
+  // se aberta. Quando a data passa para um ano novo (ex.: meia-noite de 1
+  // de Janeiro), os dados em memória ficam do ano anterior. Se estivermos
+  // a mostrar o ano corrente (não um arquivo escolhido por URL), e a data
+  // mudar de ano, recarrega-se a página para apanhar o ano novo. Só se
+  // aplica fora das vistas de estatística/mapa com ano fixado no URL.
+  const aMostrarAnoCorrente = !Number.isFinite(anoPedidoURL);
+  function verificarViradaDeAno(p) {
+    if (!aMostrarAnoCorrente) return;
+    if (p.ano !== anoAlvo) location.reload();
   }
 
   // Estado de população da tabela do horário: registamos o dia do
@@ -3248,6 +3335,7 @@ function renderEstatistica(dados, calendario, rotaInicial) {
   // componentes (garante coerência temporal).
   setInterval(() => {
     const p = partesLisboa();
+    verificarViradaDeAno(p);
     tick(dados, p);
     atualizarRelogio(p);
     repopularSeMudarDia(p);
