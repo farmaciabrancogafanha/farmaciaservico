@@ -981,11 +981,10 @@ a { color:#1976d2; }
    própria faixa sem invadir o mês seguinte. */
 #estatistica-overlay .est-ano-faixa { margin-bottom: 22px; }
 #estatistica-overlay .est-ano-mes-cab {
-  font-size: 18px; font-weight: bold; color: #1b5e20;
   border-bottom: 1px solid #cfe3d2; padding-bottom: 4px; margin-bottom: 12px;
-  display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
 }
-#estatistica-overlay .est-ano-mes-cab .tempo-funcionamento { font-size: 15px; }
+#estatistica-overlay .est-ano-mes-nome { font-size: 18px; font-weight: bold; color: #1b5e20; }
+#estatistica-overlay .est-ano-mes-met { font-size: 15px; }
 #estatistica-overlay .est-mes-tiras {
   display: flex; flex-wrap: wrap; gap: 16px;
   padding-bottom: 10px; align-items: flex-start; justify-content: flex-start;
@@ -2777,16 +2776,21 @@ function renderEstatistica(dados, calendario) {
     return { horas, dias };
   }
   function horasDoMes(mes) { return metricasDoMes(mes).horas; }
-  function horasDoAno() {
-    let total = 0;
-    for (let m = 1; m <= 12; m++) total += horasDoMes(m);
-    return total;
+  function metricasDoAno() {
+    let horas = 0, dias = 0;
+    for (let m = 1; m <= 12; m++) { const x = metricasDoMes(m); horas += x.horas; dias += x.dias; }
+    return { horas, dias };
+  }
+  function horasDoAno() { return metricasDoAno().horas; }
+  // Texto da linha de métricas (dias + horas) a partir de valores soltos.
+  function textoMetricas(dias, horas) {
+    return `Dias de funcionamento: ${dias} ${dias === 1 ? "dia" : "dias"}` +
+      `&nbsp;&nbsp;Horas de funcionamento: ${fmtHorasEst(horas)} h`;
   }
   // Texto da linha de métricas (dias + horas) usado nos cabeçalhos de mês.
   function textoMetricasMes(mes) {
     const m = metricasDoMes(mes);
-    return `Dias de funcionamento: ${m.dias} ${m.dias === 1 ? "dia" : "dias"}` +
-      `&nbsp;&nbsp;Horas de funcionamento: ${fmtHorasEst(m.horas)} h`;
+    return textoMetricas(m.dias, m.horas);
   }
   // Semanas (completas e incompletas) que tocam o mês, isto é, cuja janela
   // de 7 dias real intersecta o intervalo do mês. Uma semana de fronteira
@@ -2835,8 +2839,10 @@ function renderEstatistica(dados, calendario) {
       const { html, haFora } = tirasDoMesHTML(mes);
       if (haFora) haForaQualquer = true;
       return `<div class="est-ano-faixa">` +
-        `<div class="est-ano-mes-cab">${nome} de ${anoRef}` +
-          `<span class="tempo-funcionamento">${textoMetricasMes(mes)}</span></div>` +
+        `<div class="est-ano-mes-cab">` +
+          `<div class="est-ano-mes-nome">${nome} de ${anoRef}</div>` +
+          `<div class="tempo-funcionamento est-ano-mes-met">${textoMetricasMes(mes)}</div>` +
+        `</div>` +
         html + `</div>`;
     });
     return `<div class="est-detalhe-cab"><button type="button" class="est-voltar">Voltar à tabela</button></div>` +
@@ -2846,7 +2852,7 @@ function renderEstatistica(dados, calendario) {
   function abrirHorarioAno() {
     overlay.classList.add("vista-mes", "vista-ano");   // vista-mes alarga a caixa; vista-ano marca o modo
     if (subtitulo) subtitulo.textContent = `Horário do ano - ${anoRef}`;
-    if (topoTf) { topoTf.hidden = false; topoTf.textContent = `Tempo de funcionamento: ${fmtHorasEst(horasDoAno())} h`; }
+    if (topoTf) { topoTf.hidden = false; const a = metricasDoAno(); topoTf.innerHTML = textoMetricas(a.dias, a.horas); }
     vistaHorario.innerHTML = htmlHorarioAno();
     principal.hidden = true;
     vistaHorario.hidden = false;
