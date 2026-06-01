@@ -101,6 +101,11 @@ mark {
 }
 
 .nome { font-weight:bold; }
+/* Grupo de botões de acção do nome (Ver no mapa, Horário desta semana):
+   mantém-se unido e, quando não cabe ao lado do nome, desce inteiro para
+   a linha seguinte sem separar os botões. */
+.acoes-nome { display:inline-flex; gap:8px; vertical-align:middle; margin-left:8px; }
+.acoes-nome .botao-acao { margin-left:0; }
 
 /* Botão de ação (mapa, ligar) — chip verde claro inline */
 .botao-acao {
@@ -1484,9 +1489,15 @@ function htmlCartaoFarmacia(f, slug, ehIlhavo) {
       : "Chamada para a rede fixa nacional";
     return `<div>${tel}<a class="botao-acao${classeCondicional}" href="tel:${numeroLimpo}" aria-label="Ligar para ${tel}">📞 Ligar</a><span class="nota-custo-chamada">${notaCusto}</span></div>`;
   }).join("");
+  // Botões de acção do nome agrupados: mantêm-se sempre juntos e descem
+  // em conjunto para a linha seguinte quando não cabem ao lado do nome
+  // (caso da coluna estreita em /farmacias).
+  const acoesNome = (linkMapa || linkHorarioBranco)
+    ? `<span class="acoes-nome">${linkMapa}${linkHorarioBranco}</span>`
+    : "";
   return `
     <div class="farmacia">
-      <div class="nome">Farmácia ${f.nome}${linkMapa}${linkHorarioBranco}</div>
+      <div class="nome">Farmácia ${f.nome}${acoesNome}</div>
       <div>${f.morada || ""}</div>
       ${telefonesLinhas}
     </div>
