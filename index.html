@@ -766,6 +766,48 @@ a { color:#1976d2; }
 }
 
 /* ===================================================================
+   Página de lista exaustiva de farmácias (/farmacias)
+   Todas as farmácias de cada concelho, com os mesmos cartões da página
+   principal (Ver no mapa, Ligar, e Horário desta semana na Branco).
+   Sem relógio nem texto de turno. Scroll vertical.
+   =================================================================== */
+#farmacias-overlay {
+  position: fixed; inset: 0; z-index: 60; overflow-y: auto;
+  background: #f4f7f4; color: #222;
+  font-family: "Montserrat", system-ui, sans-serif;
+  padding: 16px;
+}
+#farmacias-overlay .farmacias-caixa {
+  width: 100%; max-width: 1100px; margin: 0 auto;
+  background: #fff; border-radius: 16px; padding: 28px 32px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+}
+#farmacias-overlay .titulo { display: flex; gap: 12px; align-items: center; border-bottom: 2px solid #2e7d32; margin-bottom: 10px; }
+#farmacias-overlay .cruz { width: 48px; height: 48px; flex: none; }
+#farmacias-overlay .titulo-principal { font-size: 32px; font-weight: bold; }
+#farmacias-overlay .subtitulo { font-size: 24px; color: #555; }
+#farmacias-overlay .farmacias-regime { font-size: 16px; color: #1b5e20; font-weight: bold; margin-top: 2px; }
+#farmacias-overlay .farmacias-grupo { margin-top: 28px; }
+#farmacias-overlay .farmacias-lista {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px;
+}
+#farmacias-overlay .farmacia {
+  background: #f7f9f7; border-radius: 8px; padding: 12px 14px; line-height: 1.5;
+}
+#farmacias-overlay .farmacia .nome { font-weight: bold; color: #1b5e20; font-size: 17px; }
+#farmacias-overlay .nota-custo-chamada { display: block; font-size: 10px; color: #aaa; }
+#farmacias-overlay .farmacias-debug-vp {
+  margin-top: 22px; text-align: center;
+  font-family: Consolas, "Courier New", monospace; font-size: 11px; color: #888;
+}
+@media (max-width: 760px) {
+  #farmacias-overlay .farmacias-caixa { padding: 18px; }
+  #farmacias-overlay .titulo-principal { font-size: 22px; }
+  #farmacias-overlay .subtitulo { font-size: 16px; }
+  #farmacias-overlay .cruz { width: 34px; height: 34px; }
+}
+
+/* ===================================================================
    Página de mapa de links (/farmaciabranco/mapa)
    Índice de todas as rotas do projecto, com a parte derivada dos dados
    (meses e semanas) gerada a partir dos mesmos JSON da estatística.
@@ -1419,6 +1461,68 @@ function getSlugs(data, calendario) {
 // RENDER
 // =====================================================================
 
+// Monta o HTML de um cartão de farmácia (nome com "Ver no mapa" e, na
+// Branco, "Horário desta semana"; morada; telefones com "Ligar" e nota
+// de custo). Partilhado pela página principal e pela página /farmacias.
+function htmlCartaoFarmacia(f, slug, ehIlhavo) {
+  const linkMapa = f.maps
+    ? `<a class="botao-acao" href="${f.maps}" target="_blank" rel="noopener noreferrer" aria-label="Ver localização da Farmácia ${f.nome} no Google Maps">📍 Ver no mapa</a>`
+    : "";
+  const linkHorarioBranco = (slug === "branco")
+    ? `<a class="botao-acao" href="https://farmaciaservicoilhavoaveiro.netlify.app/farmaciabranco/horario" aria-label="Ver o horário desta semana da Farmácia Branco">🕒 Horário desta semana</a>`
+    : "";
+  const telefonesLinhas = (f.telefones || []).map(tel => {
+    const numeroLimpo = tel.replace(/\s/g, "");
+    const eMovel = numeroLimpo.startsWith("+3519");
+    const classeCondicional = (ehIlhavo && !eMovel) ? " ligar-condicional" : "";
+    const notaCusto = eMovel
+      ? "Chamada para a rede móvel nacional"
+      : "Chamada para a rede fixa nacional";
+    return `<div>${tel}<a class="botao-acao${classeCondicional}" href="tel:${numeroLimpo}" aria-label="Ligar para ${tel}">📞 Ligar</a><span class="nota-custo-chamada">${notaCusto}</span></div>`;
+  }).join("");
+  return `
+    <div class="farmacia">
+      <div class="nome">Farmácia ${f.nome}${linkMapa}${linkHorarioBranco}</div>
+      <div>${f.morada || ""}</div>
+      ${telefonesLinhas}
+    </div>
+  `;
+}
+// Página /farmacias: lista exaustiva de todas as farmácias de cada
+// concelho, com os mesmos cartões da página principal (links de "Ver no
+// mapa" e "Ligar", e "Horário desta semana" na Branco). Sem relógio nem
+// texto de turno. Cabeçalho por concelho a espelhar a página principal,
+// em plural: "Farmácias de Serviço" sobre "Concelho de X".
+function renderListaFarmacias(dados) {
+  const cat = dados.farmacias || {};
+  const bloco = (reg, ehIlhavo) =>
+    Object.entries(cat[reg] || {})
+      .sort((a, b) => (a[1].nome || "").localeCompare(b[1].nome || "", "pt"))
+      .map(([slug, f]) => htmlCartaoFarmacia(f, slug, ehIlhavo))
+      .join("");
+  const cabecalho = (concelho, regime) =>
+    `<div class="titulo"><div class="cruz"></div><div>` +
+      `<div class="titulo-principal">Farmácias de Serviço</div>` +
+      `<div class="subtitulo">Concelho de ${concelho}</div>` +
+      `<div class="farmacias-regime">${regime}</div>` +
+    `</div></div>`;
+  const overlay = document.createElement("div");
+  overlay.id = "farmacias-overlay";
+  overlay.innerHTML =
+    `<div class="farmacias-caixa">` +
+      `<div class="farmacias-grupo">` +
+        cabecalho("Aveiro", "Regime de Permanência") +
+        `<div class="farmacias-lista">${bloco("aveiro", false)}</div>` +
+      `</div>` +
+      `<div class="farmacias-grupo">` +
+        cabecalho("Ílhavo", "Regime de Disponibilidade") +
+        `<div class="farmacias-lista">${bloco("ilhavo", true)}</div>` +
+      `</div>` +
+      `<div class="farmacias-debug-vp"></div>` +
+    `</div>`;
+  document.body.appendChild(overlay);
+}
+
 function render(slugs, catalogo, containerId) {
   const el = dom[containerId];
 
@@ -1427,49 +1531,13 @@ function render(slugs, catalogo, containerId) {
     return;
   }
 
+  const ehIlhavo = (containerId === "ilhavo");
   el.innerHTML = slugs.map(slug => {
     const f = catalogo[slug];
     if (!f) {
       return `<div class="farmacia">Farmácia desconhecida (${slug})</div>`;
     }
-
-    // Botão "Ver no mapa" inline com o nome da farmácia (se houver link).
-    const linkMapa = f.maps
-      ? `<a class="botao-acao" href="${f.maps}" target="_blank" rel="noopener noreferrer" aria-label="Ver localização da Farmácia ${f.nome} no Google Maps">📍 Ver no mapa</a>`
-      : "";
-
-    // Só na Farmácia Branco: atalho para o seu horário semanal, à direita
-    // do "Ver no mapa".
-    const linkHorarioBranco = (slug === "branco")
-      ? `<a class="botao-acao" href="https://farmaciaservicoilhavoaveiro.netlify.app/farmaciabranco/horario" aria-label="Ver o horário desta semana da Farmácia Branco">🕒 Horário desta semana</a>`
-      : "";
-
-    // Uma linha por cada telefone, com botão "Ligar".
-    // Em Ílhavo (Disponibilidade) o botão dos números fixos esconde-se fora
-    // do horário 9h–21h15. Os móveis (+351 9xx) mantêm-se sempre visíveis.
-    const ehIlhavo = (containerId === "ilhavo");
-    const telefonesLinhas = (f.telefones || []).map(tel => {
-      const numeroLimpo = tel.replace(/\s/g, "");
-      const eMovel = numeroLimpo.startsWith("+3519");
-      const classeCondicional = (ehIlhavo && !eMovel) ? " ligar-condicional" : "";
-      // Nota legal de custo da chamada (DL 59/2021, revisto pela Lei
-      // 14/2023). Obrigatória junto de cada número no sítio da Internet.
-      // Fixos nacionais (geográficos, começam por 2 ou +3512) → "rede fixa
-      // nacional"; móveis (+3519) → "rede móvel nacional". Escondida no
-      // modo montra (TV) via CSS .modo-montra .nota-custo-chamada.
-      const notaCusto = eMovel
-        ? "Chamada para a rede móvel nacional"
-        : "Chamada para a rede fixa nacional";
-      return `<div>${tel}<a class="botao-acao${classeCondicional}" href="tel:${numeroLimpo}" aria-label="Ligar para ${tel}">📞 Ligar</a><span class="nota-custo-chamada">${notaCusto}</span></div>`;
-    }).join("");
-
-    return `
-      <div class="farmacia">
-        <div class="nome">Farmácia ${f.nome}${linkMapa}${linkHorarioBranco}</div>
-        <div>${f.morada}</div>
-        ${telefonesLinhas}
-      </div>
-    `;
+    return htmlCartaoFarmacia(f, slug, ehIlhavo);
   }).join("");
 }
 
@@ -2560,6 +2628,7 @@ function renderMapa(dados, calendario, anosDisponiveis) {
     li(`${CANON}/`, `${CANON}/`, "Site de serviço (página inicial)"),
     li(`${CANON}/farmaciabranco/horario`, `${CANON}/farmaciabranco/horario`, "Horário da semana em ecrã cheio (montra)"),
     li(`${CANON}/farmaciabranco/estatistica`, `${CANON}/farmaciabranco/estatistica`, "Estatística do ano corrente"),
+    li(`${CANON}/farmacias`, `${CANON}/farmacias`, "Lista de todas as farmácias dos concelhos"),
     li(`${CANON}/farmaciabranco/mapa`, `${CANON}/farmaciabranco/mapa`, "Este mapa de links"),
   ].join("");
 
@@ -3226,6 +3295,8 @@ function renderEstatistica(dados, calendario, rotaInicial, anosDisponiveis) {
   const estatisticaRota = mEst && mEst[1] ? mEst[1].replace(/\/$/, "") : "";
   // Página de mapa: índice de rotas. Activa-se pelo pathname.
   const mapaAtivo = /^\/farmaciabranco\/mapa\/?$/.test(location.pathname);
+  // Página de lista exaustiva de farmácias dos concelhos.
+  const farmaciasAtivo = /^\/farmacias\/?$/.test(location.pathname);
 
   // Cor cinzenta dos setores decorridos (centralizada em COR_DECORRIDO).
   dom.setorDecorrido.setAttribute("fill", COR_DECORRIDO);
@@ -3263,6 +3334,8 @@ function renderEstatistica(dados, calendario, rotaInicial, anosDisponiveis) {
     if (estDbg) estDbg.textContent = txt;
     const mapaDbg = document.querySelector("#mapa-overlay .mapa-debug-vp");
     if (mapaDbg) mapaDbg.textContent = txt;
+    const farmDbg = document.querySelector("#farmacias-overlay .farmacias-debug-vp");
+    if (farmDbg) farmDbg.textContent = txt;
   }
   if (new URLSearchParams(location.search).has("debug")) {
     dom.debugVp.classList.add("on");
@@ -3321,6 +3394,12 @@ function renderEstatistica(dados, calendario, rotaInicial, anosDisponiveis) {
   // Página de mapa: índice de rotas, render único após carregar dados.
   if (mapaAtivo && calendario) {
     renderMapa(dados, calendario, anosDisponiveis);
+    atualizarDebugViewport();
+  }
+
+  // Página /farmacias: lista exaustiva de todas as farmácias dos concelhos.
+  if (farmaciasAtivo) {
+    renderListaFarmacias(dados);
     atualizarDebugViewport();
   }
 
