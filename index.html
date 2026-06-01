@@ -764,6 +764,49 @@ a { color:#1976d2; }
 }
 
 /* ===================================================================
+   Página de mapa de links (/farmaciabranco/mapa)
+   Índice de todas as rotas do projecto, com a parte derivada dos dados
+   (meses e semanas) gerada a partir dos mesmos JSON da estatística.
+   =================================================================== */
+#mapa-overlay {
+  position: fixed; inset: 0; z-index: 60; overflow-y: auto;
+  background: #f4f7f4; color: #222;
+  font-family: "Montserrat", system-ui, sans-serif;
+  padding: 16px;
+}
+#mapa-overlay .mapa-caixa {
+  width: 100%; max-width: 1100px; margin: 0 auto;
+  background: #fff; border-radius: 16px; padding: 28px 32px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+}
+#mapa-overlay .titulo { display: flex; gap: 12px; border-bottom: 2px solid #2e7d32; margin-bottom: 10px; }
+#mapa-overlay .titulo-principal { font-size: 32px; font-weight: bold; }
+#mapa-overlay .subtitulo { font-size: 24px; color: #555; }
+#mapa-overlay .mapa-seccao { margin-top: 24px; }
+#mapa-overlay .mapa-seccao h2 {
+  font-size: 19px; color: #1b5e20; margin: 0 0 10px;
+  border-bottom: 1px solid #cfe3d2; padding-bottom: 4px;
+}
+#mapa-overlay ul { list-style: none; margin: 0; padding: 0; }
+#mapa-overlay li { margin: 4px 0; }
+#mapa-overlay a { color: #1b5e20; text-decoration: none; }
+#mapa-overlay a:hover { text-decoration: underline; }
+#mapa-overlay .mapa-desc { color: #777; font-size: 14px; }
+#mapa-overlay .mapa-grelha {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 4px 18px;
+}
+#mapa-overlay .mapa-debug-vp {
+  margin-top: 22px; text-align: center;
+  font-family: Consolas, "Courier New", monospace; font-size: 11px; color: #888;
+}
+@media (max-width: 760px) {
+  #mapa-overlay .mapa-caixa { padding: 18px; }
+  #mapa-overlay .titulo-principal { font-size: 22px; }
+  #mapa-overlay .subtitulo { font-size: 16px; }
+}
+
+/* ===================================================================
    Página de estatística (/farmaciabranco/estatistica)
    Histograma da distribuição de horas de funcionamento semanal,
    com colunas clicáveis que abrem o detalhe das semanas.
@@ -2458,6 +2501,57 @@ function semanasIncompletas(ano, calendario, dados) {
 
 // Renderiza a página de estatística no body. Conteúdo estático (não
 // depende da hora), calculado uma vez a partir dos JSON já carregados.
+// Página de mapa: índice de todas as rotas do projecto. A parte derivada
+// dos dados (meses e semanas) é gerada a partir dos mesmos JSON da
+// estatística, por isso acompanha automaticamente mudanças de ano.
+function renderMapa(dados, calendario) {
+  const CANON = "https://farmaciaservicoilhavoaveiro.netlify.app";
+  const anoRef = (calendario && calendario.ano) || partesLisboa().ano;
+  const semanas = semanasDoAno(anoRef, calendario, dados);
+  const incompletas = semanasIncompletas(anoRef, calendario, dados);
+  const todas = semanas.concat(incompletas)
+    .slice().sort((a, b) => semanaISO(a.segReal || a.seg) - semanaISO(b.segReal || b.seg));
+  const mesesSlug = ESTATISTICA_MESES.map(n =>
+    n.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
+  const li = (url, txt, desc) =>
+    `<li><a href="${url}">${txt}</a>${desc ? ` <span class="mapa-desc">${desc}</span>` : ""}</li>`;
+
+  // 1) Rotas fixas (conhecidas, escritas à mão).
+  const fixas = [
+    li(`${CANON}/`, `${CANON}/`, "Site de serviço (página inicial)"),
+    li(`${CANON}/farmaciabranco/horario`, `${CANON}/farmaciabranco/horario`, "Horário da semana em ecrã cheio (montra)"),
+    li(`${CANON}/farmaciabranco/estatistica`, `${CANON}/farmaciabranco/estatistica`, "Estatística e listagem de semanas"),
+    li(`${CANON}/farmaciabranco/estatistica/${anoRef}`, `${CANON}/farmaciabranco/estatistica/${anoRef}`, "Horário do ano inteiro"),
+    li(`${CANON}/farmaciabranco/mapa`, `${CANON}/farmaciabranco/mapa`, "Este mapa de links"),
+  ].join("");
+
+  // 2) Meses (derivado dos dados).
+  const meses = ESTATISTICA_MESES.map((nome, i) =>
+    li(`${CANON}/farmaciabranco/estatistica/${anoRef}/${mesesSlug[i]}`, nome)
+  ).join("");
+
+  // 3) Semanas (derivado dos dados).
+  const sems = todas.map(s => {
+    const n = fmtSemana(semanaISO(s.segReal || s.seg));
+    return li(`${CANON}/farmaciabranco/estatistica/${anoRef}/semana${n}`, `Semana ${n}`);
+  }).join("");
+
+  const overlay = document.createElement("div");
+  overlay.id = "mapa-overlay";
+  overlay.innerHTML =
+    `<div class="mapa-caixa">` +
+      `<div class="titulo"><div class="cruz"></div><div>` +
+        `<div class="titulo-principal">Farmácia Branco</div>` +
+        `<div class="subtitulo">Mapa de links - ${anoRef}</div>` +
+      `</div></div>` +
+      `<div class="mapa-seccao"><h2>Páginas principais</h2><ul>${fixas}</ul></div>` +
+      `<div class="mapa-seccao"><h2>Horário por mês</h2><ul class="mapa-grelha">${meses}</ul></div>` +
+      `<div class="mapa-seccao"><h2>Horário por semana</h2><ul class="mapa-grelha">${sems}</ul></div>` +
+      `<div class="mapa-debug-vp"></div>` +
+    `</div>`;
+  document.body.appendChild(overlay);
+}
+
 function renderEstatistica(dados, calendario, rotaInicial) {
   const anoRef = (calendario && calendario.ano) || partesLisboa().ano;
   const hojeIso = isoLisboa(partesLisboa());          // para destacar a semana actual
@@ -3045,6 +3139,8 @@ function renderEstatistica(dados, calendario, rotaInicial) {
   const mEst = location.pathname.match(/^\/farmaciabranco\/estatistica(?:\/(.*))?\/?$/);
   const estatisticaAtiva = !!mEst;
   const estatisticaRota = mEst && mEst[1] ? mEst[1].replace(/\/$/, "") : "";
+  // Página de mapa: índice de rotas. Activa-se pelo pathname.
+  const mapaAtivo = /^\/farmaciabranco\/mapa\/?$/.test(location.pathname);
 
   // Cor cinzenta dos setores decorridos (centralizada em COR_DECORRIDO).
   dom.setorDecorrido.setAttribute("fill", COR_DECORRIDO);
@@ -3080,6 +3176,8 @@ function renderEstatistica(dados, calendario, rotaInicial) {
     }
     const estDbg = document.querySelector("#estatistica-overlay .est-debug-vp");
     if (estDbg) estDbg.textContent = txt;
+    const mapaDbg = document.querySelector("#mapa-overlay .mapa-debug-vp");
+    if (mapaDbg) mapaDbg.textContent = txt;
   }
   if (new URLSearchParams(location.search).has("debug")) {
     dom.debugVp.classList.add("on");
@@ -3096,7 +3194,7 @@ function renderEstatistica(dados, calendario, rotaInicial) {
   // só é estritamente necessário se ?horario=1 estiver activo.
   const [dados, calendario] = await Promise.all([
     carregarDados(),
-    (temHorario || estatisticaAtiva) ? carregarCalendario() : Promise.resolve(null),
+    (temHorario || estatisticaAtiva || mapaAtivo) ? carregarCalendario() : Promise.resolve(null),
   ]);
 
   if (!dados) {
@@ -3116,6 +3214,12 @@ function renderEstatistica(dados, calendario, rotaInicial) {
   if (estatisticaAtiva && calendario) {
     renderEstatistica(dados, calendario, estatisticaRota);
     atualizarDebugViewport();   // preenche a linha de diagnóstico do overlay recém-criado
+  }
+
+  // Página de mapa: índice de rotas, render único após carregar dados.
+  if (mapaAtivo && calendario) {
+    renderMapa(dados, calendario);
+    atualizarDebugViewport();
   }
 
   // Estado de população da tabela do horário: registamos o dia do

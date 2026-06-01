@@ -14,3 +14,7 @@
 # JavaScript lê o pathname e abre directamente a vista correspondente.
 # Ex.: /farmaciabranco/estatistica/2026, /.../2026/janeiro, /.../2026/semana01
 /farmaciabranco/estatistica/*   /index.html   200
+# Rota /farmaciabranco/mapa serve o mesmo index.html. O JavaScript
+# detecta o pathname e renderiza o mapa de links do projecto.
+/farmaciabranco/mapa   /index.html   200
+/farmaciabranco/mapa/  /index.html   200
