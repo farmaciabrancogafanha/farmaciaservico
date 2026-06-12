@@ -1,0 +1,24 @@
+# Reescritas do Netlify (servidas como 200, mantêm o URL no browser).
+# Documentação: https://docs.netlify.com/routing/redirects/
+
+# Rota /farmaciabranco/horario serve o index.html. O JavaScript detecta
+# o pathname e activa o overlay do horário semanal em ecrã cheio.
+/farmaciabranco/horario   /index.html   200
+/farmaciabranco/horario/  /index.html   200
+# Rota /farmaciabranco/estatistica serve o mesmo index.html. O
+# JavaScript detecta o pathname e renderiza a página de estatística
+# da distribuição de horas de funcionamento semanal.
+/farmaciabranco/estatistica   /index.html   200
+/farmaciabranco/estatistica/  /index.html   200
+# Sub-rotas da estatística (ano, mês ou semana): mesma página. O
+# JavaScript lê o pathname e abre directamente a vista correspondente.
+# Ex.: /farmaciabranco/estatistica/2026, /.../2026/janeiro, /.../2026/semana01
+/farmaciabranco/estatistica/*   /index.html   200
+# Rota /farmaciabranco/mapa serve o mesmo index.html. O JavaScript
+# detecta o pathname e renderiza o mapa de links do projecto.
+/farmaciabranco/mapa   /index.html   200
+/farmaciabranco/mapa/  /index.html   200
+# Rota /farmacias serve o mesmo index.html. O JavaScript detecta o
+# pathname e renderiza a lista exaustiva de farmácias dos concelhos.
+/farmacias   /index.html   200
+/farmacias/  /index.html   200
