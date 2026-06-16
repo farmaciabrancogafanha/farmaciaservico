@@ -791,7 +791,14 @@ a { color:#1976d2; }
 #farmacias-overlay .cruz { width: 48px; height: 48px; flex: none; }
 #farmacias-overlay .titulo-principal { font-size: 32px; font-weight: bold; }
 #farmacias-overlay .subtitulo { font-size: 24px; color: #555; }
-#farmacias-overlay .farmacias-regime { font-size: 16px; color: #1b5e20; font-weight: bold; margin-top: 2px; }
+/* Bloco de janela horária + contagem decrescente, reaproveitado da
+   página principal (mesma informação, mesma posição: entre o cabeçalho
+   do concelho e a lista de farmácias). O regime passa a vir daqui, como
+   em "/", pelo que o antigo .farmacias-regime do cabeçalho foi removido.
+   A especificidade por #id vence as media queries globais de .sub-bloco,
+   garantindo tamanho previsível em qualquer ecrã. */
+#farmacias-overlay .sub-bloco { font-size: 16px; margin-bottom: 16px; }
+#farmacias-overlay .sub-bloco small { font-size: 16px; }
 #farmacias-overlay .farmacias-colunas {
   display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start;
 }
@@ -1578,11 +1585,10 @@ function renderListaFarmacias(dados, calendario) {
       .map(slug => htmlCartaoFarmacia(catalogo[slug], slug, ehIlhavo, deServicoHoje.has(slug)))
       .join("");
   };
-  const cabecalho = (concelho, regime) =>
+  const cabecalho = (concelho) =>
     `<div class="titulo"><div class="cruz"></div><div>` +
       `<div class="titulo-principal">Farmácias de Serviço</div>` +
       `<div class="subtitulo">Concelho de ${concelho}</div>` +
-      `<div class="farmacias-regime">${regime}</div>` +
     `</div></div>`;
   const overlay = document.createElement("div");
   overlay.id = "farmacias-overlay";
@@ -1590,17 +1596,26 @@ function renderListaFarmacias(dados, calendario) {
     `<div class="farmacias-caixa">` +
       `<div class="farmacias-colunas">` +
         `<div class="farmacias-grupo">` +
-          cabecalho("Aveiro", "Regime de Permanência") +
+          cabecalho("Aveiro") +
+          `<div id="farmacias-periodo" class="sub-bloco"></div>` +
           `<div class="farmacias-lista">${bloco("aveiro", false)}</div>` +
         `</div>` +
         `<div class="farmacias-grupo">` +
-          cabecalho("Ílhavo", "Regime de Disponibilidade") +
+          cabecalho("Ílhavo") +
+          `<div id="farmacias-disponibilidade" class="sub-bloco"></div>` +
           `<div class="farmacias-lista">${bloco("ilhavo", true)}</div>` +
         `</div>` +
       `</div>` +
       `<div class="farmacias-debug-vp"></div>` +
     `</div>`;
   document.body.appendChild(overlay);
+
+  // Regista as referências dos blocos de janela/contagem e preenche-os de
+  // imediato, para o overlay nascer já com a informação (sem esperar pelo
+  // próximo tick). O tick mantém-nos actualizados ao minuto.
+  domFarmPeriodo = document.getElementById("farmacias-periodo");
+  domFarmDisponibilidade = document.getElementById("farmacias-disponibilidade");
+  tickFarmacias(p, dataServico);
 }
 
 function render(slugs, catalogo, containerId) {
@@ -1621,7 +1636,10 @@ function render(slugs, catalogo, containerId) {
   }).join("");
 }
 
-function renderDisponibilidade(p, dataServico) {
+// Gera o HTML do bloco de disponibilidade (Ílhavo) para uma dada hora.
+// Função pura, sem efeitos no DOM: reaproveitada pela página principal
+// (#disponibilidade) e pela página /farmacias (#farmacias-disponibilidade).
+function htmlDisponibilidade(p, dataServico) {
   // Antes das 21h (e depois das 9h) → ainda vai fechar.
   // Entre as 21h e as 9h do dia seguinte → já fechou.
   const fechado = !(p.h >= 9 && p.h < 21);
@@ -1653,14 +1671,21 @@ function renderDisponibilidade(p, dataServico) {
     linhaRestante = `<br><span style="visibility:hidden;"><b>Restam 00h00min</b> até ao fecho</span>`;
   }
 
-  const novo = `<small>Regime de Disponibilidade<br>${realce} de <span class="data-turno">${dataServico}</span>${linhaRestante}</small>`;
+  return `<small>Regime de Disponibilidade<br>${realce} de <span class="data-turno">${dataServico}</span>${linhaRestante}</small>`;
+}
+
+function renderDisponibilidade(p, dataServico) {
+  const novo = htmlDisponibilidade(p, dataServico);
   if (novo !== ultimoDisponibilidade) {
     dom.disponibilidade.innerHTML = novo;
     ultimoDisponibilidade = novo;
   }
 }
 
-function renderPeriodo(p, dataServico) {
+// Gera o HTML do bloco de permanência (Aveiro) para uma dada hora.
+// Função pura, sem efeitos no DOM: reaproveitada pela página principal
+// (#periodo) e pela página /farmacias (#farmacias-periodo).
+function htmlPeriodo(p, dataServico) {
   const fim = adicionarDias(dataServico, 1);
   // Minutos até às próximas 09:00 em Lisboa.
   const agoraEmMin = p.h * 60 + p.m;
@@ -1671,11 +1696,33 @@ function renderPeriodo(p, dataServico) {
   // Última hora antes da mudança de turno (08:00–08:59) → vermelho de alerta.
   const corRestanteTurno = (p.h === 8) ? COR_ALERTA : COR_TURNO;
   const linhaRestante = `<b style="color:${corRestanteTurno};">Restam ${formatarTempoRestante(restantesTurno)}</b> até à <mark>mudança de turno</mark>`;
-  const novo = `<small>Regime de Permanência<br>Desde as 09h de <span class="data-turno">${dataServico}</span> até às 09h de <mark>${fim}</mark><br>${linhaRestante}</small>`;
+  return `<small>Regime de Permanência<br>Desde as 09h de <span class="data-turno">${dataServico}</span> até às 09h de <mark>${fim}</mark><br>${linhaRestante}</small>`;
+}
+
+function renderPeriodo(p, dataServico) {
+  const novo = htmlPeriodo(p, dataServico);
   if (novo !== ultimoPeriodo) {
     dom.periodo.innerHTML = novo;
     ultimoPeriodo = novo;
   }
+}
+
+// Página /farmacias: referências e cache próprias para os blocos de
+// janela/contagem (um por concelho). Só existem quando o overlay
+// /farmacias está montado; nas restantes rotas tickFarmacias() sai de
+// imediato, com custo nulo. Cache própria (independente de ultimoPeriodo/
+// ultimoDisponibilidade) porque o overlay nasce depois do primeiro tick.
+let domFarmPeriodo = null;
+let domFarmDisponibilidade = null;
+let ultimoFarmPeriodo = null;
+let ultimoFarmDisponibilidade = null;
+
+function tickFarmacias(p, dataServico) {
+  if (!domFarmPeriodo) return;
+  const nP = htmlPeriodo(p, dataServico);
+  if (nP !== ultimoFarmPeriodo) { domFarmPeriodo.innerHTML = nP; ultimoFarmPeriodo = nP; }
+  const nD = htmlDisponibilidade(p, dataServico);
+  if (nD !== ultimoFarmDisponibilidade) { domFarmDisponibilidade.innerHTML = nD; ultimoFarmDisponibilidade = nD; }
 }
 
 function formatHora(p) {
@@ -1977,6 +2024,7 @@ function tick(dados, p = partesLisboa()) {
 
   renderDisponibilidade(p, dataServico);
   renderPeriodo(p, dataServico);
+  tickFarmacias(p, dataServico);
   atualizarDatas(p);
   atualizarVisibilidadeLigar(p);
 }
