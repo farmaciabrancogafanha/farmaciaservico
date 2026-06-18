@@ -792,13 +792,29 @@ a { color:#1976d2; }
 #farmacias-overlay .titulo-principal { font-size: 32px; font-weight: bold; }
 #farmacias-overlay .subtitulo { font-size: 24px; color: #555; }
 /* Bloco de janela horária + contagem decrescente, reaproveitado da
-   página principal (mesma informação, mesma posição: entre o cabeçalho
-   do concelho e a lista de farmácias). O regime passa a vir daqui, como
-   em "/", pelo que o antigo .farmacias-regime do cabeçalho foi removido.
+   página principal (mesma informação, mesmo texto). Em /farmacias vive
+   dentro da lista, colado por baixo de cada farmácia de serviço, no mesmo
+   conjunto verde, como se lhe pertencesse. O regime vem daqui, como em
+   "/", pelo que o antigo .farmacias-regime do cabeçalho foi removido.
    A especificidade por #id vence as media queries globais de .sub-bloco,
    garantindo tamanho previsível em qualquer ecrã. */
-#farmacias-overlay .sub-bloco { font-size: 16px; margin-bottom: 16px; }
+#farmacias-overlay .sub-bloco { font-size: 16px; }
 #farmacias-overlay .sub-bloco small { font-size: 16px; }
+/* Conjunto cartão-de-serviço + bloco: ocupa um único lugar na lista (com
+   o gap normal acima e abaixo); cartão e bloco ficam encostados, sem gap
+   entre si, e só o conjunto arredonda nos topos do cartão e na base do
+   bloco, dando a leitura de uma peça só. */
+#farmacias-overlay .farmacia-servico-conjunto {
+  display: flex; flex-direction: column;
+}
+#farmacias-overlay .farmacia-servico-conjunto .farmacia.de-servico {
+  border-radius: 8px 8px 0 0;
+}
+#farmacias-overlay .farmacias-janela {
+  background: #d6ecd8; box-shadow: inset 4px 0 0 #2e7d32;
+  border-radius: 0 0 8px 8px;
+  margin: 0; padding: 10px 14px 12px; border-left: 0;
+}
 #farmacias-overlay .farmacias-colunas {
   display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start;
 }
@@ -1580,9 +1596,20 @@ function renderListaFarmacias(dados, calendario) {
     const catalogo = cat[reg] || {};
     const ordem = ordemCanonicaConcelho(catalogo, escala[reg], ehIlhavo);
     const deServicoHoje = new Set(getSlugs(dataServico, escala[reg] || []));
+    const tipoJanela = ehIlhavo ? "disponibilidade" : "periodo";
     return ordem
       .filter(slug => catalogo[slug])
-      .map(slug => htmlCartaoFarmacia(catalogo[slug], slug, ehIlhavo, deServicoHoje.has(slug)))
+      .map(slug => {
+        const deServico = deServicoHoje.has(slug);
+        const cartao = htmlCartaoFarmacia(catalogo[slug], slug, ehIlhavo, deServico);
+        if (!deServico) return cartao;
+        // Farmácia de serviço: cartão + bloco de regime/datas/contagem
+        // colado por baixo, formando um conjunto verde. O conteúdo do
+        // bloco é preenchido e actualizado ao minuto por tickFarmacias.
+        // Nos dias de 2 farmácias (Ílhavo), cada uma leva o seu bloco.
+        return `<div class="farmacia-servico-conjunto">${cartao}` +
+          `<div class="sub-bloco farmacias-janela" data-janela="${tipoJanela}"></div></div>`;
+      })
       .join("");
   };
   const cabecalho = (concelho) =>
@@ -1597,12 +1624,10 @@ function renderListaFarmacias(dados, calendario) {
       `<div class="farmacias-colunas">` +
         `<div class="farmacias-grupo">` +
           cabecalho("Aveiro") +
-          `<div id="farmacias-periodo" class="sub-bloco"></div>` +
           `<div class="farmacias-lista">${bloco("aveiro", false)}</div>` +
         `</div>` +
         `<div class="farmacias-grupo">` +
           cabecalho("Ílhavo") +
-          `<div id="farmacias-disponibilidade" class="sub-bloco"></div>` +
           `<div class="farmacias-lista">${bloco("ilhavo", true)}</div>` +
         `</div>` +
       `</div>` +
@@ -1610,11 +1635,11 @@ function renderListaFarmacias(dados, calendario) {
     `</div>`;
   document.body.appendChild(overlay);
 
-  // Regista as referências dos blocos de janela/contagem e preenche-os de
-  // imediato, para o overlay nascer já com a informação (sem esperar pelo
-  // próximo tick). O tick mantém-nos actualizados ao minuto.
-  domFarmPeriodo = document.getElementById("farmacias-periodo");
-  domFarmDisponibilidade = document.getElementById("farmacias-disponibilidade");
+  // Os blocos de janela/contagem ficam dentro da lista, colados por baixo
+  // de cada farmácia de serviço (ver bloco()). Marca o overlay como
+  // montado e preenche-os de imediato; tickFarmacias mantém-nos
+  // actualizados ao minuto.
+  farmaciasMontado = true;
   tickFarmacias(p, dataServico);
 }
 
@@ -1638,7 +1663,7 @@ function render(slugs, catalogo, containerId) {
 
 // Gera o HTML do bloco de disponibilidade (Ílhavo) para uma dada hora.
 // Função pura, sem efeitos no DOM: reaproveitada pela página principal
-// (#disponibilidade) e pela página /farmacias (#farmacias-disponibilidade).
+// (#disponibilidade) e pela página /farmacias ([data-janela=disponibilidade]).
 function htmlDisponibilidade(p, dataServico) {
   // Antes das 21h (e depois das 9h) → ainda vai fechar.
   // Entre as 21h e as 9h do dia seguinte → já fechou.
@@ -1684,7 +1709,7 @@ function renderDisponibilidade(p, dataServico) {
 
 // Gera o HTML do bloco de permanência (Aveiro) para uma dada hora.
 // Função pura, sem efeitos no DOM: reaproveitada pela página principal
-// (#periodo) e pela página /farmacias (#farmacias-periodo).
+// (#periodo) e pela página /farmacias ([data-janela=periodo]).
 function htmlPeriodo(p, dataServico) {
   const fim = adicionarDias(dataServico, 1);
   // Minutos até às próximas 09:00 em Lisboa.
@@ -1707,22 +1732,31 @@ function renderPeriodo(p, dataServico) {
   }
 }
 
-// Página /farmacias: referências e cache próprias para os blocos de
-// janela/contagem (um por concelho). Só existem quando o overlay
-// /farmacias está montado; nas restantes rotas tickFarmacias() sai de
-// imediato, com custo nulo. Cache própria (independente de ultimoPeriodo/
-// ultimoDisponibilidade) porque o overlay nasce depois do primeiro tick.
-let domFarmPeriodo = null;
-let domFarmDisponibilidade = null;
+// Página /farmacias: actualização dos blocos de janela/contagem, que
+// vivem dentro da lista, colados a cada farmácia de serviço. Podem
+// existir vários por concelho (Ílhavo tem 2 nos dias de 2 farmácias) ou
+// nenhum, daí o uso de querySelectorAll por data-janela. Só corre quando
+// o overlay /farmacias está montado; nas restantes rotas sai de imediato,
+// com custo nulo. Cache por tipo (não por elemento): como todos os blocos
+// do mesmo concelho mostram a mesma informação, basta comparar a string
+// e, quando muda (ao minuto), reescrever todos. A flag separa o caso
+// "ainda não montado" (cache intacta) do caso "montado e já preenchido".
+let farmaciasMontado = false;
 let ultimoFarmPeriodo = null;
 let ultimoFarmDisponibilidade = null;
 
 function tickFarmacias(p, dataServico) {
-  if (!domFarmPeriodo) return;
+  if (!farmaciasMontado) return;
   const nP = htmlPeriodo(p, dataServico);
-  if (nP !== ultimoFarmPeriodo) { domFarmPeriodo.innerHTML = nP; ultimoFarmPeriodo = nP; }
+  if (nP !== ultimoFarmPeriodo) {
+    document.querySelectorAll('#farmacias-overlay [data-janela="periodo"]').forEach(el => el.innerHTML = nP);
+    ultimoFarmPeriodo = nP;
+  }
   const nD = htmlDisponibilidade(p, dataServico);
-  if (nD !== ultimoFarmDisponibilidade) { domFarmDisponibilidade.innerHTML = nD; ultimoFarmDisponibilidade = nD; }
+  if (nD !== ultimoFarmDisponibilidade) {
+    document.querySelectorAll('#farmacias-overlay [data-janela="disponibilidade"]').forEach(el => el.innerHTML = nD);
+    ultimoFarmDisponibilidade = nD;
+  }
 }
 
 function formatHora(p) {
