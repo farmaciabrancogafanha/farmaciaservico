@@ -3520,7 +3520,15 @@ function renderEstatistica(dados, calendario, rotaInicial, anosDisponiveis) {
   //   primeiro da lista), para o site nunca ficar vazio.
   // ---------------------------------------------------------------------
   const anosDisponiveis = await carregarAnos();
-  const anoCorrente = partesLisboa().ano;
+  const pArranque = partesLisboa();
+  const anoCivil = pArranque.ano;
+  // Ano base da página principal, da TV e da /farmacias: o da DATA DE
+  // SERVIÇO, não o da data civil. Antes das 9h a data de serviço ainda é
+  // a do dia anterior, por isso na madrugada de 1 de Janeiro o ano a
+  // carregar continua a ser o do ano que termina, até às 9h. A
+  // estatística e o mapa são sobre o ano de calendário, logo usam o civil.
+  const anoServico = Number(obterDataServico(pArranque).slice(0, 4));
+  const anoBase = (estatisticaAtiva || mapaAtivo) ? anoCivil : anoServico;
   // Ano pedido pelo URL da estatística (primeiro segmento da sub-rota).
   const anoPedidoURL = (estatisticaAtiva && estatisticaRota)
     ? parseInt(estatisticaRota.split("/")[0], 10) : NaN;
@@ -3530,8 +3538,8 @@ function renderEstatistica(dados, calendario, rotaInicial, anosDisponiveis) {
     const menores = anosDisponiveis.filter(a => a <= pretendido);
     return menores.length ? menores[menores.length - 1] : anosDisponiveis[0];
   }
-  // Ano a carregar: o do URL se for um número válido, senão o corrente.
-  const anoAlvo = resolverAno(Number.isFinite(anoPedidoURL) ? anoPedidoURL : anoCorrente);
+  // Ano a carregar: o do URL se for um número válido, senão o ano base.
+  const anoAlvo = resolverAno(Number.isFinite(anoPedidoURL) ? anoPedidoURL : anoBase);
 
   // Carrega farmacias-AAAA.json e calendario-AAAA.json do ano alvo.
   const [dados, calendario] = await Promise.all([
@@ -3566,16 +3574,21 @@ function renderEstatistica(dados, calendario, rotaInicial, anosDisponiveis) {
     atualizarDebugViewport();
   }
 
-  // Virada de ano: a TV/página principal carrega o ano corrente e mantém-
-  // se aberta. Quando a data passa para um ano novo (ex.: meia-noite de 1
-  // de Janeiro), os dados em memória ficam do ano anterior. Se estivermos
-  // a mostrar o ano corrente (não um arquivo escolhido por URL), e a data
-  // mudar de ano, recarrega-se a página para apanhar o ano novo. Só se
+  // Virada de ano: a TV/página principal carrega um ano e mantém-se
+  // aberta. Quando o ano da DATA DE SERVIÇO passa a ser outro (o turno de
+  // permanência muda às 9h, por isso a viragem efectiva dá-se às 9h de 1
+  // de Janeiro, não à meia-noite), recarrega-se a página para apanhar os
+  // dados do ano novo. Recarrega-se só se esse ano estiver mesmo publicado
+  // em anos.json; caso contrário não se toca em nada, para nunca entrar em
+  // ciclo de reloads enquanto o ano novo ainda não foi publicado. Só se
   // aplica fora das vistas de estatística/mapa com ano fixado no URL.
   const aMostrarAnoCorrente = !Number.isFinite(anoPedidoURL);
   function verificarViradaDeAno(p) {
     if (!aMostrarAnoCorrente) return;
-    if (p.ano !== anoAlvo) location.reload();
+    const anoServicoAgora = Number(obterDataServico(p).slice(0, 4));
+    if (anoServicoAgora !== anoAlvo && anosDisponiveis.includes(anoServicoAgora)) {
+      location.reload();
+    }
   }
 
   // Estado de população da tabela do horário: registamos o dia do
