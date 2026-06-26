@@ -65,14 +65,20 @@ Disponibilidades da Farmácia Branco são lidas exclusivamente do `farmacias-AAA
 
 ### Selecção do ano
 
-- A página principal e a TV usam o ano corrente (data de Lisboa).
-- A estatística usa o ano do URL (`/estatistica/2026`) ou, sem ano, o corrente.
-- Se um ano pedido não existir em `anos.json`, o código recua para o último ano disponível menor ou igual ao pedido, ou para o primeiro da lista, para o site nunca ficar vazio.
+O ano de cada página é dado pela função `anoEmVigor(p)`, conforme a rota:
+
+- Página principal, TV e `/farmacias`: o ano da **data de serviço**, não o ano civil. Como a data de serviço, antes das 9h, ainda é a do dia anterior (Aveiro muda às 9h), na madrugada de 1 de Janeiro estas páginas continuam no ano que termina, até às 9h.
+- Estatística e mapa: o ano **civil** (data de Lisboa), por serem sobre o calendário. A estatística aceita ainda um ano explícito no URL (`/estatistica/2026`), que prevalece.
+- Se o ano pretendido não existir em `anos.json`, o código recua para o último ano disponível menor ou igual ao pedido, ou para o primeiro da lista, para o site nunca ficar vazio.
 - O seletor de ano (na listagem e na vista de ano) só aparece se houver mais do que um ano publicado.
+
+O mesmo critério `anoEmVigor(p)` é usado para escolher o ano a carregar e para decidir a recarga na virada (ver abaixo); têm de ser o mesmo, senão a página recarrega em ciclo quando os dois valores divergem.
 
 ### Virada de ano (TV)
 
-A TV mantém-se aberta e só recarrega às 9h05. À meia-noite de 1 de Janeiro, o tique de cada segundo detecta que a data passou para um ano diferente do carregado e, se estiver a mostrar o ano corrente (não um arquivo escolhido por URL), faz `location.reload()` para apanhar os dados do ano novo.
+A TV mantém-se aberta e o Fully Kiosk faz refresh diário às 9h05. Independentemente desse refresh, o tique de cada segundo verifica se o ano em vigor da rota (ver "Selecção do ano") mudou face ao que está carregado e, em caso afirmativo, faz `location.reload()` para apanhar os dados do ano novo. Como usa o mesmo critério da selecção, a página principal, a TV e `/farmacias` viram às 9h de 1 de Janeiro (virada da data de serviço), enquanto a estatística e o mapa viram à meia-noite (virada civil). O reload só dispara se o ano novo já estiver publicado em `anos.json`; se ainda não estiver, não se toca em nada, para a página nunca entrar em ciclo de reloads. Não se aplica às vistas de estatística/mapa com ano fixado no URL.
+
+Nota: `anos.json` é lido uma vez no arranque. Se o ano novo for publicado depois de a página já estar aberta, essa página não o descobre até ao próximo arranque (ex.: o refresh das 9h05). Por isso o novo ano deve ser publicado antecipadamente, antes do fim do ano em curso.
 
 ## Regimes de serviço
 
