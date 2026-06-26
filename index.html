@@ -3513,8 +3513,10 @@ function renderEstatistica(dados, calendario, rotaInicial, anosDisponiveis) {
 
   // ---------------------------------------------------------------------
   // Selecção do ano (site multi-ano).
-  // - O ano corrente vem da data de Lisboa; serve a página principal e a TV.
-  // - A estatística/mapa podem pedir um ano específico pelo URL.
+  // - O ano em vigor de cada rota vem de anoEmVigor (abaixo): página
+  //   principal, TV e /farmacias seguem a data de serviço; estatística e
+  //   mapa seguem o ano civil de Lisboa.
+  // - Só a estatística pode pedir um ano específico pelo URL; o mapa não.
   // - anos.json lista os anos publicados. Se o ano pedido não existir,
   //   recua-se para o mais próximo disponível (último <= pedido, ou o
   //   primeiro da lista), para o site nunca ficar vazio.
@@ -3587,7 +3589,8 @@ function renderEstatistica(dados, calendario, rotaInicial, anosDisponiveis) {
   // (virada civil). Recarrega-se só se esse ano estiver mesmo publicado em
   // anos.json; caso contrário não se toca em nada, para nunca entrar em
   // ciclo de reloads enquanto o ano novo ainda não foi publicado. Não se
-  // aplica às vistas de estatística/mapa com ano fixado no URL.
+  // aplica às vistas de estatística com ano explícito no URL; o mapa não
+  // tem ano por URL e segue sempre o ano civil em vigor.
   const aMostrarAnoCorrente = !Number.isFinite(anoPedidoURL);
   function verificarViradaDeAno(p) {
     if (!aMostrarAnoCorrente) return;
