@@ -2537,11 +2537,15 @@ function popularTabelaHorario(refs, calendario, dados, p) {
   // Número da semana, dias de funcionamento (dias com porta aberta) e
   // total de horas, para o subtítulo e a linha de métricas.
   const numSemana = fmtSemana(semanaISO(iniSemana));
+  // Ano ISO da semana = ano da quinta-feira dessa semana (evita, p. ex.,
+  // "2027 - Semana 53" nos primeiros dias de Janeiro que ainda pertencem
+  // à última semana ISO do ano anterior).
+  const anoSemana = adicionarDias(iniSemana, 3).slice(0, 4);
   const diasFunc = horariosSemana.reduce((acc, hd) => acc + (horasAbertoDia(hd) > 0 ? 1 : 0), 0);
   const URL_EST = "https://farmaciaservicoilhavoaveiro.netlify.app/farmaciabranco/estatistica";
   if (refs.subtitulo) {
-    // Subtítulo com o nº da semana, ligado à tabela de estatística.
-    refs.subtitulo.innerHTML = `<a class="horario-link-est" href="${URL_EST}">Semana ${numSemana} - Horário</a>`;
+    // Subtítulo com o ano e o nº da semana, ligado à tabela de estatística.
+    refs.subtitulo.innerHTML = `<a class="horario-link-est" href="${URL_EST}">${anoSemana} - Semana ${numSemana} - Horário</a>`;
   }
   if (refs.tempoFuncionamento) {
     const totalHoras = horariosSemana.reduce((acc, hd) => acc + horasAbertoDia(hd), 0);
@@ -3267,7 +3271,8 @@ function renderEstatistica(dados, calendario, rotaInicial, anosDisponiveis) {
     overlay.classList.remove("vista-mes", "vista-ano");
     const s = todasLista.find(x => (x.segReal || x.seg) === segIso);
     const atual = hojeIso >= segIso && hojeIso <= adicionarDias(segIso, 6);
-    if (subtitulo) subtitulo.textContent = `Semana ${fmtSemana(semanaISO(segIso))} - Horário`;
+    // Ano ISO da semana (ano da quinta-feira), coerente com o modo TV.
+    if (subtitulo) subtitulo.textContent = `${adicionarDias(segIso, 3).slice(0, 4)} - Semana ${fmtSemana(semanaISO(segIso))} - Horário`;
     if (topoTf) {
       topoTf.hidden = false;
       const horasTxt = s ? fmtHorasEst(s.total) : "n/d";
